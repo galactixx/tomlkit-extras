@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import (
     Any,
     List,
+    Optional,
     Tuple,
     Type,
     TypeVar
@@ -18,14 +19,10 @@ class BaseHierarchy(ABC):
 
     def __eq__(self, hierarchy: Any) -> bool:
         if not isinstance(hierarchy, BaseHierarchy):
-            raise TypeError(
-                f"Expected an instance of BaseHierarchy, but got {type(hierarchy).__name__}"
-            )
+            message_core = 'Expected an instance of BaseHierarchy'
+            raise TypeError(f"{message_core}, but got {type(hierarchy).__name__}")
         
-        return (
-            self.hierarchy == hierarchy.hierarchy and
-            self.attribute == hierarchy.attribute
-        )
+        return self.hierarchy == hierarchy.hierarchy and self.attribute == hierarchy.attribute
     
     @classmethod
     @abstractmethod
@@ -34,9 +31,27 @@ class BaseHierarchy(ABC):
         pass
 
     @staticmethod
-    def consolidate_hierarchy(hierarchy: List[str]) -> str:
+    def remove_recent_table(hierarchy: str) -> str:
         """"""
-        return '.'.join(hierarchy)
+        return '.'.join(hierarchy.split('.')[:-1])
+
+    @staticmethod
+    def update_hierarchy(hierarchy: str, update: str) -> str:
+        """"""
+        return hierarchy + '.' + update if hierarchy else update
+    
+    @property
+    def hierarchy_depth(self) -> int:
+        """"""
+        return len(self.full_hierarchy)
+
+    @property
+    def root_attribute(self) -> str:
+        """"""
+        if not self.hierarchy:
+            return self.attribute
+        else:
+            return self.hierarchy[0]
 
     @property
     def full_hierarchy(self) -> Tuple[str, ...]:
@@ -55,7 +70,25 @@ class BaseHierarchy(ABC):
             return self.attribute
         else:
             return '.'.join(self.full_hierarchy)
-
+        
+    def _sub_hierarchy_match(self, hierarchies: List[str]) -> Optional[str]:
+        """"""
+        for hierarchy in hierarchies:
+            if self.full_hierarchy_str.startswith(hierarchy):
+                return hierarchy
+            
+        return None
+        
+    def shortest_sub_hierarchy(self, hierarchies: List[str]) -> Optional[str]:
+        """"""
+        hierarchies_sorted = sorted(hierarchies, key=lambda x: len(x))
+        return self._sub_hierarchy_match(hierarchies=hierarchies_sorted)
+    
+    def longest_sub_hierarchy(self, hierarchies: List[str]) -> Optional[str]:
+        """"""
+        hierarchies_sorted = sorted(hierarchies, key=lambda x: -len(x))
+        return self._sub_hierarchy_match(hierarchies=hierarchies_sorted)
+    
 
 class FieldHierarchy(BaseHierarchy):
     """"""
