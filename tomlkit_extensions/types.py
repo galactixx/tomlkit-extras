@@ -24,6 +24,16 @@ class BaseHierarchy(ABC):
         
         return self.hierarchy == hierarchy.hierarchy and self.attribute == hierarchy.attribute
     
+    @abstractmethod
+    def __str__(self) -> str:
+        """"""
+        pass
+
+    @abstractmethod
+    def __repr__(self) -> str:
+        """"""
+        pass
+
     @classmethod
     @abstractmethod
     def from_str_hierarchy(cls: Type[_Hierarchy], hierarchy: str) -> _Hierarchy:
@@ -71,14 +81,6 @@ class BaseHierarchy(ABC):
         else:
             return '.'.join(self.full_hierarchy)
         
-    def _sub_hierarchy_match(self, hierarchies: List[str]) -> Optional[str]:
-        """"""
-        for hierarchy in hierarchies:
-            if self.full_hierarchy_str.startswith(hierarchy):
-                return hierarchy
-            
-        return None
-        
     def shortest_sub_hierarchy(self, hierarchies: List[str]) -> Optional[str]:
         """"""
         hierarchies_sorted = sorted(hierarchies, key=lambda x: len(x))
@@ -88,6 +90,14 @@ class BaseHierarchy(ABC):
         """"""
         hierarchies_sorted = sorted(hierarchies, key=lambda x: -len(x))
         return self._sub_hierarchy_match(hierarchies=hierarchies_sorted)
+        
+    def _sub_hierarchy_match(self, hierarchies: List[str]) -> Optional[str]:
+        """"""
+        for hierarchy in hierarchies:
+            if self.full_hierarchy_str.startswith(hierarchy):
+                return hierarchy
+            
+        return None
     
 
 class FieldHierarchy(BaseHierarchy):
@@ -96,6 +106,14 @@ class FieldHierarchy(BaseHierarchy):
         self, field: str, hierarchy: Tuple[str, ...] = tuple()
     ):
         super().__init__(hierarchy=hierarchy, attribute=field)
+
+    def __str__(self) -> str:
+        """"""
+        return repr(self)
+
+    def __repr__(self) -> str:
+        """"""
+        return f'<FieldHierarchy {self.full_hierarchy_str}>' 
 
     @classmethod
     def from_str_hierarchy(cls, hierarchy: str) -> FieldHierarchy:
@@ -116,6 +134,14 @@ class Hierarchy(BaseHierarchy):
     ):
         super().__init__(hierarchy=hierarchy, attribute=table)
     
+    def __str__(self) -> str:
+        """"""
+        return repr(self)
+
+    def __repr__(self) -> str:
+        """"""
+        return f'<Hierarchy {self.full_hierarchy_str}>'
+
     @classmethod
     def from_str_hierarchy(cls, hierarchy: str) -> Hierarchy:
         """"""

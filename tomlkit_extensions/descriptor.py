@@ -25,14 +25,43 @@ from tomlkit_extensions.exceptions import (
     InvalidStylingError
 )
 
-_Container: TypeAlias = Union[TOMLDocument, items.Table, items.InlineTable, items.Array, OutOfOrderTableProxy]
-
-TomlType: TypeAlias = Literal[
-    'document', 'field', 'table', 'inline-table', 'array', 'array-of-tables', 'whitespace', 'comment'
+_Container: TypeAlias = Union[
+    TOMLDocument, 
+    items.Table,
+    items.InlineTable,
+    items.Array,
+    OutOfOrderTableProxy
 ]
 
-Item: TypeAlias = Literal['field', 'table', 'inline-table', 'array', 'whitespace', 'comment']
-Parent: TypeAlias = Literal['document', 'table', 'inline-table', 'array', 'array-of-tables']
+TomlType: TypeAlias = Literal[
+    'document',
+    'field',
+    'table',
+    'inline-table',
+    'array',
+    'array-of-tables',
+    'whitespace',
+    'comment'
+]
+
+Item: TypeAlias = Literal[
+    'field',
+    'table',
+    'inline-table',
+    'array',
+    'whitespace',
+    'comment'
+]
+Parent: TypeAlias = Literal[
+    'document', 
+    'table',
+    'inline-table',
+    'array',
+    'array-of-tables'
+]
+
+StyleItem: TypeAlias = Literal['whitespace', 'comment']
+AttributeItem: TypeAlias = Literal['field', 'table', 'inline-table', 'array', 'array-of-tables']
 
 def _reorganize_array(array: items.Array) -> List[Tuple[None, items.Item]]:
     """"""
@@ -43,6 +72,14 @@ def _reorganize_array(array: items.Array) -> List[Tuple[None, items.Item]]:
             array_body_items.append((None, array_item))
 
     return array_body_items
+
+
+def _create_comment_descriptor(item: items.Item, line_no: Optional[int]) -> Optional[CommentDescriptor]:
+    """"""
+    return (
+        CommentDescriptor(comment=item.trivia.comment, line_no=line_no)
+        if line_no is not None else None
+    )
 
 
 def get_item_type(toml_item: items.Item) -> TomlType:
@@ -68,43 +105,48 @@ def get_item_type(toml_item: items.Item) -> TomlType:
 
 
 @dataclass(frozen=True)
-class ItemType:
+class _ItemType:
     """"""
     item_type: Item
     parent_type: Optional[Parent]
 
 
 @dataclass(frozen=True)
-class CommentPosition:
+class CommentDescriptor:
     """"""
-    name: str
+    comment: str
     line_no: int
 
 
 @dataclass(frozen=True)
-class Position:
+class Descriptor:
     """"""
-    item_type: ItemType
+    item_type: AttributeItem
+    parent_type: Optional[Parent]
     name: str
     hierarchy: Hierarchy
     line_no: int
+    attribute_pos: int
+    container_pos: int
+    comment: Optional[CommentDescriptor]
     from_aot: bool = False
-    # comment: Optional[CommentPosition]
 
 
 @dataclass(frozen=True)
-class StylePosition:
+class StyleDescriptor:
     """"""
-    item_type: ItemType
+    item_type: StyleItem
+    parent_type: Optional[Parent]
     hierarchy: Hierarchy
     line_no: int
+    container_pos: int
     from_aot: bool = False
 
 
 @dataclass(frozen=True)
 class _StylingPosition:
     """"""
-    item_type: ItemType
+    item_type: _ItemType
     line_no: int
     container: int
 
@@ -157,11 +199,16 @@ class _StylingPositions:
 
 
 @dataclass
-class _FieldPosition:
+class _AttributePosition(object):
     """"""
     line_no: int
-    item_type: ItemType
-    comment: Optional[int]
+    item_type: _ItemType
+    comment: Optional[CommentDescriptor]
+
+
+@dataclass
+class _FieldPosition(_AttributePosition):
+    """"""
     position: _ItemPosition
     styling: Optional[_StylingPositions]
 
@@ -170,15 +217,16 @@ class _FieldPosition:
         """"""
         if isinstance(item.item, items.Array):
             styling = _StylingPositions(comments=dict(), whitespace=dict())
-            comment_position = None
+            comment_line_no = None
         else:
             styling = None
-            comment_position = _TablePosition.find_comment_line_no(line_no=line_no, item=item.item)
+            comment_line_no = _TablePosition.find_comment_line_no(line_no=line_no, item=item.item)
 
+        comment = _create_comment_descriptor(item=item.item, line_no=comment_line_no)
         return cls(
             line_no=line_no,
             item_type=item.item_type,
-            comment=comment_position,
+            comment=comment,
             position=copy.copy(position),
             styling=styling
         )
@@ -192,7 +240,7 @@ class _FieldPosition:
 @dataclass(frozen=True)
 class ContainerItem:
     """"""
-    item_type: ItemType
+    item_type: _ItemType
     key: Optional[str]
     hierarchy: str
     item: _Container
@@ -211,7 +259,7 @@ class ContainerItem:
 @dataclass(frozen=True)
 class TOMLItem:
     """"""
-    item_type: ItemType
+    item_type: _ItemType
     key: Optional[str]
     hierarchy: str
     item: items.Item
@@ -226,7 +274,7 @@ class TOMLItem:
         cls, key: Optional[str], hierarchy: str, toml_item: items.Item, parent_type: Optional[TomlType] = None
     ) -> TOMLItem:
         """"""
-        item_type = ItemType(
+        item_type = _ItemType(
             item_type=get_item_type(toml_item=toml_item), parent_type=parent_type
         )
         return cls(
@@ -246,7 +294,7 @@ class TOMLItem:
         )
         toml_item: items.Item = body_item[1]
 
-        item_type = ItemType(
+        item_type = _ItemType(
             item_type=get_item_type(toml_item=toml_item),
             parent_type=container.item_type.item_type
         )
@@ -276,11 +324,8 @@ class _ItemPosition:
 
 
 @dataclass
-class _TablePosition:
+class _TablePosition(_AttributePosition):
     """"""
-    line_no: int
-    item_type: ItemType
-    comment: Optional[int]
     position: _ItemPosition
     styling: _StylingPositions
     fields: Dict[str, _FieldPosition]
@@ -306,10 +351,11 @@ class _TablePosition:
         """"""
         comment_line_no = _TablePosition.find_comment_line_no(line_no=line_no, item=container.item)
         styling = _StylingPositions(comments=dict(), whitespace=dict())
+        comment = _create_comment_descriptor(item=container.item, line_no=comment_line_no)
         return cls(
             line_no=line_no,
             item_type=container.item_type,
-            comment=comment_line_no,
+            comment=comment,
             position=copy.copy(position),
             styling=styling,
             fields=dict()
@@ -365,9 +411,33 @@ class TOMLDocumentDescriptor:
                 position=position
             )
 
+    @property
+    def number_of_tables(self) -> int:
+        """"""
+
+    @property
+    def number_of_inline_tables(self) -> int:
+        """"""
+
+    @property
+    def number_of_attributes(self) -> int:
+        """"""
+
+    @property
+    def number_of_arrays(self) -> int:
+        """"""
+
+    @property
+    def number_of_comments(self) -> int:
+        """"""
+
+    @property
+    def number_of_fields(self) -> int:
+        """"""
+
     def get_attribute_from_aot(
         self, hierarchy: str, position: int, attribute: Optional[str] = None
-    ) -> Position:
+    ) -> Descriptor:
         """"""
         hierarchy_obj = Hierarchy.from_str_hierarchy(hierarchy=hierarchy + attribute or '')
         array_hierarchy: Optional[str] = self._get_array_hierarchy(hierarchy=hierarchy_obj)
@@ -387,10 +457,9 @@ class TOMLDocumentDescriptor:
         if hierarchy not in position_hierarchies:
             raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
 
+        attribute_position: Union[_FieldPosition, _TablePosition]
         if attribute is None:
-            table_position: _TablePosition = position_hierarchies[hierarchy]
-            line_no = table_position.line_no
-            item_type = table_position.item_type
+            attribute_position = position_hierarchies[hierarchy]
         else:
             hierarchy_fields = position_hierarchies[hierarchy].fields
             if attribute not in hierarchy_fields:
@@ -398,25 +467,32 @@ class TOMLDocumentDescriptor:
                     "Attribute does not exist in set of valid attributes for the given hierarchy"
                 )
             
-            field_position: _FieldPosition = hierarchy_fields[attribute]
-            line_no = field_position.line_no
-            item_type = field_position.item_type
+            attribute_position = hierarchy_fields[attribute]
         
-        return Position(
-            item_type=item_type, name=attribute, hierarchy=hierarchy_obj, line_no=line_no, from_aot=True
+        item_type: _ItemType = attribute_position.item_type
+        return Descriptor(
+            item_type=cast(AttributeItem, item_type.item_type),
+            parent_type=item_type.parent_type,
+            name=attribute,
+            hierarchy=hierarchy_obj,
+            line_no=attribute_position.line_no,
+            attribute_pos=attribute_position.position.attribute,
+            container_pos=attribute_position.position.container,
+            comment=attribute_position.comment,
+            from_aot=True,
         )
 
     @overload
-    def get_attribute(self, hierarchy: Optional[str], attribute: str) -> Position:
+    def get_attribute(self, hierarchy: Optional[str], attribute: str) -> Descriptor:
         ...
 
     @overload
-    def get_attribute(self, hierarchy: str, attribute: Optional[str]) -> Position:
+    def get_attribute(self, hierarchy: str, attribute: Optional[str]) -> Descriptor:
         ...
 
     def get_attribute(
         self, hierarchy: Optional[str] = None, attribute: Optional[str] = None
-    ) -> Position:
+    ) -> Descriptor:
         """"""
         if hierarchy is None and attribute is None:
             raise TypeError("Both the hierarchy and attribute arguments cannot be None")
@@ -424,53 +500,66 @@ class TOMLDocumentDescriptor:
         hierarchy_obj = Hierarchy.from_str_hierarchy(
             hierarchy=hierarchy or '' + attribute or ''
         )
+        attribute_position: Union[_FieldPosition, _TablePosition]
 
         if hierarchy is None:
             if attribute not in self._document_lines:
                 raise InvalidAttributeError("Attribute does not exist in top-level document space")
             
-            line_no = self._document_lines[attribute]
-            return Position(
-                item_type='field', name=attribute, hierarchy=hierarchy_obj, line_no=line_no
-            )
+            attribute_position = self._document_lines[attribute]
         else:
             if hierarchy not in self._attribute_lines:
                 raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
             
-            table_position: _TablePosition = self._attribute_lines[hierarchy]
+            attribute_position = self._attribute_lines[hierarchy]
             if attribute is not None:
-                if attribute not in table_position.fields:
+                if attribute not in attribute_position.fields:
                     raise InvalidAttributeError(
                         "Attribute does not exist in set of valid attributes for the given hierarchy"
                     )
                 
-                field_position: _FieldPosition = table_position.fields[attribute]
-                line_no = field_position.line_no
-                item_type = field_position.item_type
-            else:
-                line_no = table_position.line_no
-                item_type = table_position.item_type
+                attribute_position = attribute_position.fields[attribute]
 
-            return Position(
-                item_type=item_type, name=attribute, hierarchy=hierarchy_obj, line_no=line_no
-            )
+        item_type: _ItemType = attribute_position.item_type
+        return Descriptor(
+            item_type=cast(AttributeItem, item_type.item_type),
+            parent_type=item_type.parent_type,
+            name=attribute,
+            hierarchy=hierarchy_obj,
+            line_no=attribute_position.line_no,
+            attribute_pos=attribute_position.position.attribute,
+            container_pos=attribute_position.position.container,
+            comment=attribute_position.comment
+        )
 
     @overload
     def get_styling(
         self, styling: str, position: None, hierarchy: Optional[str] = None
-    ) -> List[StylePosition]:
+    ) -> List[StyleDescriptor]:
         ...
         
     @overload
     def get_styling(
         self, styling: str, position: int, hierarchy: Optional[str] = None
-    ) -> StylePosition:
+    ) -> StyleDescriptor:
         ...
 
     def get_styling(
         self, styling: str, position: Optional[int] = None, hierarchy: Optional[str] = None
-    ) -> Union[StylePosition, List[StylePosition]]:
+    ) -> Union[StyleDescriptor, List[StyleDescriptor]]:
         """"""
+        def create_style_descriptor(styling_position: _StylingPosition, hierarchy: Hierarchy) -> StyleDescriptor:
+            """"""
+            item_type = styling_position.item_type
+            return StyleDescriptor(
+                item_type=cast(StyleItem, item_type.item_type),
+                parent_type=item_type.parent_type,
+                hierarchy=hierarchy,
+                line_no=styling_position.line_no,
+                container_pos=styling_position.container,
+                from_aot=False
+            )
+
         hierarchy_obj = Hierarchy.from_str_hierarchy(hierarchy=hierarchy or '')
 
         is_comment = not re.match(_WHITESPACE_PATTERN, styling)
@@ -492,17 +581,12 @@ class TOMLDocumentDescriptor:
 
         if position is not None:
             styling_position: _StylingPosition = line_nos[position]
-            line_no = styling_position.line_no
 
-            return StylePosition(
-                item_type=styling_position.item_type, hierarchy=hierarchy_obj, line_no=line_no, from_aot=False
-            )
+            return create_style_descriptor(styling_position=styling_position, hierarchy=hierarchy_obj)
         else:
             return [
-                StylePosition(
-                    item_type=styling.item_type, hierarchy=hierarchy_obj, line_no=styling.line_no, from_aot=False
-                )
-                for styling in line_nos
+                create_style_descriptor(styling_position=styling_position, hierarchy=hierarchy_obj)
+                for styling_position in line_nos
             ]
 
     def _get_array_hierarchy(self, hierarchy: Union[str, Hierarchy]) -> Optional[str]:
@@ -739,5 +823,4 @@ class TOMLDocumentDescriptor:
 
                     if not isinstance(container, items.InlineTable):
                         self._current_line_number += 1
-
                 new_position.update_positions()
