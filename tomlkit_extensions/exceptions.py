@@ -28,8 +28,8 @@ class InvalidHierarchyError(BaseError):
         super().__init__(message=message)
 
 
-class InvalidAttributeError(BaseError):
-    """Error occurring when an attribute does not exist in set of expected attributes."""
+class InvalidFieldError(BaseError):
+    """Error occurring when a field does not exist in set of expected fields."""
     def __init__(self, message: str):
         super().__init__(message=message)
 

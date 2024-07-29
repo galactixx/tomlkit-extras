@@ -3,13 +3,16 @@ from dataclasses import dataclass
 import copy
 import re
 from typing import (
+    Any,
     cast,
     Dict,
     List,
     Literal,
     Optional,
     overload,
+    Set,
     Tuple,
+    Type,
     TypeAlias,
     Union
 )
@@ -20,7 +23,7 @@ from tomlkit import items, TOMLDocument
 from tomlkit_extensions.types import Hierarchy
 from tomlkit_extensions.exceptions import (
     InvalidArrayOfTablesError,
-    InvalidAttributeError,
+    InvalidFieldError,
     InvalidHierarchyError,
     InvalidStylingError
 )
@@ -38,6 +41,7 @@ TomlType: TypeAlias = Literal[
     'field',
     'table',
     'inline-table',
+    'super-table',
     'array',
     'array-of-tables',
     'whitespace',
@@ -52,16 +56,18 @@ Item: TypeAlias = Literal[
     'whitespace',
     'comment'
 ]
-Parent: TypeAlias = Literal[
+ParentItem: TypeAlias = Literal[
     'document', 
     'table',
     'inline-table',
+    'super-table',
     'array',
     'array-of-tables'
 ]
 
 StyleItem: TypeAlias = Literal['whitespace', 'comment']
-AttributeItem: TypeAlias = Literal['field', 'table', 'inline-table', 'array', 'array-of-tables']
+TableItem: TypeAlias = Literal['table', 'inline-table']
+FieldItem: TypeAlias = Literal['field', 'array']
 
 def _reorganize_array(array: items.Array) -> List[Tuple[None, items.Item]]:
     """"""
@@ -74,6 +80,14 @@ def _reorganize_array(array: items.Array) -> List[Tuple[None, items.Item]]:
     return array_body_items
 
 
+def _find_nested_tables(root_hierarchy: str, hierarchies: Dict[str, Any]) -> Set[Hierarchy]:
+    """"""
+    return {
+        Hierarchy.from_str_hierarchy(hierarchy=hierarchy) for hierarchy in hierarchies
+        if root_hierarchy.startswith(hierarchy) and root_hierarchy != hierarchy
+    }
+
+
 def _create_comment_descriptor(item: items.Item, line_no: Optional[int]) -> Optional[CommentDescriptor]:
     """"""
     return (
@@ -82,12 +96,79 @@ def _create_comment_descriptor(item: items.Item, line_no: Optional[int]) -> Opti
     )
 
 
+def _create_style_descriptor(
+    styling_position: _StylingPosition, hierarchy: Optional[Hierarchy], parent_type: ParentItem
+) -> StyleDescriptor:
+    """"""
+    return StyleDescriptor(
+        item_type=styling_position.item_type,
+        parent_type=parent_type,
+        style=styling_position.style,
+        hierarchy=hierarchy,
+        line_no=styling_position.line_no,
+        container_pos=styling_position.container,
+        from_aot=False
+    )
+
+
+def _create_field_descriptor(
+    field: str,
+    hierarchy: Hierarchy,
+    field_position: _FieldPosition,
+    parent_type: ParentItem,
+    from_aot: bool
+) -> FieldDescriptor:
+    """"""
+    return FieldDescriptor(
+        item_type=field_position.item_type,
+        parent_type=parent_type,
+        name=field,
+        hierarchy=hierarchy,
+        line_no=field_position.line_no,
+        attribute_pos=field_position.position.attribute,
+        container_pos=field_position.position.container,
+        comment=field_position.comment,
+        from_aot=from_aot,
+        value=field_position.value
+    )
+
+
+def _create_table_descriptor(
+    hierarchy: Hierarchy, table_position: _TablePosition, tables: Set[Hierarchy], from_aot: bool
+) -> TableDescriptor:
+    """"""
+    fields = {
+        field: _create_field_descriptor(
+            field=field,
+            hierarchy=Hierarchy(hierarchy=hierarchy.hierarchy, attribute=field),
+            field_position=field_position,
+            parent_type=table_position.item_type,
+            from_aot=from_aot
+        )
+        for field, field_position in table_position.fields.items()
+    }
+
+    return TableDescriptor(
+        item_type=table_position.item_type,
+        parent_type=table_position.parent_type,
+        name=hierarchy.attribute,
+        hierarchy=hierarchy,
+        line_no=table_position.line_no,
+        attribute_pos=table_position.position.attribute,
+        container_pos=table_position.position.container,
+        comment=table_position.comment,
+        from_aot=from_aot,
+        fields=fields,
+        tables=tables or None
+    )
+
+
 def get_item_type(toml_item: items.Item) -> TomlType:
     """"""
     if isinstance(toml_item, TOMLDocument):
         toml_type = 'document'
     elif isinstance(toml_item, (items.Table, OutOfOrderTableProxy)):
-        toml_type = 'table'
+        toml_type = 'super-table' if toml_item.is_super_table() else 'table'
     elif isinstance(toml_item, items.InlineTable):
         toml_type = 'inline-table'
     elif isinstance(toml_item, items.Comment):
@@ -108,7 +189,7 @@ def get_item_type(toml_item: items.Item) -> TomlType:
 class _ItemType:
     """"""
     item_type: Item
-    parent_type: Optional[Parent]
+    parent_type: Optional[ParentItem]
 
 
 @dataclass(frozen=True)
@@ -121,23 +202,43 @@ class CommentDescriptor:
 @dataclass(frozen=True)
 class Descriptor:
     """"""
-    item_type: AttributeItem
-    parent_type: Optional[Parent]
+    parent_type: Optional[ParentItem]
     name: str
     hierarchy: Hierarchy
     line_no: int
     attribute_pos: int
     container_pos: int
     comment: Optional[CommentDescriptor]
-    from_aot: bool = False
+    from_aot: bool
+
+
+@dataclass(frozen=True)
+class TableDescriptor(Descriptor):
+    """"""
+    item_type: TableItem
+    fields: Dict[str, FieldDescriptor]
+    tables: Optional[Set[Hierarchy]]
+
+
+@dataclass(frozen=True)
+class FieldDescriptor(Descriptor):
+    """"""
+    item_type: FieldItem
+    value: Any
+
+    @property
+    def value_type(self) -> Type[Any]:
+        """"""
+        return type(self.value)
 
 
 @dataclass(frozen=True)
 class StyleDescriptor:
     """"""
     item_type: StyleItem
-    parent_type: Optional[Parent]
-    hierarchy: Hierarchy
+    parent_type: Optional[ParentItem]
+    style: str
+    hierarchy: Optional[Hierarchy]
     line_no: int
     container_pos: int
     from_aot: bool = False
@@ -146,7 +247,8 @@ class StyleDescriptor:
 @dataclass(frozen=True)
 class _StylingPosition:
     """"""
-    item_type: _ItemType
+    item_type: StyleItem
+    style: str
     line_no: int
     container: int
 
@@ -190,7 +292,10 @@ class _StylingPositions:
             current_source = self.whitespace
 
         styling_position = _StylingPosition(
-            item_type=style_item.item_type, line_no=line_no, container=position.container
+            item_type=cast(StyleItem, style_item.item_type.item_type),
+            style=styling,
+            line_no=line_no,
+            container=position.container
         )
         if styling not in current_source:
             current_source[styling] = [styling_position]
@@ -199,17 +304,13 @@ class _StylingPositions:
 
 
 @dataclass
-class _AttributePosition(object):
+class _FieldPosition:
     """"""
+    item_type: FieldItem
     line_no: int
-    item_type: _ItemType
-    comment: Optional[CommentDescriptor]
-
-
-@dataclass
-class _FieldPosition(_AttributePosition):
-    """"""
     position: _ItemPosition
+    value: Any
+    comment: Optional[CommentDescriptor]
     styling: Optional[_StylingPositions]
 
     @classmethod
@@ -225,9 +326,10 @@ class _FieldPosition(_AttributePosition):
         comment = _create_comment_descriptor(item=item.item, line_no=comment_line_no)
         return cls(
             line_no=line_no,
-            item_type=item.item_type,
-            comment=comment,
+            item_type=cast(FieldItem, item.item_type.item_type),
             position=copy.copy(position),
+            value=item.item.unwrap(),
+            comment=comment,
             styling=styling
         )
 
@@ -267,11 +369,11 @@ class TOMLItem:
     @property
     def full_hierarchy(self) -> str:
         """"""
-        return Hierarchy.update_hierarchy(hierarchy=self.hierarchy, update=self.key)
+        return Hierarchy.create_hierarchy(hierarchy=self.hierarchy, update=self.key)
 
     @classmethod
     def from_parent_type(
-        cls, key: Optional[str], hierarchy: str, toml_item: items.Item, parent_type: Optional[TomlType] = None
+        cls, key: str, hierarchy: str, toml_item: items.Item, parent_type: Optional[TomlType] = None
     ) -> TOMLItem:
         """"""
         item_type = _ItemType(
@@ -324,9 +426,13 @@ class _ItemPosition:
 
 
 @dataclass
-class _TablePosition(_AttributePosition):
+class _TablePosition:
     """"""
+    item_type: TableItem
+    parent_type: ParentItem
+    line_no: int
     position: _ItemPosition
+    comment: Optional[CommentDescriptor]
     styling: _StylingPositions
     fields: Dict[str, _FieldPosition]
 
@@ -354,7 +460,8 @@ class _TablePosition(_AttributePosition):
         comment = _create_comment_descriptor(item=container.item, line_no=comment_line_no)
         return cls(
             line_no=line_no,
-            item_type=container.item_type,
+            item_type=cast(TableItem, container.item_type.item_type),
+            parent_type=container.item_type.parent_type,
             comment=comment,
             position=copy.copy(position),
             styling=styling,
@@ -435,11 +542,26 @@ class TOMLDocumentDescriptor:
     def number_of_fields(self) -> int:
         """"""
 
+    @overload
     def get_attribute_from_aot(
-        self, hierarchy: str, position: int, attribute: Optional[str] = None
-    ) -> Descriptor:
+        self, hierarchy: str, position: int, field: str
+    ) -> FieldDescriptor:
+        ...
+
+    @overload
+    def get_attribute_from_aot(
+        self, hierarchy: str, position: int, field: None
+    ) -> TableDescriptor:
+        ...
+
+    def get_attribute_from_aot(
+        self, hierarchy: str, position: int, field: Optional[str] = None
+    ) -> Union[FieldDescriptor, TableDescriptor]:
         """"""
-        hierarchy_obj = Hierarchy.from_str_hierarchy(hierarchy=hierarchy + attribute or '')
+        hierarchy_obj = Hierarchy.from_str_hierarchy(
+            hierarchy=Hierarchy.create_hierarchy(hierarchy=hierarchy, update=field or '')
+        )
+
         array_hierarchy: Optional[str] = self._get_array_hierarchy(hierarchy=hierarchy_obj)
 
         if array_hierarchy is None:
@@ -457,80 +579,92 @@ class TOMLDocumentDescriptor:
         if hierarchy not in position_hierarchies:
             raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
 
-        attribute_position: Union[_FieldPosition, _TablePosition]
-        if attribute is None:
-            attribute_position = position_hierarchies[hierarchy]
-        else:
-            hierarchy_fields = position_hierarchies[hierarchy].fields
-            if attribute not in hierarchy_fields:
-                raise InvalidAttributeError(
-                    "Attribute does not exist in set of valid attributes for the given hierarchy"
+        table_position: _TablePosition = position_hierarchies[hierarchy]
+        if field is not None:
+            hierarchy_fields = table_position.fields
+            if field not in hierarchy_fields:
+                raise InvalidFieldError(
+                    "Field does not exist in set of valid fields for the given hierarchy"
                 )
             
-            attribute_position = hierarchy_fields[attribute]
+            field_position: _FieldPosition = hierarchy_fields[field]
+            return _create_field_descriptor(
+                field=field,
+                hierarchy=hierarchy_obj,
+                field_position=field_position,
+                parent_type=table_position.item_type,
+                from_aot=True
+            )
+        else:
+            tables = _find_nested_tables(
+                root_hierarchy=array_hierarchy, hierarchies=position_hierarchies
+            )
+            return _create_table_descriptor(
+                hierarchy=hierarchy_obj, table_position=table_position, tables=tables, from_aot=True
+            )
         
-        item_type: _ItemType = attribute_position.item_type
-        return Descriptor(
-            item_type=cast(AttributeItem, item_type.item_type),
-            parent_type=item_type.parent_type,
-            name=attribute,
-            hierarchy=hierarchy_obj,
-            line_no=attribute_position.line_no,
-            attribute_pos=attribute_position.position.attribute,
-            container_pos=attribute_position.position.container,
-            comment=attribute_position.comment,
-            from_aot=True,
-        )
-
     @overload
-    def get_attribute(self, hierarchy: Optional[str], attribute: str) -> Descriptor:
+    def get_attribute(self, hierarchy: str, field: str) -> FieldDescriptor:
         ...
 
     @overload
-    def get_attribute(self, hierarchy: str, attribute: Optional[str]) -> Descriptor:
+    def get_attribute(self, hierarchy: Optional[str], field: str) -> FieldDescriptor:
+        ...
+
+    @overload
+    def get_attribute(self, hierarchy: str, field: Optional[str]) -> TableDescriptor:
         ...
 
     def get_attribute(
-        self, hierarchy: Optional[str] = None, attribute: Optional[str] = None
-    ) -> Descriptor:
+        self, hierarchy: Optional[str] = None, field: Optional[str] = None
+    ) -> Union[FieldDescriptor, TableDescriptor]:
         """"""
-        if hierarchy is None and attribute is None:
-            raise TypeError("Both the hierarchy and attribute arguments cannot be None")
+        if hierarchy is None and field is None:
+            raise TypeError("Both the hierarchy and field arguments cannot be None")
 
         hierarchy_obj = Hierarchy.from_str_hierarchy(
-            hierarchy=hierarchy or '' + attribute or ''
+            hierarchy=Hierarchy.create_hierarchy(hierarchy=hierarchy or '', update=field or '')
         )
-        attribute_position: Union[_FieldPosition, _TablePosition]
 
         if hierarchy is None:
-            if attribute not in self._document_lines:
-                raise InvalidAttributeError("Attribute does not exist in top-level document space")
+            if field not in self._document_lines:
+                raise InvalidFieldError("Field does not exist in top-level document space")
             
-            attribute_position = self._document_lines[attribute]
+            field_position: _FieldPosition = self._document_lines[field]
+            return _create_field_descriptor(
+                field=field,
+                hierarchy=hierarchy_obj,
+                field_position=field_position,
+                parent_type='document',
+                from_aot=False
+            )
+
         else:
             if hierarchy not in self._attribute_lines:
                 raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
             
-            attribute_position = self._attribute_lines[hierarchy]
-            if attribute is not None:
-                if attribute not in attribute_position.fields:
-                    raise InvalidAttributeError(
-                        "Attribute does not exist in set of valid attributes for the given hierarchy"
+            table_position: _TablePosition = self._attribute_lines[hierarchy]
+            if field is not None:
+                if field not in table_position.fields:
+                    raise InvalidFieldError(
+                        "Field does not exist in set of valid attributes for the given hierarchy"
                     )
                 
-                attribute_position = attribute_position.fields[attribute]
-
-        item_type: _ItemType = attribute_position.item_type
-        return Descriptor(
-            item_type=cast(AttributeItem, item_type.item_type),
-            parent_type=item_type.parent_type,
-            name=attribute,
-            hierarchy=hierarchy_obj,
-            line_no=attribute_position.line_no,
-            attribute_pos=attribute_position.position.attribute,
-            container_pos=attribute_position.position.container,
-            comment=attribute_position.comment
-        )
+                field_position: _FieldPosition = table_position.fields[field]
+                return _create_field_descriptor(
+                    field=field,
+                    hierarchy=hierarchy_obj,
+                    field_position=field_position,
+                    parent_type=table_position.parent_type,
+                    from_aot=False
+                )
+            else:
+                tables = _find_nested_tables(
+                    root_hierarchy=hierarchy, hierarchies=self._attribute_lines
+                )
+                return _create_table_descriptor(
+                    hierarchy=hierarchy_obj, table_position=table_position, tables=tables, from_aot=False
+                )
 
     @overload
     def get_styling(
@@ -548,30 +682,24 @@ class TOMLDocumentDescriptor:
         self, styling: str, position: Optional[int] = None, hierarchy: Optional[str] = None
     ) -> Union[StyleDescriptor, List[StyleDescriptor]]:
         """"""
-        def create_style_descriptor(styling_position: _StylingPosition, hierarchy: Hierarchy) -> StyleDescriptor:
-            """"""
-            item_type = styling_position.item_type
-            return StyleDescriptor(
-                item_type=cast(StyleItem, item_type.item_type),
-                parent_type=item_type.parent_type,
-                hierarchy=hierarchy,
-                line_no=styling_position.line_no,
-                container_pos=styling_position.container,
-                from_aot=False
-            )
-
-        hierarchy_obj = Hierarchy.from_str_hierarchy(hierarchy=hierarchy or '')
+        hierarchy_obj: Optional[Hierarchy] = (
+            Hierarchy.from_str_hierarchy(hierarchy=hierarchy) if hierarchy is not None else None
+        )
 
         is_comment = not re.match(_WHITESPACE_PATTERN, styling)
         stylings: _StylingPositions
+        parent_type: ParentItem
 
         if hierarchy is None:
+            parent_type = 'document'
             stylings = self._document_stylings
         else:
             if hierarchy not in self._attribute_lines:
                 raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
             
-            stylings = self._attribute_lines[hierarchy].styling
+            table_position: _TablePosition = self._attribute_lines[hierarchy]
+            parent_type = table_position.item_type
+            stylings = table_position.styling
 
         styling_space = stylings.comments if is_comment else stylings.whitespace
         if styling not in styling_space:
@@ -582,10 +710,14 @@ class TOMLDocumentDescriptor:
         if position is not None:
             styling_position: _StylingPosition = line_nos[position]
 
-            return create_style_descriptor(styling_position=styling_position, hierarchy=hierarchy_obj)
+            return _create_style_descriptor(
+                styling_position=styling_position, hierarchy=hierarchy_obj, parent_type=parent_type
+            )
         else:
             return [
-                create_style_descriptor(styling_position=styling_position, hierarchy=hierarchy_obj)
+                _create_style_descriptor(
+                    styling_position=styling_position, hierarchy=hierarchy_obj, parent_type=parent_type
+                )
                 for styling_position in line_nos
             ]
 
@@ -738,7 +870,7 @@ class TOMLDocumentDescriptor:
         if isinstance(container.item, items.Array):
             new_hierarchy = container.hierarchy
         else:
-            new_hierarchy = Hierarchy.update_hierarchy(hierarchy=container.hierarchy, update=container.key)
+            new_hierarchy = Hierarchy.create_hierarchy(hierarchy=container.hierarchy, update=container.key)
 
         if not (isinstance(container.item, items.Table) and container.item.is_super_table()):
             if is_aot and isinstance(container.item, items.Table):
@@ -816,11 +948,11 @@ class TOMLDocumentDescriptor:
                 self._generate_descriptor_bridge(item=toml_item, position=new_position, is_aot=is_aot)
                 new_position.update_positions()
             else:
-                if not isinstance(container, items.Array):
+                if not isinstance(container.item, items.Array):
                     self._update_attribute_descriptor(
                         item=toml_item, position=new_position, is_doc=is_doc, is_aot=is_aot
                     )
 
-                    if not isinstance(container, items.InlineTable):
+                    if not isinstance(container.item, items.InlineTable):
                         self._current_line_number += 1
                 new_position.update_positions()
