@@ -34,6 +34,12 @@ class InvalidFieldError(BaseError):
         super().__init__(message=message)
 
 
+class InvalidTableError(BaseError):
+    """Error occurring when a table does not exist in set of expected table."""
+    def __init__(self, message: str):
+        super().__init__(message=message)
+
+
 class InvalidArrayOfTablesError(BaseError):
     """Error occurring when referencing an invalid array of tables."""
     def __init__(self, message: str):

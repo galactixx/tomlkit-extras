@@ -1,0 +1,22 @@
+# this is a document comment
+
+[project]
+name = "Example Project"
+
+[details]
+description = "A sample project configuration"
+
+[[members]]
+name = "Alice"
+
+    [[members.roles]]
+    role = "Developer"
+
+    [[members.roles]]
+    role = "Designer"
+
+[[members]]
+name = "Bob"
+
+    [[members.roles]]
+    role = "Manager"

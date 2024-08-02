@@ -1,0 +1,24 @@
+project = "Example Project"
+
+
+# this is a document comment
+
+[tool.ruff] # this is a tool.ruff comment
+line-length = 88
+
+[tool.ruff.lint]
+# this is the first comment for lint table
+# this is the second comment for lint table
+pydocstyle = { convention = "numpy" }
+
+[main_table]
+name = "Main Table"
+description = "This is the main table containing an array of nested tables."
+
+[[main_table.sub_tables]]
+name = "Sub Table 1"
+value = 10
+
+[[main_table.sub_tables]]
+name = "Sub Table 2"
+value = 20

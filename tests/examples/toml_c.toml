@@ -1,0 +1,23 @@
+# this is a document comment
+
+project = "Example Project"
+
+
+
+
+[tool.ruff.lint]
+pydocstyle = { convention = "numpy" }
+
+# this is the first comment for lint table
+
+[tool.ruff]
+line-length = 88
+# this is a tool.ruff comment
+
+
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "ruff>=0.4.4"
+]
