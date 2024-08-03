@@ -68,16 +68,17 @@ class TOMLDocumentDescriptor:
     ):
         self._current_line_number = 0
 
-        # Line mappings for attributes occurring in document but outside of tables
+        # Structures for storing any attributes occurring in top-level document
+        # space (outside of tables)
         self._document_lines: Dict[str, FieldPosition] = dict()
         self._document_stylings: StylingPositions = StylingPositions(
             comments=dict(), whitespace=dict()
         )
 
-        # Line mappings for any array of tables objects
+        # Structure for storing any array of tables objects
         self._array_of_tables: Dict[str, ArrayOfTables] = dict()
 
-        # Line mappings for attributes occurring within at least one table
+        # Structure for storing any attributes occurring within at least one table
         self._attribute_lines: Dict[str, TablePosition] = dict()
 
         # Statistics on number of types within TOML source

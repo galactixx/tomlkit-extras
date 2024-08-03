@@ -1,51 +1,48 @@
 from typing import (
-    cast,
-    List,
-    Tuple,
-    Union
+    Optional,
+    Tuple
 )
 
-import tomlkit
-from tomlkit import (
-    items, 
-    TOMLDocument
-)
+from tomlkit import TOMLDocument
 
+from tomlkit_extensions.typing import TOMLRetrieval
+from tomlkit_extensions.hierarchy import Hierarchy
 from tomlkit_extensions.toml.retrieval import get_attribute_from_toml_source
-from tomlkit_extensions.typing import TOMLHierarchy
-from tomlkit_extensions.hierarchy import (
-    Hierarchy,
-    standardize_hierarchy
-)
 
-def create_toml_document(hierarchy: TOMLHierarchy, update: items.Item) -> TOMLDocument:
+def _find_parent_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> TOMLRetrieval:
     """"""
-    hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
-    source: TOMLDocument = tomlkit.document()
-
-    current_source: Union[items.Item, TOMLDocument] = source
-    for table in hierarchy_obj.hierarchy:
-        current_source[table] = tomlkit.table()
-        current_source = cast(items.Table, current_source[table])
-
-    current_source[hierarchy_obj.attribute] = update
-
-    return source
+    hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy))
+    return get_attribute_from_toml_source(
+        hierarchy=hierarchy_parent, toml_source=toml_source
+    )
 
 
-def find_parent_toml_source(
-    hierarchy: Hierarchy, toml_source: TOMLDocument
-) -> Tuple[Hierarchy, Union[TOMLDocument, items.Item, List[items.Item]]]:
+def find_parent_toml_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> TOMLRetrieval:
     """"""
-    if hierarchy.hierarchy_depth == 1:
-        hierarchy_remaining = hierarchy
-        retrieved_from_toml = toml_source
+    if hierarchy.hierarchy_depth > 1:
+        parent_toml = _find_parent_source(hierarchy=hierarchy, toml_source=toml_source)
     else:
-        hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy))
-        hierarchy_remaining = hierarchy - hierarchy_parent
+        parent_toml = toml_source
 
-        retrieved_from_toml = get_attribute_from_toml_source(
-            hierarchy=hierarchy_parent, toml_source=toml_source
-        )
+    return parent_toml
 
-    return hierarchy_remaining, retrieved_from_toml
+
+def find_parent_toml_sources(hierarchy: Hierarchy, toml_source: TOMLDocument) -> Tuple[
+    Optional[TOMLRetrieval], TOMLRetrieval
+]:
+    """"""
+    if hierarchy.hierarchy_depth > 1:
+        parent_toml = _find_parent_source(hierarchy=hierarchy, toml_source=toml_source)
+
+        if hierarchy.hierarchy_depth > 2:
+            grandparent_toml = _find_parent_source(
+                hierarchy=Hierarchy.parent_hierarchy(hierarchy=str(hierarchy)),
+                toml_source=toml_source
+            )
+        else:
+            grandparent_toml = toml_source
+    else:
+        grandparent_toml = None
+        parent_toml = toml_source
+
+    return grandparent_toml, parent_toml

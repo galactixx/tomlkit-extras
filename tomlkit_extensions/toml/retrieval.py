@@ -19,6 +19,21 @@ from tomlkit_extensions.hierarchy import (
     standardize_hierarchy
 )
 
+def _get_table_from_aot(current_source: List[items.Item], table: str) -> List[items.Item]:
+    """"""
+    next_source: List[items.Item] = []
+
+    for source_item in current_source:
+        if isinstance(source_item, items.AoT):
+            next_source.extend(
+                aot_item[table] for aot_item in source_item if table in aot_item
+            )
+        elif table in source_item:
+            next_source.append(source_item[table])
+    
+    return next_source
+
+
 def get_attribute_from_toml_source(
     hierarchy: TOMLHierarchy, toml_source: TOMLSource, array_priority: bool = True
 ) -> Union[items.Item, List[items.Item]]:
@@ -33,7 +48,9 @@ def get_attribute_from_toml_source(
             table: str = hierarchy_of_tables.popleft()
 
             if isinstance(current_source, list):
-                current_source = [item[table] for item in current_source if table in item]
+                current_source = _get_table_from_aot(
+                    current_source=current_source, table=table
+                )
             else:
                 current_source = current_source[table]
     except KeyError:

@@ -1,0 +1,186 @@
+from tomlkit.container import OutOfOrderTableProxy
+from tomlkit import items
+import pytest
+from tomlkit_extensions import (
+    delete_from_toml_source,
+    get_attribute_from_toml_source,
+    load_toml_file,
+    InvalidHierarchyError
+)
+
+from tests.utils import retrieval_error_handling
+
+def test_deletion_from_toml_a() -> None:
+    """"""
+    toml_document = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+
+    HIERARCHY_PROJECT_NAME = 'project.name'
+
+    assert get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_PROJECT_NAME, toml_source=toml_document
+    ) == "Example Project"
+
+    # Delete the "name" field from the "project" table. Since "name" is the
+    # only field in this table, the following function call should result in
+    # the deletion of the entire table
+    delete_from_toml_source(
+        hierarchy=HIERARCHY_PROJECT_NAME, toml_source=toml_document
+    )
+    retrieval_error_handling(hierarchy=HIERARCHY_PROJECT_NAME, toml_document=toml_document)
+
+    # Delete all "role" fields from each table in the "members.roles" array
+    # of tables. This should mirror the prior result
+    HIERARCHY_MEMBERS_ROLES_ROLE = 'members.roles.role'
+
+    members_roles_role_aot = get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_MEMBERS_ROLES_ROLE, toml_source=toml_document, array_priority=False
+    )
+    assert len(members_roles_role_aot) == 3
+
+    delete_from_toml_source(
+        hierarchy=HIERARCHY_MEMBERS_ROLES_ROLE, toml_source=toml_document
+    )
+    retrieval_error_handling(hierarchy=HIERARCHY_MEMBERS_ROLES_ROLE, toml_document=toml_document)
+
+    HIERARCHY_DETAILS_DESCRIPTION = 'details.description'
+
+    assert get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_DETAILS_DESCRIPTION, toml_source=toml_document
+    ) == "A sample project configuration"
+    delete_from_toml_source(
+        hierarchy=HIERARCHY_DETAILS_DESCRIPTION, toml_source=toml_document
+    )
+    retrieval_error_handling(hierarchy=HIERARCHY_DETAILS_DESCRIPTION, toml_document=toml_document)
+
+    HIERARCHY_MEMBERS_NAME = 'members.name'
+
+    members_roles_role_aot = get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_MEMBERS_NAME, toml_source=toml_document, array_priority=False
+    )
+    assert len(members_roles_role_aot) == 2
+
+    delete_from_toml_source(hierarchy=HIERARCHY_MEMBERS_NAME, toml_source=toml_document)
+    retrieval_error_handling(hierarchy=HIERARCHY_MEMBERS_NAME, toml_document=toml_document)
+
+    assert not toml_document
+
+
+def test_deletion_from_toml_b() -> None:
+    """"""
+    toml_document = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+
+    HIERARCHY_PROJECT = 'project'
+
+    assert get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_PROJECT, toml_source=toml_document
+    ) == "Example Project"
+    delete_from_toml_source(hierarchy=HIERARCHY_PROJECT, toml_source=toml_document)
+    retrieval_error_handling(hierarchy=HIERARCHY_PROJECT, toml_document=toml_document)
+
+    HIERARCHY_PYDOCSTYLE_CONVENTION = 'tool.ruff.lint.pydocstyle.convention'
+
+    assert get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_PYDOCSTYLE_CONVENTION, toml_source=toml_document
+    ) == 'numpy'
+
+    delete_from_toml_source(
+        hierarchy=HIERARCHY_PYDOCSTYLE_CONVENTION, toml_source=toml_document
+    )
+    retrieval_error_handling(hierarchy=HIERARCHY_PYDOCSTYLE_CONVENTION, toml_document=toml_document)
+
+    HIERARCHY_MAIN_DESCRIPTION = 'main_table.description'
+
+    assert get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_MAIN_DESCRIPTION, toml_source=toml_document
+    ) == "This is the main table containing an array of nested tables."
+    delete_from_toml_source(
+        hierarchy=HIERARCHY_MAIN_DESCRIPTION, toml_source=toml_document
+    )
+    retrieval_error_handling(hierarchy=HIERARCHY_MAIN_DESCRIPTION, toml_document=toml_document)
+
+    HIERARCHY_MAIN_SUB_VALUE = 'main_table.sub_tables.value'
+
+    sub_table_values = get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_MAIN_SUB_VALUE, toml_source=toml_document
+    )
+    assert len(sub_table_values) == 2
+    delete_from_toml_source(hierarchy=HIERARCHY_MAIN_SUB_VALUE, toml_source=toml_document)
+    retrieval_error_handling(hierarchy=HIERARCHY_MAIN_SUB_VALUE, toml_document=toml_document)
+
+    HIERARCHY_MAIN_SUB_TABLES = 'main_table.sub_tables'
+    HIERARCHY_MAIN_SUB_NAME = 'main_table.sub_tables.name'
+
+    sub_tables = get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_MAIN_SUB_TABLES, toml_source=toml_document
+    )
+    assert len(sub_tables) == 2
+    delete_from_toml_source(hierarchy=HIERARCHY_MAIN_SUB_NAME, toml_source=toml_document)
+    retrieval_error_handling(hierarchy=HIERARCHY_MAIN_SUB_TABLES, toml_document=toml_document)
+
+    HIERARCHY_TOOL_RUFF_LINE = 'tool.ruff.line-length'
+
+    assert get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_TOOL_RUFF_LINE, toml_source=toml_document
+    ) == 88
+    delete_from_toml_source(hierarchy='tool.ruff', toml_source=toml_document)
+    retrieval_error_handling(hierarchy='tool', toml_document=toml_document)
+
+    HIERARCHY_MAIN_NAME = 'main_table.name'
+
+    assert get_attribute_from_toml_source(
+        hierarchy=HIERARCHY_MAIN_NAME, toml_source=toml_document
+    ) == 'Main Table'
+    delete_from_toml_source(hierarchy=HIERARCHY_MAIN_NAME, toml_source=toml_document)
+    
+    assert not toml_document
+
+
+def test_deletion_from_toml_c() -> None:
+    """"""
+    toml_document = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+
+    HIERARCHY_TOOL_RUFF = 'tool.ruff'
+
+    assert isinstance(
+        get_attribute_from_toml_source(hierarchy=HIERARCHY_TOOL_RUFF, toml_source=toml_document),
+        OutOfOrderTableProxy
+    )
+    delete_from_toml_source(hierarchy=HIERARCHY_TOOL_RUFF, toml_source=toml_document)
+    retrieval_error_handling(hierarchy=HIERARCHY_TOOL_RUFF, toml_document=toml_document)
+
+    HIERARCHY_TOOL_RYE = 'tool.rye'
+
+    assert isinstance(
+        get_attribute_from_toml_source(hierarchy=HIERARCHY_TOOL_RYE, toml_source=toml_document),
+        items.Table
+    )
+    delete_from_toml_source(hierarchy=HIERARCHY_TOOL_RYE, toml_source=toml_document)
+    retrieval_error_handling(hierarchy=HIERARCHY_TOOL_RYE, toml_document=toml_document)
+
+    HIERARCHY_PROJECT = 'project'
+
+    assert len(toml_document) == 1
+    assert toml_document[HIERARCHY_PROJECT] == "Example Project"
+    delete_from_toml_source(hierarchy=HIERARCHY_PROJECT, toml_source=toml_document)
+
+    assert not toml_document
+
+
+def test_deletion_errors() -> None:
+    """"""
+    toml_document = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+
+    HIERARCHY_TOOL_POETRY = 'tool.poetry'
+
+    with pytest.raises(InvalidHierarchyError) as exc_info:
+        delete_from_toml_source(hierarchy=HIERARCHY_TOOL_POETRY, toml_source=toml_document)
+    assert str(exc_info.value) == "Hierarchy does not exist in TOML source space"
+
+    HIERARCHY_TOOL_RUFF = 'tool.ruff'
+
+    delete_from_toml_source(hierarchy=HIERARCHY_TOOL_RUFF, toml_source=toml_document)
+
+    with pytest.raises(InvalidHierarchyError) as exc_info:
+        delete_from_toml_source(hierarchy=HIERARCHY_TOOL_RUFF, toml_source=toml_document)
+    
+    assert str(exc_info.value) == "Hierarchy does not exist in TOML source space"

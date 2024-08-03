@@ -45,7 +45,6 @@ def update_non_aot_from_toml_source(
             isinstance(update_converted, (items.Table, items.InlineTable)) and
             isinstance(toml_edit_space, (items.Table, items.InlineTable))
         ):
-            for table_key, table_value in update_converted.items():
-                toml_edit_space.update({table_key: table_value})
+            toml_edit_space.update(update_converted)
         else:
             retrieved_from_toml[final_attribute] = update_converted

@@ -1,4 +1,5 @@
 from typing import (
+    List,
     Literal,
     TypeAlias,
     Union
@@ -14,6 +15,8 @@ TOMLHierarchy: TypeAlias = Union[str, Hierarchy]
 TOMLSource: TypeAlias = Union[TOMLDocument, items.Table, items.AoT]
 
 TOMLTable: TypeAlias = Union[items.Table, items.InlineTable]
+
+TOMLRetrieval: TypeAlias = Union[TOMLDocument, items.Item, List[items.Item]]
 
 TOMLTableLike: TypeAlias = Union[
     items.Table, 
