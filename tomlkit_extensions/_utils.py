@@ -16,14 +16,14 @@ from tomlkit import (
     TOMLDocument
 )
 
-from tomlkit_extensions.hierarchy import (
+from tomlkit_extensions._hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )
-from tomlkit_extensions.typing import (
+from tomlkit_extensions._typing import (
+    Container,
     ContainerBody,
-    ContainerItemDecomposed,
-    TOMLContainer, 
+    ContainerItemDecomposed, 
     TOMLHierarchy
 )
 
@@ -98,7 +98,7 @@ def _reorganize_array(array: items.Array) -> ContainerBody:
     return array_body_items
 
 
-def get_container_body(toml_source: TOMLContainer) -> ContainerBody:
+def get_container_body(toml_source: Container) -> ContainerBody:
     """"""
     if isinstance(toml_source, (items.Table, items.InlineTable)):
         table_body_items = toml_source.value.body
@@ -106,18 +106,20 @@ def get_container_body(toml_source: TOMLContainer) -> ContainerBody:
         table_body_items = _reorganize_array(array=toml_source)
     elif isinstance(toml_source, OutOfOrderTableProxy):
         table_body_items = toml_source._container.body
-    else:
+    elif isinstance(toml_source, TOMLDocument):
         table_body_items = toml_source.body
+    else:
+        raise ValueError("Type is not a valid container-like structure")
 
     return table_body_items
 
 
 def decompose_body_item(
-    toml_table_item: Tuple[Optional[items.Key], items.Item]
+    body_item: Tuple[Optional[items.Key], items.Item]
 ) -> ContainerItemDecomposed:
     """"""
     item_key: Optional[str] = (
-        toml_table_item[0].as_string().strip() if toml_table_item[0] is not None else None
+        body_item[0].as_string().strip() if body_item[0] is not None else None
     )
-    toml_item: items.Item = toml_table_item[1]
+    toml_item: items.Item = body_item[1]
     return item_key, toml_item

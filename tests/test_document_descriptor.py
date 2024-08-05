@@ -121,7 +121,7 @@ def test_toml_a_descriptors() -> None:
         comment=None,
         from_aot=True,
         fields={'name': descriptor_members_name_one},
-        tables=None
+        child_tables=None
     )
     descriptor_members_table_two = TableDescriptor(
         item_type='table',
@@ -134,7 +134,7 @@ def test_toml_a_descriptors() -> None:
         comment=None,
         from_aot=True,
         fields={'name': descriptor_members_name_two},
-        tables=None
+        child_tables=None
     )
 
     assert document_descriptor.get_table_from_array_of_tables(hierarchy=hierarchy_members) == [
@@ -267,7 +267,7 @@ def test_toml_b_descriptor() -> None:
         ),
         from_aot=False,
         fields={'line-length': descriptor_line_length},
-        tables={str(hierarchy_ruff_lint)}
+        child_tables={str(hierarchy_ruff_lint)}
     )
 
     assert document_descriptor.get_table(hierarchy=hieraarchy_ruff) == descriptor_ruff
@@ -304,7 +304,7 @@ def test_toml_b_descriptor() -> None:
         from_aot=False,
         item_type='inline-table',
         fields={'convention': descriptor_convention},
-        tables=None
+        child_tables=None
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_pydocstyle) == descriptor_pydocstyle
@@ -357,7 +357,7 @@ def test_toml_b_descriptor() -> None:
         from_aot=False,
         item_type='table',
         fields={'name': descriptor_name, 'description': descriptor_desc},
-        tables=None
+        child_tables=None
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_main_table) == descriptor_main_table
@@ -438,7 +438,7 @@ def test_toml_b_descriptor() -> None:
         container_pos=1,
         comment=None,
         from_aot=True,
-        tables=None,
+        child_tables=None,
         fields={'name': descriptor_sub_tables_name_one, 'value': descriptor_sub_tables_value_one}
     )
     descriptor_main_sub_table_two = TableDescriptor(
@@ -451,7 +451,7 @@ def test_toml_b_descriptor() -> None:
         container_pos=2,
         comment=None,
         from_aot=True,
-        tables=None,
+        child_tables=None,
         fields={'name': descriptor_sub_tables_name_two, 'value': descriptor_sub_tables_value_two}
     )
 
@@ -553,7 +553,7 @@ def test_toml_c_descriptor() -> None:
         from_aot=False,
         item_type='inline-table',
         fields={'convention': descriptor_convention},
-        tables=None
+        child_tables=None
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_pydocstyle) == descriptor_pydocstyle
@@ -606,7 +606,7 @@ def test_toml_c_descriptor() -> None:
         comment=None,
         from_aot=False,
         fields={'line-length': descriptor_line_length},
-        tables={str(hierarchy_ruff_lint)}
+        child_tables={str(hierarchy_ruff_lint)}
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_ruff) == descriptor_ruff
@@ -674,7 +674,7 @@ def test_toml_c_descriptor() -> None:
         comment=None,
         from_aot=False,
         item_type='table',
-        tables=None,
+        child_tables=None,
         fields={'managed': descriptor_managed, 'dev-dependencies': descriptor_deps}
     )
 

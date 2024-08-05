@@ -17,14 +17,14 @@ from tomlkit import items
 from tomlkit_extensions.descriptor._helpers import get_item_type
 from tomlkit_extensions.descriptor._create import create_comment_descriptor
 from tomlkit_extensions.descriptor._descriptors import CommentDescriptor
-from tomlkit_extensions.hierarchy import Hierarchy
-from tomlkit_extensions.typing import (
+from tomlkit_extensions._hierarchy import Hierarchy
+from tomlkit_extensions._typing import (
+    Container,
     FieldItem,
     Item,
     ParentItem,
     StyleItem,
     TableItem,
-    TOMLContainer,
     TOMLType
 )
 
@@ -160,7 +160,7 @@ class ContainerItem:
     item_type: ItemType
     key: Optional[str]
     hierarchy: str
-    item: TOMLContainer
+    item: Container
 
     @classmethod
     def from_toml_item(cls, item: TOMLItem) -> ContainerItem:
@@ -169,7 +169,7 @@ class ContainerItem:
             item_type=item.item_type,
             key=item.key,
             hierarchy=item.hierarchy,
-            item=cast(TOMLContainer, item.item)
+            item=cast(Container, item.item)
         )
 
 

@@ -18,7 +18,7 @@ from pathvalidate import (
 )
 
 from tomlkit_extensions._utils import from_dict_to_toml_document
-from tomlkit_extensions.exceptions import (
+from tomlkit_extensions._exceptions import (
     TOMLConversionError,
     TOMLDecodingError
 )

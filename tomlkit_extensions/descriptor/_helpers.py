@@ -7,10 +7,10 @@ from typing import (
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items, TOMLDocument
 
-from tomlkit_extensions.typing import TOMLType
-from tomlkit_extensions.hierarchy import Hierarchy
+from tomlkit_extensions._typing import TOMLType
+from tomlkit_extensions._hierarchy import Hierarchy
 
-def find_nested_tables(root_hierarchy: str, hierarchies: List[str]) -> Set[Hierarchy]:
+def find_child_tables(root_hierarchy: str, hierarchies: List[str]) -> Set[Hierarchy]:
     """"""
     children_hierarchies: Set[str] = set()
 

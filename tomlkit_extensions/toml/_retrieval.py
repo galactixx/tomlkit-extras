@@ -15,19 +15,19 @@ from tomlkit import (
     TOMLDocument
 )
 
-from tomlkit_extensions.exceptions import InvalidHierarchyError
+from tomlkit_extensions._exceptions import InvalidHierarchyError
 from tomlkit_extensions._utils import (
     decompose_body_item,
     get_container_body
 )
-from tomlkit_extensions.hierarchy import (
+from tomlkit_extensions._hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )
-from tomlkit_extensions.typing import (
+from tomlkit_extensions._typing import (
     ContainerBody,
+    Retrieval,
     TOMLHierarchy,
-    TOMLRetrieval,
     TOMLSource
 )
 
@@ -60,7 +60,7 @@ def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[in
     try:
         while finding_positions:
             toml_table_item = next(table_body_items)
-            item_key, _ = decompose_body_item(toml_table_item=toml_table_item)
+            item_key, _ = decompose_body_item(body_item=toml_table_item)
 
             if item_key is not None:
                 attribute_position += 1
@@ -129,7 +129,7 @@ def is_toml_instance(
         return all(isinstance(item, toml_type) for item in toml_items)
     
 
-def _find_parent_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> TOMLRetrieval:
+def _find_parent_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> Retrieval:
     """"""
     hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy))
     return get_attribute_from_toml_source(
@@ -137,7 +137,7 @@ def _find_parent_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> TOML
     )
 
 
-def find_parent_toml_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> TOMLRetrieval:
+def find_parent_toml_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> Retrieval:
     """"""
     if hierarchy.hierarchy_depth > 1:
         parent_toml = _find_parent_source(hierarchy=hierarchy, toml_source=toml_source)
@@ -148,7 +148,7 @@ def find_parent_toml_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> 
 
 
 def find_parent_toml_sources(hierarchy: Hierarchy, toml_source: TOMLDocument) -> Tuple[
-    Optional[TOMLRetrieval], TOMLRetrieval
+    Optional[Retrieval], Retrieval
 ]:
     """"""
     if hierarchy.hierarchy_depth > 1:

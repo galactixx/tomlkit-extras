@@ -9,8 +9,8 @@ from typing import (
     Type
 )
 
-from tomlkit_extensions.hierarchy import Hierarchy
-from tomlkit_extensions.typing import (
+from tomlkit_extensions._hierarchy import Hierarchy
+from tomlkit_extensions._typing import (
     FieldItem,
     ParentItem,
     StyleItem,
@@ -42,7 +42,7 @@ class TableDescriptor(Descriptor):
     """"""
     item_type: TableItem
     fields: Dict[str, FieldDescriptor]
-    tables: Optional[Set[Hierarchy]]
+    child_tables: Optional[Set[Hierarchy]]
 
 
 @dataclass(frozen=True)

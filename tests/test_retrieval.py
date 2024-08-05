@@ -1,4 +1,5 @@
 from tomlkit import items, TOMLDocument
+from tomlkit.container import OutOfOrderTableProxy
 from tomlkit_extensions import (
     get_attribute_from_toml_source,
     is_toml_instance,
@@ -226,11 +227,11 @@ def test_retrieval_from_toml_c() -> None:
         str, hierarchy=HIERARCHY_PYDOCSTYLE_CONVENTION, toml_source=toml_document
     )
 
-    # HIERARCHY_TOOL_RUFF = 'tool.ruff'
+    HIERARCHY_TOOL_RUFF = 'tool.ruff'
 
-    # assert is_toml_instance(
-    #     items.Table, hierarchy=HIERARCHY_TOOL_RUFF, toml_source=toml_document
-    # )
+    assert is_toml_instance(
+        OutOfOrderTableProxy, hierarchy=HIERARCHY_TOOL_RUFF, toml_source=toml_document
+    )
 
     HIERARCHY_TOOL_RUFF_LINE = 'tool.ruff.line-length'
 

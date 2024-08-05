@@ -10,27 +10,28 @@ from typing import (
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items, TOMLDocument
 
-from tomlkit_extensions.hierarchy import Hierarchy
+from tomlkit_extensions._hierarchy import Hierarchy
 
 # General types
 TOMLHierarchy: TypeAlias = Union[str, Hierarchy]
 TOMLSource: TypeAlias = Union[TOMLDocument, items.Table, items.AoT]
 
-TOMLTable: TypeAlias = Union[items.Table, items.InlineTable]
+Table: TypeAlias = Union[items.Table, items.InlineTable]
 
-TOMLRetrieval: TypeAlias = Union[TOMLDocument, items.Item, List[items.Item]]
+Retrieval: TypeAlias = Union[TOMLDocument, items.Item, List[items.Item]]
 
 ContainerItemDecomposed: TypeAlias = Tuple[Optional[str], items.Item]
 ContainerBody: TypeAlias = List[Tuple[Optional[items.Key], items.Item]]
 
-TOMLTableLike: TypeAlias = Union[
-    items.Table, 
-    items.InlineTable, 
+ContainerLike: TypeAlias = Union[
+    TOMLDocument, 
+    items.Table,
+    items.Array,
     items.AoT,
     OutOfOrderTableProxy
 ]
 
-TOMLContainer: TypeAlias = Union[
+Container: TypeAlias = Union[
     TOMLDocument, 
     items.Table,
     items.InlineTable,

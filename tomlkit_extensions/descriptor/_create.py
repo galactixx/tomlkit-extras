@@ -7,8 +7,8 @@ from typing import (
 
 from tomlkit import items
 
-from tomlkit_extensions.typing import ParentItem
-from tomlkit_extensions.hierarchy import Hierarchy
+from tomlkit_extensions._typing import ParentItem
+from tomlkit_extensions._hierarchy import Hierarchy
 from tomlkit_extensions.descriptor._descriptors import (
     CommentDescriptor,
     FieldDescriptor,
@@ -94,5 +94,5 @@ def create_table_descriptor(
         comment=table_position.comment,
         from_aot=from_aot,
         fields=fields,
-        tables=tables or None
+        child_tables=tables or None
     )

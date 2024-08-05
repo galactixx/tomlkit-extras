@@ -17,14 +17,14 @@ from tomlkit_extensions._utils import (
     complete_clear_toml_document,
     decompose_body_item
 )
-from tomlkit_extensions.exceptions import InvalidHierarchyError
-from tomlkit_extensions.hierarchy import (
+from tomlkit_extensions._exceptions import InvalidHierarchyError
+from tomlkit_extensions._hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )
-from tomlkit_extensions.typing import (
-    TOMLHierarchy,
-    TOMLTable
+from tomlkit_extensions._typing import (
+    Table,
+    TOMLHierarchy
 )
 from tomlkit_extensions.toml._retrieval import (
     find_parent_toml_source,
@@ -54,7 +54,7 @@ def _insert_item_at_position_in_container(
     position: int,
     item_to_insert: Tuple[str, items.Item],
     toml_body_items: List[Tuple[Optional[items.Key], items.Item]],
-    updated_container: Union[TOMLDocument, TOMLTable],
+    updated_container: Union[TOMLDocument, Table],
     by_attribute: bool = True
 ) -> None:
     """"""
@@ -64,7 +64,7 @@ def _insert_item_at_position_in_container(
     attribute_position = container_position = 1
 
     for toml_table_item in toml_body_items:
-        item_key, toml_item = decompose_body_item(toml_table_item=toml_table_item)
+        item_key, toml_item = decompose_body_item(body_item=toml_table_item)
 
         if isinstance(toml_item, items.Whitespace):
             toml_item: items.Whitespace = tomlkit.ws(toml_item.value)
@@ -92,11 +92,7 @@ def container_insertion_into_toml_source(
 ) -> None:
     """"""
     _positional_insertion_into_toml_source(
-        hierarchy=hierarchy,
-        toml_source=toml_source,
-        insertion=insertion,
-        position=position,
-        by_attribute=False
+        hierarchy=hierarchy, toml_source=toml_source, insertion=insertion, position=position, by_attribute=False
     )
 
 
@@ -105,11 +101,7 @@ def attribute_insertion_into_toml_source(
 ) -> None:
     """"""
     _positional_insertion_into_toml_source(
-        hierarchy=hierarchy,
-        toml_source=toml_source,
-        insertion=insertion,
-        position=position,
-        by_attribute=True
+        hierarchy=hierarchy, toml_source=toml_source, insertion=insertion, position=position, by_attribute=True
     )
 
 
@@ -151,7 +143,7 @@ def _positional_insertion_into_toml_source(
                 "Insertion into an inline table must only be simple key-value pairs"
             )
         
-        updated_container: Union[TOMLDocument, TOMLTable]
+        updated_container: Union[TOMLDocument, Table]
 
         if grandparent_toml is not None:
             updated_container = (
