@@ -1,6 +1,8 @@
 from typing import (
     List,
     Literal,
+    Optional,
+    Tuple,
     TypeAlias,
     Union
 )
@@ -17,6 +19,9 @@ TOMLSource: TypeAlias = Union[TOMLDocument, items.Table, items.AoT]
 TOMLTable: TypeAlias = Union[items.Table, items.InlineTable]
 
 TOMLRetrieval: TypeAlias = Union[TOMLDocument, items.Item, List[items.Item]]
+
+ContainerItemDecomposed: TypeAlias = Tuple[Optional[str], items.Item]
+ContainerBody: TypeAlias = List[Tuple[Optional[items.Key], items.Item]]
 
 TOMLTableLike: TypeAlias = Union[
     items.Table, 

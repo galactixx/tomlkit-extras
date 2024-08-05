@@ -3,10 +3,13 @@ from typing import (
     cast,
     Dict,
     List,
+    Optional,
+    Tuple,
     Union
 )
 
 import tomlkit
+from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import (
     document, 
     items,
@@ -17,7 +20,12 @@ from tomlkit_extensions.hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )
-from tomlkit_extensions.typing import TOMLHierarchy
+from tomlkit_extensions.typing import (
+    ContainerBody,
+    ContainerItemDecomposed,
+    TOMLContainer, 
+    TOMLHierarchy
+)
 
 def from_dict_to_toml_document(dictionary: Dict[str, Any]) -> TOMLDocument:
     """"""
@@ -61,8 +69,55 @@ def create_toml_document(hierarchy: TOMLHierarchy, update: items.Item) -> TOMLDo
     return source
 
 
-def clear_toml_document(toml_document: TOMLDocument) -> None:
+def partial_clear_toml_document(toml_document: TOMLDocument) -> None:
     """"""
     keys = list(toml_document.keys())
     for key in keys:
         del toml_document[key]
+
+
+def complete_clear_toml_document(toml_document: TOMLDocument) -> None:
+    """"""
+    partial_clear_toml_document(toml_document=toml_document)
+
+    # Reset private attributes that store elements within document
+    toml_document._map = {}
+    toml_document._body = []
+    toml_document._parsed = False
+    toml_document._table_keys = []
+
+
+def _reorganize_array(array: items.Array) -> ContainerBody:
+    """"""
+    array_body_items: ContainerBody = []
+
+    for array_item_group in array._value:
+        for array_item in array_item_group:
+            array_body_items.append((None, array_item))
+
+    return array_body_items
+
+
+def get_container_body(toml_source: TOMLContainer) -> ContainerBody:
+    """"""
+    if isinstance(toml_source, (items.Table, items.InlineTable)):
+        table_body_items = toml_source.value.body
+    elif isinstance(toml_source, items.Array):
+        table_body_items = _reorganize_array(array=toml_source)
+    elif isinstance(toml_source, OutOfOrderTableProxy):
+        table_body_items = toml_source._container.body
+    else:
+        table_body_items = toml_source.body
+
+    return table_body_items
+
+
+def decompose_body_item(
+    toml_table_item: Tuple[Optional[items.Key], items.Item]
+) -> ContainerItemDecomposed:
+    """"""
+    item_key: Optional[str] = (
+        toml_table_item[0].as_string().strip() if toml_table_item[0] is not None else None
+    )
+    toml_item: items.Item = toml_table_item[1]
+    return item_key, toml_item

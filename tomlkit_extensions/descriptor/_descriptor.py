@@ -14,6 +14,7 @@ from typing import (
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items, TOMLDocument
 
+from tomlkit_extensions._utils import get_container_body
 from tomlkit_extensions.typing import (
     ParentItem,
     TOMLHierarchy
@@ -48,8 +49,7 @@ from tomlkit_extensions.descriptor._types import (
 )
 from tomlkit_extensions.descriptor._helpers import (
     find_nested_tables,
-    get_item_type,
-    reorganize_array
+    get_item_type
 )
 from tomlkit_extensions.descriptor._create import (
     create_field_descriptor,
@@ -555,7 +555,7 @@ class TOMLDocumentDescriptor:
         self, container: ContainerItem, position: ItemPosition, is_aot: bool = False
     ) -> None:
         """"""
-        is_doc = False
+        is_doc = isinstance(container.item, TOMLDocument)
         new_position = ItemPosition(attribute=1, container=1)
 
         # Determine the new hierarchy
@@ -579,16 +579,7 @@ class TOMLDocumentDescriptor:
 
         # Since an inline table is contained only on a single line, and thus,
         # on the same line as the table header, the line number is intialized to 0
-        if isinstance(container.item, (items.Table, items.InlineTable)):
-            table_body_items = container.item.value.body
-        elif isinstance(container.item, items.Array):
-            table_body_items = reorganize_array(array=container.item)
-        elif isinstance(container.item, OutOfOrderTableProxy):
-            table_body_items = container.item._container.body
-        else:
-            is_doc = True
-            table_body_items = container.item.body
-
+        table_body_items = get_container_body(toml_source=container.item)
         if (
             isinstance(container.item, TOMLDocument) or
             (isinstance(container.item, items.Table) and not container.item.is_super_table())

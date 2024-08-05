@@ -1,5 +1,5 @@
 from tomlkit.container import OutOfOrderTableProxy
-from tomlkit import items
+from tomlkit import items, TOMLDocument
 import pytest
 from tomlkit_extensions import (
     delete_from_toml_source,
@@ -8,11 +8,27 @@ from tomlkit_extensions import (
     InvalidHierarchyError
 )
 
-from tests.utils import retrieval_error_handling
+def _retrieval_of_invalid_hierarchy(hierarchy: str, toml_document: TOMLDocument) -> None:
+    """"""
+    with pytest.raises(InvalidHierarchyError) as exc_info:
+        _ = get_attribute_from_toml_source(
+            hierarchy=hierarchy, toml_source=toml_document, array_priority=False
+        )
+
+    assert str(exc_info.value) == (
+        "Hierarchy specified does not exist in TOMLDocument instance"
+    )
+
+
+def _deletion_and_retrieval_test(hierarchy: str, toml_document: TOMLDocument) -> None:
+    """"""
+    delete_from_toml_source(hierarchy=hierarchy, toml_source=toml_document)
+    _retrieval_of_invalid_hierarchy(hierarchy=hierarchy, toml_document=toml_document)
+
 
 def test_deletion_from_toml_a() -> None:
     """"""
-    toml_document = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
 
     HIERARCHY_PROJECT_NAME = 'project.name'
 
@@ -23,10 +39,7 @@ def test_deletion_from_toml_a() -> None:
     # Delete the "name" field from the "project" table. Since "name" is the
     # only field in this table, the following function call should result in
     # the deletion of the entire table
-    delete_from_toml_source(
-        hierarchy=HIERARCHY_PROJECT_NAME, toml_source=toml_document
-    )
-    retrieval_error_handling(hierarchy=HIERARCHY_PROJECT_NAME, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_PROJECT_NAME, toml_document=toml_document)
 
     # Delete all "role" fields from each table in the "members.roles" array
     # of tables. This should mirror the prior result
@@ -36,21 +49,14 @@ def test_deletion_from_toml_a() -> None:
         hierarchy=HIERARCHY_MEMBERS_ROLES_ROLE, toml_source=toml_document, array_priority=False
     )
     assert len(members_roles_role_aot) == 3
-
-    delete_from_toml_source(
-        hierarchy=HIERARCHY_MEMBERS_ROLES_ROLE, toml_source=toml_document
-    )
-    retrieval_error_handling(hierarchy=HIERARCHY_MEMBERS_ROLES_ROLE, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_MEMBERS_ROLES_ROLE, toml_document=toml_document)
 
     HIERARCHY_DETAILS_DESCRIPTION = 'details.description'
 
     assert get_attribute_from_toml_source(
         hierarchy=HIERARCHY_DETAILS_DESCRIPTION, toml_source=toml_document
     ) == "A sample project configuration"
-    delete_from_toml_source(
-        hierarchy=HIERARCHY_DETAILS_DESCRIPTION, toml_source=toml_document
-    )
-    retrieval_error_handling(hierarchy=HIERARCHY_DETAILS_DESCRIPTION, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_DETAILS_DESCRIPTION, toml_document=toml_document)
 
     HIERARCHY_MEMBERS_NAME = 'members.name'
 
@@ -58,45 +64,35 @@ def test_deletion_from_toml_a() -> None:
         hierarchy=HIERARCHY_MEMBERS_NAME, toml_source=toml_document, array_priority=False
     )
     assert len(members_roles_role_aot) == 2
-
-    delete_from_toml_source(hierarchy=HIERARCHY_MEMBERS_NAME, toml_source=toml_document)
-    retrieval_error_handling(hierarchy=HIERARCHY_MEMBERS_NAME, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_MEMBERS_NAME, toml_document=toml_document)
 
     assert not toml_document
 
 
 def test_deletion_from_toml_b() -> None:
     """"""
-    toml_document = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
 
     HIERARCHY_PROJECT = 'project'
 
     assert get_attribute_from_toml_source(
         hierarchy=HIERARCHY_PROJECT, toml_source=toml_document
     ) == "Example Project"
-    delete_from_toml_source(hierarchy=HIERARCHY_PROJECT, toml_source=toml_document)
-    retrieval_error_handling(hierarchy=HIERARCHY_PROJECT, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_PROJECT, toml_document=toml_document)
 
     HIERARCHY_PYDOCSTYLE_CONVENTION = 'tool.ruff.lint.pydocstyle.convention'
 
     assert get_attribute_from_toml_source(
         hierarchy=HIERARCHY_PYDOCSTYLE_CONVENTION, toml_source=toml_document
     ) == 'numpy'
-
-    delete_from_toml_source(
-        hierarchy=HIERARCHY_PYDOCSTYLE_CONVENTION, toml_source=toml_document
-    )
-    retrieval_error_handling(hierarchy=HIERARCHY_PYDOCSTYLE_CONVENTION, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_PYDOCSTYLE_CONVENTION, toml_document=toml_document)
 
     HIERARCHY_MAIN_DESCRIPTION = 'main_table.description'
 
     assert get_attribute_from_toml_source(
         hierarchy=HIERARCHY_MAIN_DESCRIPTION, toml_source=toml_document
     ) == "This is the main table containing an array of nested tables."
-    delete_from_toml_source(
-        hierarchy=HIERARCHY_MAIN_DESCRIPTION, toml_source=toml_document
-    )
-    retrieval_error_handling(hierarchy=HIERARCHY_MAIN_DESCRIPTION, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_MAIN_DESCRIPTION, toml_document=toml_document)
 
     HIERARCHY_MAIN_SUB_VALUE = 'main_table.sub_tables.value'
 
@@ -104,8 +100,7 @@ def test_deletion_from_toml_b() -> None:
         hierarchy=HIERARCHY_MAIN_SUB_VALUE, toml_source=toml_document
     )
     assert len(sub_table_values) == 2
-    delete_from_toml_source(hierarchy=HIERARCHY_MAIN_SUB_VALUE, toml_source=toml_document)
-    retrieval_error_handling(hierarchy=HIERARCHY_MAIN_SUB_VALUE, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_MAIN_SUB_VALUE, toml_document=toml_document)
 
     HIERARCHY_MAIN_SUB_TABLES = 'main_table.sub_tables'
     HIERARCHY_MAIN_SUB_NAME = 'main_table.sub_tables.name'
@@ -114,8 +109,7 @@ def test_deletion_from_toml_b() -> None:
         hierarchy=HIERARCHY_MAIN_SUB_TABLES, toml_source=toml_document
     )
     assert len(sub_tables) == 2
-    delete_from_toml_source(hierarchy=HIERARCHY_MAIN_SUB_NAME, toml_source=toml_document)
-    retrieval_error_handling(hierarchy=HIERARCHY_MAIN_SUB_TABLES, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_MAIN_SUB_NAME, toml_document=toml_document)
 
     HIERARCHY_TOOL_RUFF_LINE = 'tool.ruff.line-length'
 
@@ -123,7 +117,7 @@ def test_deletion_from_toml_b() -> None:
         hierarchy=HIERARCHY_TOOL_RUFF_LINE, toml_source=toml_document
     ) == 88
     delete_from_toml_source(hierarchy='tool.ruff', toml_source=toml_document)
-    retrieval_error_handling(hierarchy='tool', toml_document=toml_document)
+    _retrieval_of_invalid_hierarchy(hierarchy='tool', toml_document=toml_document)
 
     HIERARCHY_MAIN_NAME = 'main_table.name'
 
@@ -137,7 +131,7 @@ def test_deletion_from_toml_b() -> None:
 
 def test_deletion_from_toml_c() -> None:
     """"""
-    toml_document = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
 
     HIERARCHY_TOOL_RUFF = 'tool.ruff'
 
@@ -145,8 +139,7 @@ def test_deletion_from_toml_c() -> None:
         get_attribute_from_toml_source(hierarchy=HIERARCHY_TOOL_RUFF, toml_source=toml_document),
         OutOfOrderTableProxy
     )
-    delete_from_toml_source(hierarchy=HIERARCHY_TOOL_RUFF, toml_source=toml_document)
-    retrieval_error_handling(hierarchy=HIERARCHY_TOOL_RUFF, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_TOOL_RUFF, toml_document=toml_document)
 
     HIERARCHY_TOOL_RYE = 'tool.rye'
 
@@ -154,8 +147,7 @@ def test_deletion_from_toml_c() -> None:
         get_attribute_from_toml_source(hierarchy=HIERARCHY_TOOL_RYE, toml_source=toml_document),
         items.Table
     )
-    delete_from_toml_source(hierarchy=HIERARCHY_TOOL_RYE, toml_source=toml_document)
-    retrieval_error_handling(hierarchy=HIERARCHY_TOOL_RYE, toml_document=toml_document)
+    _deletion_and_retrieval_test(hierarchy=HIERARCHY_TOOL_RYE, toml_document=toml_document)
 
     HIERARCHY_PROJECT = 'project'
 
@@ -168,7 +160,7 @@ def test_deletion_from_toml_c() -> None:
 
 def test_deletion_errors() -> None:
     """"""
-    toml_document = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
 
     HIERARCHY_TOOL_POETRY = 'tool.poetry'
 

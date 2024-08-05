@@ -1,8 +1,7 @@
 from __future__ import annotations
 from typing import (
     List,
-    Set,
-    Tuple
+    Set
 )
 
 from tomlkit.container import OutOfOrderTableProxy
@@ -10,17 +9,6 @@ from tomlkit import items, TOMLDocument
 
 from tomlkit_extensions.typing import TOMLType
 from tomlkit_extensions.hierarchy import Hierarchy
-
-def reorganize_array(array: items.Array) -> List[Tuple[None, items.Item]]:
-    """"""
-    array_body_items: List[Tuple[None, items.Item]] = []
-
-    for array_item_group in array._value:
-        for array_item in array_item_group:
-            array_body_items.append((None, array_item))
-
-    return array_body_items
-
 
 def find_nested_tables(root_hierarchy: str, hierarchies: List[str]) -> Set[Hierarchy]:
     """"""

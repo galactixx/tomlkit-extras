@@ -13,7 +13,10 @@ from tomlkit import (
     TOMLDocument
 )
 
-from tomlkit_extensions._utils import clear_toml_document
+from tomlkit_extensions._utils import (
+    complete_clear_toml_document,
+    decompose_body_item
+)
 from tomlkit_extensions.exceptions import InvalidHierarchyError
 from tomlkit_extensions.hierarchy import (
     Hierarchy,
@@ -23,7 +26,7 @@ from tomlkit_extensions.typing import (
     TOMLHierarchy,
     TOMLTable
 )
-from tomlkit_extensions.toml.common import (
+from tomlkit_extensions.toml._retrieval import (
     find_parent_toml_source,
     find_parent_toml_sources
 )
@@ -58,39 +61,30 @@ def _insert_item_at_position_in_container(
     item_inserted = False
     attribute, insertion = item_to_insert
 
-    attribute_position = 1
-    styling_position = 1
+    attribute_position = container_position = 1
 
     for toml_table_item in toml_body_items:
-        item_key, toml_item = _decompose_body_item(toml_table_item=toml_table_item)
+        item_key, toml_item = decompose_body_item(toml_table_item=toml_table_item)
+
+        if isinstance(toml_item, items.Whitespace):
+            toml_item: items.Whitespace = tomlkit.ws(toml_item.value)
+
+        if (
+            (attribute_position == position and by_attribute) or
+            (container_position == position and not by_attribute)
+        ):
+            updated_container.add(attribute, insertion)
+            item_inserted = True
+            attribute_position += 1
 
         if item_key is not None:
-            if (
-                (attribute_position == position and by_attribute) or
-                (styling_position == position and not by_attribute)
-            ):
-                updated_container.add(attribute, insertion)
-                item_inserted = True
-            
-            updated_container.add(item_key, toml_item)
             attribute_position += 1
-        else:
-            updated_container.add(toml_item)
-        styling_position += 1
+
+        updated_container.add(item_key, toml_item)
+        container_position += 1
 
     if not item_inserted:
         updated_container.add(attribute, insertion)
-
-
-def _decompose_body_item(
-    toml_table_item: Tuple[Optional[items.Key], items.Item]
-) -> Tuple[Optional[str], items.Item]:
-    """"""
-    item_key: Optional[str] = (
-        toml_table_item[0].as_string().strip() if toml_table_item[0] is not None else None
-    )
-    toml_item: items.Item = toml_table_item[1]
-    return item_key, toml_item
 
 
 def container_insertion_into_toml_source(
@@ -177,18 +171,16 @@ def _positional_insertion_into_toml_source(
             )
             grandparent_toml.update({parent_hierarchy.attribute: updated_container})
         else:
-            updated_container: TOMLDocument = tomlkit.document()
+            document_body = parent_toml.body.copy()
+            complete_clear_toml_document(toml_document=toml_source)
 
             _insert_item_at_position_in_container(
                 position=position,
                 item_to_insert=(attribute, insertion_converted),
-                toml_body_items=parent_toml.body,
-                updated_container=updated_container,
+                toml_body_items=document_body,
+                updated_container=toml_source,
                 by_attribute=by_attribute
             )
-
-            clear_toml_document(toml_document=toml_source)
-            toml_source.update(updated_container)
 
 
 def general_insertion_into_toml_source(
