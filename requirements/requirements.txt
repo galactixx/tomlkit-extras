@@ -1,0 +1,4 @@
+tomlkit>=0.13.0
+pyrsistent>=0.20.0
+charset-normalizer>=3.3.2
+pathvalidate>=3.2.0

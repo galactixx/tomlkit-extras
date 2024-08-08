@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "tomlkit-extensions"
+version = "0.1.0"
+description = "tomlkit-extensions is a Python package that extends the functionality of tomlkit, allowing for advanced manipulation, validation, and introspection of TOML files, including handling comments and nested structures"
+authors = ["galactixx"]
+license = "MIT License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+tomlkit = "^0.13.0"
+pyrsistent = "^0.20.0"
+charset-normalizer = "^3.3.2"
+pathvalidate = "^3.2.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

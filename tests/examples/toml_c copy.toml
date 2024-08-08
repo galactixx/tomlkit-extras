@@ -2,10 +2,10 @@
 
 project = "Example Project"
 
+[tool.ruff.lint.people]
+name = "Nicholas Wlezien"
 
-
-
-[tool.ruff.lint]
+[tool.ruff.lint] # lint table comment
 pydocstyle = { convention = "numpy" }
 
 # this is the first comment for lint table
@@ -14,7 +14,13 @@ pydocstyle = { convention = "numpy" }
 line-length = 88
 # this is a tool.ruff comment
 
+[tool.ruff.lint.people.roles.managers]
+# the manager for each person
+names = [ "Elon Musk" ]
 
+[tool.ruff.lint.people.roles]
+# all roles
+role = [ "Software Engineer" ]
 
 [tool.rye]
 managed = true

@@ -486,7 +486,7 @@ def test_toml_c_descriptor() -> None:
     # Basic statistics of the TOML file
     assert document_descriptor.number_of_aots == 0
     assert document_descriptor.number_of_arrays == 1
-    assert document_descriptor.number_of_comments == 3
+    assert document_descriptor.number_of_comments == 6
     assert document_descriptor.number_of_fields == 4
     assert document_descriptor.number_of_inline_tables == 1
     assert document_descriptor.number_of_tables == 3
@@ -656,7 +656,7 @@ def test_toml_c_descriptor() -> None:
         comment=None,
         from_aot=False,
         item_type='array',
-        value=['ruff>=0.4.4']
+        value=['ruff>=0.4.4', 'mypy>=0.812', 'sphinx>=3.5', 'setuptools>=56.0']
     )
 
     assert document_descriptor.get_field(hierarchy=hierarchy_deps) == descriptor_deps

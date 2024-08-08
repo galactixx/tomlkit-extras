@@ -54,17 +54,12 @@ def _recursive_deletion(
 
         if not hierarchy_queue_new:
             if isinstance(current_source, items.AoT):
-                _delete_attribute_from_aot(
-                    attribute=current_table, current_source=current_source
-                )
+                _delete_attribute_from_aot(attribute=current_table, current_source=current_source)
             else:
                 del current_source[current_table]
         elif isinstance(current_source, items.AoT):
-            # Further recursive calls 
             _delete_iteration_for_aot(
-                attribute=current_table,
-                current_source=current_source,
-                hierarchy_queue=hierarchy_queue_new
+                attribute=current_table, current_source=current_source, hierarchy_queue=hierarchy_queue_new
             )
         else:
             next_source = current_source[current_table]

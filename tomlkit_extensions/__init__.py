@@ -2,6 +2,12 @@ from tomlkit_extensions._file_validator import load_toml_file
 from tomlkit_extensions._hierarchy import Hierarchy
 from tomlkit_extensions.toml._delete import delete_from_toml_source
 from tomlkit_extensions.descriptor._descriptor import TOMLDocumentDescriptor
+from tomlkit_extensions.toml._update import update_non_aot_from_toml_source
+from tomlkit_extensions.toml._comments import (
+    get_array_field_comment,
+    get_comments,
+    StructureComment
+)
 from tomlkit_extensions.descriptor._descriptors import (
     ArrayOfTablesDescriptor,
     CommentDescriptor,
@@ -35,6 +41,10 @@ __all__ = [
     'Hierarchy',
     'delete_from_toml_source',
     'TOMLDocumentDescriptor',
+    'update_non_aot_from_toml_source',
+    'get_array_field_comment',
+    'get_comments',
+    'StructureComment',
     'ArrayOfTablesDescriptor',
     'CommentDescriptor',
     'FieldDescriptor',

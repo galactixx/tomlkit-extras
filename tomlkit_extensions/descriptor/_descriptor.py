@@ -66,18 +66,18 @@ class TOMLDocumentDescriptor:
     def __init__(
         self,
         toml_source: Union[TOMLDocument, items.Table, items.AoT],
-        hierarchy: Optional[TOMLHierarchy] = None,
         top_level_only: bool = False
     ):
         self.top_level_only = top_level_only
         self.top_level_type = get_item_type(toml_item=toml_source)
+        
+        self.top_level_hierarchy: Optional[str]
 
         self._current_line_number = 0
 
-        # Structures for storing any attributes occurring in top-level document
-        # space (outside of tables)
-        self._top_level_lines: Dict[str, FieldPosition] = dict()
-        self._top_level_stylings: StylingPositions = StylingPositions(
+        # Structures for storing any attributes occurring in top-level space
+        self._document_lines: Dict[str, FieldPosition] = dict()
+        self._document_stylings: StylingPositions = StylingPositions(
             comments=dict(), whitespace=dict()
         )
 
@@ -90,20 +90,22 @@ class TOMLDocumentDescriptor:
         # Statistics on number of types within TOML source
         self._toml_statistics = TOMLStatistics()
 
-        active_hierarchy = str(hierarchy) or str()
         position = ItemPosition(attribute=1, container=1)
         if isinstance(toml_source, items.AoT):
+            self.top_level_hierarchy = toml_source.name
             self._generate_descriptor_from_array_of_tables(
-                hierarchy=active_hierarchy, array=toml_source, position=position
+                hierarchy=str(), array=toml_source, position=position
             )          
         else:
             if isinstance(toml_source, items.Table):
+                self.top_level_hierarchy = toml_source.name
                 update_key = toml_source.name
             else:
+                self.top_level_hierarchy = None
                 update_key = str()
 
             self._generate_descriptor_bridge(
-                item=TOMLItem.from_parent_type(key=update_key, hierarchy=hierarchy, toml_item=toml_source),
+                item=TOMLItem.from_parent_type(key=update_key, hierarchy=str(), toml_item=toml_source),
                 position=position
             )
 
@@ -304,10 +306,10 @@ class TOMLDocumentDescriptor:
         hierarchy_as_str: str = str(hierarchy_obj)
 
         if hierarchy_obj.hierarchy_depth == 1:
-            if hierarchy_as_str not in self._top_level_lines:
+            if hierarchy_as_str not in self._document_lines:
                 raise InvalidFieldError("Field does not exist in top-level document space")
             
-            field_position: FieldPosition = self._top_level_lines[hierarchy_as_str]
+            field_position: FieldPosition = self._document_lines[hierarchy_as_str]
             parent_type = self.top_level_type
             field = hierarchy_as_str
         else:
@@ -358,15 +360,26 @@ class TOMLDocumentDescriptor:
     
     def get_top_level_stylings(self, styling: StyleItem) -> List[StyleDescriptor]:
         """"""
-        stylings: Dict[str, List[StylingPosition]]
+        styling_positions: StylingPositions
+
+        if self.top_level_hierarchy is None:
+            styling_positions = self._document_stylings
+        elif self.top_level_hierarchy in self._attribute_lines:
+            styling_positions = self._attribute_lines[self.top_level_hierarchy].styling
+        else:
+            styling_positions = StylingPositions(comments=dict(), whitespace=dict())
 
         if styling == 'comment':
-            stylings = self._top_level_stylings.comments
+            stylings = styling_positions.comments
         else:
-            stylings = self._top_level_stylings.whitespace
+            stylings = styling_positions.whitespace
 
         return [
-            create_style_descriptor(styling_position=styling_position, parent_type=self.top_level_type)
+            create_style_descriptor(
+                styling_position=styling_position,
+                hierarchy=self.top_level_hierarchy,
+                parent_type=self.top_level_type
+            )
             for stylings in stylings.values() for styling_position in stylings
         ]
 
@@ -390,7 +403,7 @@ class TOMLDocumentDescriptor:
             stylings = table_position.styling
         else:
             parent_type = self.top_level_type
-            stylings = self._top_level_stylings
+            stylings = self._document_stylings
 
         styling_space = stylings.comments if is_comment else stylings.whitespace
         if styling not in styling_space:
@@ -444,9 +457,9 @@ class TOMLDocumentDescriptor:
         styling_positions: StylingPositions
 
         if isinstance(container.item, TOMLDocument):
-            styling_positions = self._top_level_stylings
+            styling_positions = self._document_stylings
         elif is_aot:
-            table_position = self._get_aot_table(hierarchy=style.hierarchy)
+            table_position: TablePosition = self._get_aot_table(hierarchy=style.hierarchy)
             if isinstance(container.item, (items.Table, items.InlineTable)):
                 styling_positions = table_position.styling
             else:
@@ -457,7 +470,7 @@ class TOMLDocumentDescriptor:
             if container.hierarchy:
                 styling_positions = self._attribute_lines[style.hierarchy].fields[container.key].styling
             else:
-                styling_positions = self._top_level_lines[container.key].styling
+                styling_positions = self._document_lines[container.key].styling
 
         styling_positions.update_stylings(
             style_item=style, position=position, line_no=self._current_line_number
@@ -469,9 +482,9 @@ class TOMLDocumentDescriptor:
             item=item, line_no=self._current_line_number, position=position
         )
 
-    def _update_document(self, item: TOMLItem, position: ItemPosition) -> None:
+    def _update_top_level_space(self, item: TOMLItem, position: ItemPosition) -> None:
         """"""
-        self._top_level_lines[item.key] = FieldPosition.from_toml_item(
+        self._document_lines[item.key] = FieldPosition.from_toml_item(
             line_no=self._current_line_number, position=position, item=item
         )
 
@@ -507,22 +520,20 @@ class TOMLDocumentDescriptor:
             hierarchy=hierarchy, table_position=table_position
         )
 
-    def _update_attribute_descriptor(
-        self, item: TOMLItem, position: ItemPosition, is_doc: bool, is_aot: bool
-    ) -> None:
+    def _update_attribute_descriptor(self, item: TOMLItem, position: ItemPosition, is_aot: bool) -> None:
         """"""
-        if is_doc:
-            self._update_document(item=item, position=position)
+        if not item.hierarchy:
+            self._update_top_level_space(item=item, position=position)
         elif is_aot:
             self._update_array_of_tables(item=item, position=position)
         else:
             self._update_attribute(item=item, position=position)
 
-    def _update_array_comment(self, item: TOMLItem, is_doc: bool, is_aot: bool) -> None:
+    def _update_array_comment(self, item: TOMLItem, is_aot: bool) -> None:
         """"""
         field_position: FieldPosition
-        if is_doc:
-            field_position = self._top_level_lines[item.key]
+        if not item.hierarchy:
+            field_position = self._document_lines[item.key]
         elif is_aot:
             field_position = self._get_aot_table(hierarchy=item.hierarchy).fields[item.key]
         else:
@@ -550,13 +561,13 @@ class TOMLDocumentDescriptor:
         else:
             self._array_of_tables[hierarchy].update_arrays(hierarchy=hierarchy, array=array_of_tables)
 
-        hierarchy_root = Hierarchy.parent_hierarchy(hierarchy=hierarchy)
+        hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=hierarchy)
 
         for index, table in enumerate(array.body):
             table_position = index + 1
             self._toml_statistics.add_table(table=table)
             table_item = TOMLItem.from_parent_type(
-                key=array.name, hierarchy=hierarchy_root, toml_item=table, parent_type='array-of-tables'
+                key=array.name, hierarchy=hierarchy_parent, toml_item=table, parent_type='array-of-tables'
             )
 
             self._generate_descriptor_bridge(
@@ -575,7 +586,6 @@ class TOMLDocumentDescriptor:
         self, container: ContainerItem, position: ItemPosition, is_aot: bool = False
     ) -> None:
         """"""
-        is_doc = isinstance(container.item, TOMLDocument)
         new_position = ItemPosition(attribute=1, container=1)
 
         # Determine the new hierarchy
@@ -616,11 +626,9 @@ class TOMLDocumentDescriptor:
             # If an inline table or array is encountered, the function
             # is run recursively since both data types can contain styling
             if isinstance(toml_item.item, items.Array):
-                self._update_attribute_descriptor(
-                    item=toml_item, position=new_position, is_doc=is_doc, is_aot=is_aot
-                )
+                self._update_attribute_descriptor(item=toml_item, position=new_position, is_aot=is_aot)
                 self._generate_descriptor_bridge(item=toml_item, position=new_position, is_aot=is_aot)
-                self._update_array_comment(item=toml_item, is_doc=is_doc, is_aot=is_aot)
+                self._update_array_comment(item=toml_item, is_aot=is_aot)
 
                 self._toml_statistics.add_array(item=toml_item.item)
                 self._current_line_number += 1
@@ -665,10 +673,7 @@ class TOMLDocumentDescriptor:
                 new_position.update_positions()
             else:
                 if not isinstance(container.item, items.Array):
-                    self._update_attribute_descriptor(
-                        item=toml_item, position=new_position, is_doc=is_doc, is_aot=is_aot
-                    )
-
+                    self._update_attribute_descriptor(item=toml_item, position=new_position, is_aot=is_aot)
                     if not isinstance(container.item, items.InlineTable):
                         self._current_line_number += 1
 

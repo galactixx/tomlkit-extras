@@ -5,21 +5,24 @@ from typing import (
     Optional
 )
 
-from tomlkit import items
+from tomlkit import items, TOMLDocument
 from tomlkit.container import OutOfOrderTableProxy
 
+from tomlkit_extensions._exceptions import InvalidArrayItemError
+from tomlkit_extensions._hierarchy import Hierarchy
 from tomlkit_extensions.descriptor._descriptor import TOMLDocumentDescriptor
 from tomlkit_extensions._typing import ContainerLike, TOMLHierarchy
 from tomlkit_extensions.toml._retrieval import get_attribute_from_toml_source
 from tomlkit_extensions._utils import (
     decompose_body_item,
-    get_container_body
+    get_container_body,
+    standardize_hierarchy
 )
 
 @dataclass(frozen=True)
 class StructureComment:
     """"""
-    name: str
+    hierarchy: Optional[Hierarchy]
     line_no: int
     comment: str
 
@@ -35,20 +38,19 @@ def get_comments(
     
     if (
         isinstance(attribute, list) or
-        not isinstance(attribute, (items.Table, OutOfOrderTableProxy, items.Array))
+        not isinstance(attribute, (TOMLDocument, items.Table, OutOfOrderTableProxy, items.Array))
     ):
         return None
     else:
+        hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         comments: List[StructureComment] = []
-        
-        document_descriptor = TOMLDocumentDescriptor(
-            toml_source=attribute, hierarchy=hierarchy, top_level_only=True
-        )
+
+        document_descriptor = TOMLDocumentDescriptor(toml_source=attribute, top_level_only=True)
 
         for comment_descriptor in document_descriptor.get_top_level_stylings(styling='comment'):
             comments.append(
                 StructureComment(
-                    name=attribute.name, line_no=comment_descriptor.line_no, comment=comment_descriptor.style
+                    hierarchy=hierarchy_obj, line_no=comment_descriptor.line_no, comment=comment_descriptor.style
                 )
             )
 
@@ -79,5 +81,8 @@ def get_array_field_comment(array: items.Array, array_item: Any) -> Optional[str
                     array_item_comment = array_body_item.trivia.comment
     except StopIteration:
         pass
+
+    if not seen_array_item:
+        raise InvalidArrayItemError("Data item does not exist in specified array")
 
     return array_item_comment

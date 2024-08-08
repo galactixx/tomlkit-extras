@@ -259,4 +259,4 @@ def test_retrieval_from_toml_c() -> None:
     dev_dependencies = get_attribute_from_toml_source(
         hierarchy=HIERARCHY_TOOL_RYE_DEV_DEPS, toml_source=toml_document
     )
-    assert dev_dependencies == ["ruff>=0.4.4"]
+    assert dev_dependencies == ['ruff>=0.4.4', 'mypy>=0.812', 'sphinx>=3.5', 'setuptools>=56.0']

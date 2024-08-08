@@ -50,3 +50,9 @@ class InvalidStylingError(BaseError):
     """Error occurring when a styling does not exist in set of expected stylings."""
     def __init__(self, message: str):
         super().__init__(message=message)
+
+
+class InvalidArrayItemError(BaseError):
+    """Error occurring when an item expected to exist in an array, does not."""
+    def __init__(self, message: str):
+        super().__init__(message=message)
