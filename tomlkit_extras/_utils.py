@@ -16,11 +16,11 @@ from tomlkit import (
     TOMLDocument
 )
 
-from tomlkit_extensions._hierarchy import (
+from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )
-from tomlkit_extensions._typing import (
+from tomlkit_extras._typing import (
     Container,
     ContainerBody,
     ContainerItemDecomposed, 

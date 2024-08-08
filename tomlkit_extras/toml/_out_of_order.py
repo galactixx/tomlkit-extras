@@ -8,7 +8,7 @@ from typing import (
 from tomlkit import items, TOMLDocument
 from tomlkit.container import OutOfOrderTableProxy
 
-from tomlkit_extensions._typing import TOMLSource
+from tomlkit_extras._typing import TOMLSource
 
 def _fix_of_out_of_order_table_chain(
     current_table: items.Table, update_key: str, update_table: items.Table

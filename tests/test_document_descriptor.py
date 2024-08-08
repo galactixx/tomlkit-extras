@@ -1,5 +1,5 @@
 from tomlkit import TOMLDocument
-from tomlkit_extensions import (
+from tomlkit_extras import (
     ArrayOfTablesDescriptor,
     CommentDescriptor,
     FieldDescriptor,

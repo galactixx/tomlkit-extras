@@ -12,7 +12,7 @@ from typing import (
 from tomlkit import items
 
 if TYPE_CHECKING:
-    from tomlkit_extensions._typing import TOMLHierarchy
+    from tomlkit_extras._typing import TOMLHierarchy
 
 def standardize_hierarchy(hierarchy: 'TOMLHierarchy') -> Hierarchy:
     """"""

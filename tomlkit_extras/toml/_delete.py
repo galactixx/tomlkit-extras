@@ -6,9 +6,9 @@ from tomlkit import (
     TOMLDocument
 )
 
-from tomlkit_extensions._typing import TOMLHierarchy, TOMLSource
-from tomlkit_extensions._exceptions import InvalidHierarchyError
-from tomlkit_extensions._hierarchy import (
+from tomlkit_extras._typing import TOMLHierarchy, TOMLSource
+from tomlkit_extras._exceptions import InvalidHierarchyError
+from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )

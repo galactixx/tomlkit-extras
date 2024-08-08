@@ -9,8 +9,8 @@ from typing import (
     Type
 )
 
-from tomlkit_extensions._hierarchy import Hierarchy
-from tomlkit_extensions._typing import (
+from tomlkit_extras._hierarchy import Hierarchy
+from tomlkit_extras._typing import (
     FieldItem,
     ParentItem,
     StyleItem,

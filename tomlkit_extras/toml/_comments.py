@@ -8,12 +8,12 @@ from typing import (
 from tomlkit import items, TOMLDocument
 from tomlkit.container import OutOfOrderTableProxy
 
-from tomlkit_extensions._exceptions import InvalidArrayItemError
-from tomlkit_extensions._hierarchy import Hierarchy
-from tomlkit_extensions.descriptor._descriptor import TOMLDocumentDescriptor
-from tomlkit_extensions._typing import ContainerLike, TOMLHierarchy
-from tomlkit_extensions.toml._retrieval import get_attribute_from_toml_source
-from tomlkit_extensions._utils import (
+from tomlkit_extras._exceptions import InvalidArrayItemError
+from tomlkit_extras._hierarchy import Hierarchy
+from tomlkit_extras.descriptor._descriptor import TOMLDocumentDescriptor
+from tomlkit_extras._typing import ContainerLike, TOMLHierarchy
+from tomlkit_extras.toml._retrieval import get_attribute_from_toml_source
+from tomlkit_extras._utils import (
     decompose_body_item,
     get_container_body,
     standardize_hierarchy

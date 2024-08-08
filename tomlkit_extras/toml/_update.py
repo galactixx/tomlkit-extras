@@ -6,10 +6,10 @@ from tomlkit import (
     TOMLDocument
 )
 
-from tomlkit_extensions._typing import TOMLHierarchy
-from tomlkit_extensions.toml._retrieval import find_parent_toml_source
-from tomlkit_extensions._exceptions import InvalidHierarchyError
-from tomlkit_extensions._hierarchy import (
+from tomlkit_extras._typing import TOMLHierarchy
+from tomlkit_extras.toml._retrieval import find_parent_toml_source
+from tomlkit_extras._exceptions import InvalidHierarchyError
+from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )

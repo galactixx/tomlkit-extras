@@ -14,11 +14,11 @@ from typing import (
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items
 
-from tomlkit_extensions.descriptor._helpers import get_item_type
-from tomlkit_extensions.descriptor._create import create_comment_descriptor
-from tomlkit_extensions.descriptor._descriptors import CommentDescriptor
-from tomlkit_extensions._hierarchy import Hierarchy
-from tomlkit_extensions._typing import (
+from tomlkit_extras.descriptor._helpers import get_item_type
+from tomlkit_extras.descriptor._create import create_comment_descriptor
+from tomlkit_extras.descriptor._descriptors import CommentDescriptor
+from tomlkit_extras._hierarchy import Hierarchy
+from tomlkit_extras._typing import (
     Container,
     FieldItem,
     Item,

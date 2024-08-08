@@ -14,30 +14,30 @@ from typing import (
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items, TOMLDocument
 
-from tomlkit_extensions._utils import get_container_body
-from tomlkit_extensions._typing import (
+from tomlkit_extras._utils import get_container_body
+from tomlkit_extras._typing import (
     ParentItem,
     StyleItem,
     TOMLHierarchy
 )
-from tomlkit_extensions._hierarchy import (
+from tomlkit_extras._hierarchy import (
     Hierarchy, 
     standardize_hierarchy
 )
-from tomlkit_extensions._exceptions import (
+from tomlkit_extras._exceptions import (
     InvalidArrayOfTablesError,
     InvalidFieldError,
     InvalidHierarchyError,
     InvalidStylingError,
     InvalidTableError
 )
-from tomlkit_extensions.descriptor._descriptors import (
+from tomlkit_extras.descriptor._descriptors import (
     ArrayOfTablesDescriptor,
     FieldDescriptor,
     StyleDescriptor,
     TableDescriptor
 )
-from tomlkit_extensions.descriptor._types import (
+from tomlkit_extras.descriptor._types import (
     ArrayOfTables,
     ArrayOfTablesPosition,
     ContainerItem,
@@ -49,11 +49,11 @@ from tomlkit_extensions.descriptor._types import (
     TOMLItem,
     TOMLStatistics
 )
-from tomlkit_extensions.descriptor._helpers import (
+from tomlkit_extras.descriptor._helpers import (
     find_child_tables,
     get_item_type
 )
-from tomlkit_extensions.descriptor._create import (
+from tomlkit_extras.descriptor._create import (
     create_field_descriptor,
     create_style_descriptor,
     create_table_descriptor

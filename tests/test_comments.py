@@ -1,7 +1,7 @@
 from typing import List
 
 from tomlkit import items, TOMLDocument
-from tomlkit_extensions import (
+from tomlkit_extras import (
     get_attribute_from_toml_source,
     get_array_field_comment,
     get_comments,

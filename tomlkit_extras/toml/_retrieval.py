@@ -15,16 +15,16 @@ from tomlkit import (
     TOMLDocument
 )
 
-from tomlkit_extensions._exceptions import InvalidHierarchyError
-from tomlkit_extensions._utils import (
+from tomlkit_extras._exceptions import InvalidHierarchyError
+from tomlkit_extras._utils import (
     decompose_body_item,
     get_container_body
 )
-from tomlkit_extensions._hierarchy import (
+from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )
-from tomlkit_extensions._typing import (
+from tomlkit_extras._typing import (
     ContainerBody,
     Retrieval,
     TOMLHierarchy,

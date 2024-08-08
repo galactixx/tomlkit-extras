@@ -10,7 +10,7 @@ from typing import (
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items, TOMLDocument
 
-from tomlkit_extensions._hierarchy import Hierarchy
+from tomlkit_extras._hierarchy import Hierarchy
 
 # General types
 TOMLHierarchy: TypeAlias = Union[str, Hierarchy]

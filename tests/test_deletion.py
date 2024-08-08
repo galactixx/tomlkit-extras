@@ -1,7 +1,7 @@
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items, TOMLDocument
 import pytest
-from tomlkit_extensions import (
+from tomlkit_extras import (
     delete_from_toml_source,
     get_attribute_from_toml_source,
     load_toml_file,

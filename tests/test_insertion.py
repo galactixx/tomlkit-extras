@@ -1,5 +1,5 @@
 from tomlkit import TOMLDocument
-from tomlkit_extensions import (
+from tomlkit_extras import (
     attribute_insertion_into_toml_source,
     container_insertion_into_toml_source,
     general_insertion_into_toml_source,

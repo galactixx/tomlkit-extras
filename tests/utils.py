@@ -1,5 +1,5 @@
-from tomlkit_extensions.descriptor._descriptor import TOMLDocumentDescriptor
-from tomlkit_extensions._hierarchy import Hierarchy
+from tomlkit_extras.descriptor._descriptor import TOMLDocumentDescriptor
+from tomlkit_extras._hierarchy import Hierarchy
 
 def is_field_instance_test(
     document_descriptor: TOMLDocumentDescriptor, hierarchy: Hierarchy

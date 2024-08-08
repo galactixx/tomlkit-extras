@@ -1,6 +1,6 @@
 from tomlkit import items, TOMLDocument
 from tomlkit.container import OutOfOrderTableProxy
-from tomlkit_extensions import (
+from tomlkit_extras import (
     get_attribute_from_toml_source,
     is_toml_instance,
     load_toml_file

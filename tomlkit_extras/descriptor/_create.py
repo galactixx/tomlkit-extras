@@ -7,9 +7,9 @@ from typing import (
 
 from tomlkit import items
 
-from tomlkit_extensions._typing import ParentItem
-from tomlkit_extensions._hierarchy import Hierarchy
-from tomlkit_extensions.descriptor._descriptors import (
+from tomlkit_extras._typing import ParentItem
+from tomlkit_extras._hierarchy import Hierarchy
+from tomlkit_extras.descriptor._descriptors import (
     CommentDescriptor,
     FieldDescriptor,
     StyleDescriptor,
@@ -17,7 +17,7 @@ from tomlkit_extensions.descriptor._descriptors import (
 )
 
 if TYPE_CHECKING:
-    from tomlkit_extensions.descriptor._types import (
+    from tomlkit_extras.descriptor._types import (
         FieldPosition,
         StylingPosition,
         TablePosition
