@@ -177,7 +177,7 @@ class TOMLDocumentDescriptor:
         field_descriptors: List[FieldDescriptor] = []
 
         hierarchy_table = Hierarchy.parent_hierarchy(hierarchy=hierarchy_as_str)
-        hierarchy_field = str(cast(Hierarchy, hierarchy_obj - hierarchy_table))
+        hierarchy_field = str(cast(Hierarchy, hierarchy_obj.diff(hierarchy=hierarchy_table)))
 
         for array_of_table in arrays:
             if hierarchy_table in array_of_table.tables:
@@ -321,7 +321,7 @@ class TOMLDocumentDescriptor:
                 raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
 
             table_position: TablePosition = self._attribute_lines[longest_hierarchy]
-            remaning_hierarchy: Optional[Hierarchy] = hierarchy_obj - longest_hierarchy
+            remaning_hierarchy: Optional[Hierarchy] = hierarchy_obj.diff(hierarchy=longest_hierarchy)
 
             if (
                 remaning_hierarchy is None or

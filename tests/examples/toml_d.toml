@@ -1,0 +1,32 @@
+# This is a sample TOML file with out-of-order tables
+
+[database]
+server = "192.168.1.1"
+port = 5432
+user = "admin"
+password = "secret"
+
+[owner]
+name = "Tom Preston-Werner"
+dob = 1979-05-27T07:32:00Z
+
+[servers.alpha]
+ip = "10.0.0.1"
+role = "frontend"
+# Out-of-order table
+
+[clients]
+data = ["gamma", "delta"]
+hosts = [
+    "alpha",
+    "omega"
+]
+
+[servers.beta]
+# Another out-of-order table
+ip = "10.0.0.2"
+role = "backend"
+
+[servers.gamma]
+ip = "10.0.0.3"
+role = "cache"

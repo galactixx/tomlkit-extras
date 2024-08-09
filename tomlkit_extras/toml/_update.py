@@ -14,7 +14,7 @@ from tomlkit_extras._hierarchy import (
     standardize_hierarchy
 )
 
-def update_non_aot_from_toml_source(
+def update_toml_source(
     hierarchy: TOMLHierarchy, toml_source: TOMLDocument, update: Any, full: bool = True
 ) -> None:
     """"""

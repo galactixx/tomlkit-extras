@@ -1,0 +1,50 @@
+# TOML file with awkward nesting
+
+[project]
+name = "AwkwardNesting"
+version = "1.0.0"
+
+[project.details]
+# Awkwardly nested table (sub-section before main section)
+description = "A project with awkward nesting."
+repository = "https://github.com/example/awkward-nesting"
+
+[database]
+type = "mysql"
+host = "127.0.0.1"
+port = 3306
+
+[project.details.authors]
+# Nested table here is disjointed
+primary = "Jane Doe"
+secondary = "John Smith"
+
+[servers]
+# This table is nested under servers, but details are spread out
+alpha.ip = "192.168.1.10"
+alpha.role = "frontend"
+
+[project.license]
+type = "MIT"
+year = 2024
+
+[servers.beta]
+ip = "192.168.1.11"
+
+# This nesting is awkward
+
+role = "backend"
+
+[servers.alpha.config]
+max_connections = 100
+timeout = 30
+
+[servers.alpha.metadata]
+location = "datacenter-1"
+uptime = "99.9%"
+
+# Too far from papa
+
+[servers.beta.config]
+max_connections = 200
+timeout = 60

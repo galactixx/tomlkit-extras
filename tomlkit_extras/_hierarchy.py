@@ -1,5 +1,4 @@
 from __future__ import annotations
-from dataclasses import dataclass
 from typing import (
     Any,
     List,
@@ -9,10 +8,14 @@ from typing import (
     TYPE_CHECKING
 )
 
-from tomlkit import items
-
 if TYPE_CHECKING:
     from tomlkit_extras._typing import TOMLHierarchy
+
+def _hierarchy_type_error(hierarchy: Any) -> TypeError:
+    """"""
+    message_core = 'Expected an instance of string or Hierarchy'
+    return TypeError(f"{message_core}, but got {type(hierarchy).__name__}")
+
 
 def standardize_hierarchy(hierarchy: 'TOMLHierarchy') -> Hierarchy:
     """"""
@@ -23,15 +26,6 @@ def standardize_hierarchy(hierarchy: 'TOMLHierarchy') -> Hierarchy:
     return hierarchy_final
 
 
-@dataclass(frozen=True)
-class Attribute:
-    """"""
-    name: str
-    hierarchy: Hierarchy
-    position: int
-    value: items.Item
-
-
 class Hierarchy:
     """"""
     def __init__(self, hierarchy: Tuple[str, ...], attribute: str):
@@ -40,8 +34,7 @@ class Hierarchy:
 
     def __eq__(self, hierarchy: Any) -> bool:
         if not isinstance(hierarchy, (str, Hierarchy)):
-            message_core = 'Expected an instance of string or Hierarchy'
-            raise TypeError(f"{message_core}, but got {type(hierarchy).__name__}")
+            raise _hierarchy_type_error(hierarchy=hierarchy)
 
         hierarchy_arg = standardize_hierarchy(hierarchy=hierarchy)
         return (
@@ -60,33 +53,6 @@ class Hierarchy:
     def __len__(self) -> int:
         """"""
         return self.hierarchy_depth
-    
-    def __add__(self, update: Any) -> Hierarchy:
-        """"""
-        pass
-
-    def __sub__(self, hierarchy: Any) -> Optional[Hierarchy]:
-        """"""
-        if not isinstance(hierarchy, (str, Hierarchy)):
-            message_core = 'Expected an instance of string or Hierarchy'
-            raise TypeError(f"{message_core}, but got {type(hierarchy).__name__}")
-        
-        hierarchy_arg = standardize_hierarchy(hierarchy=hierarchy)
-
-        if hierarchy_arg == self:
-            return None
-
-        if not self.full_hierarchy_str.startswith(hierarchy_arg.full_hierarchy_str):
-            raise ValueError(
-                "Hierarchy argument must be a sub-hierarchy of the Hierarchy instance"
-            )
-        
-        remaining_heirarchy = self.full_hierarchy_str.replace(
-            hierarchy_arg.full_hierarchy_str, ''
-        )
-        remaining_heirarchy = remaining_heirarchy.lstrip('.')
-
-        return Hierarchy.from_str_hierarchy(hierarchy=remaining_heirarchy)
 
     @staticmethod
     def parent_hierarchy(hierarchy: str) -> str:
@@ -171,13 +137,32 @@ class Hierarchy:
 
         start_hierarchy = str()
         for hierarchy in self.full_hierarchy:
-            start_hierarchy = Hierarchy.create_hierarchy(
-                hierarchy=start_hierarchy, update=hierarchy
-            )
-
+            start_hierarchy = Hierarchy.create_hierarchy(hierarchy=start_hierarchy, update=hierarchy)
             sub_hierarchies.append(start_hierarchy)
 
         return sub_hierarchies
+
+    def diff(self, hierarchy: Any) -> Optional[Hierarchy]:
+        """"""
+        if not isinstance(hierarchy, (str, Hierarchy)):
+            raise _hierarchy_type_error(hierarchy=hierarchy)
+        
+        hierarchy_obj = standardize_hierarchy(hierarchy=hierarchy)
+
+        if hierarchy_obj == self:
+            return None
+
+        if not self.full_hierarchy_str.startswith(hierarchy_obj.full_hierarchy_str):
+            raise ValueError(
+                "Hierarchy argument must be a sub-hierarchy of the Hierarchy instance"
+            )
+        
+        remaining_heirarchy = self.full_hierarchy_str.replace(
+            hierarchy_obj.full_hierarchy_str, str()
+        )
+        remaining_heirarchy = remaining_heirarchy.lstrip('.')
+
+        return Hierarchy.from_str_hierarchy(hierarchy=remaining_heirarchy)
         
     def shortest_sub_hierarchy(self, hierarchies: Set[str]) -> Optional[str]:
         """"""
@@ -201,7 +186,7 @@ class Hierarchy:
             
         return None
     
-    def update_hierarchy(self, update: str) -> None:
+    def add_to_hierarchy(self, update: str) -> None:
         """"""
         update_decomposed: List[str] = update.split('.')
         

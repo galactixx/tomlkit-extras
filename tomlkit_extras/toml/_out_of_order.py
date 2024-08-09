@@ -2,7 +2,9 @@ import copy
 from typing import (
     Any,
     cast,
-    List
+    Iterator,
+    List,
+    Optional
 )
 
 from tomlkit import items, TOMLDocument
@@ -17,21 +19,21 @@ def _fix_of_out_of_order_table_chain(
     if update_key not in current_table:
         current_table[update_key] = update_table
     else:
-        update_from_table = cast(items.Table, current_table[update_key])
+        update_from_table: items.Table = _find_child_table(table_value=current_table[update_key])
 
         if update_from_table.is_super_table():
-            new_table = update_table
+            new_current_table = update_table
             new_update_table = update_from_table
             current_table[update_key] = update_table
         else:
-            new_table = update_from_table
+            new_current_table = update_from_table
             new_update_table = update_table
 
         for table_key, table_value in new_update_table.items():
             child_table = _find_child_table(table_value=table_value)
 
             _fix_of_out_of_order_table_chain(
-                current_table=new_table, update_key=table_key, update_table=child_table
+                current_table=new_current_table, update_key=table_key, update_table=child_table
             )
 
 
@@ -48,16 +50,34 @@ def fix_out_of_order_table(table: OutOfOrderTableProxy) -> items.Table:
     """"""
     component_tables = cast(List[items.Table], copy.deepcopy(table._tables))
 
-    parent_table: items.Table = next(
-        co_table for co_table in component_tables if not co_table.is_super_table()
-    )
+    table_w_shortest_name: Optional[items.Table] = None
+    parent_table: Optional[items.Table] = None
+
+    component_tables_iter: Iterator[items.Table] = iter(component_tables)
+
+    try:
+        while parent_table is None:
+            co_table: items.Table = next(component_tables_iter)
+
+            if not co_table.is_super_table():
+                parent_table = co_table
+            elif co_table.name is not None and table_w_shortest_name is None:
+                table_w_shortest_name = co_table
+            elif (
+                co_table.name is not None and
+                len(co_table.name) < len(table_w_shortest_name.name)
+            ):
+                table_w_shortest_name = co_table
+    except StopIteration:
+        parent_table = table_w_shortest_name
+
     component_tables.remove(parent_table)
 
     for component_table in component_tables:
         current_table = parent_table
 
         for table_key, table_value in component_table.items():
-            child_table = _find_child_table(table_value=table_value)
+            child_table: items.Table = _find_child_table(table_value=table_value)
 
             _fix_of_out_of_order_table_chain(
                 current_table=current_table, update_key=table_key, update_table=child_table

@@ -2,11 +2,10 @@ from tomlkit_extras._file_validator import load_toml_file
 from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras.toml._delete import delete_from_toml_source
 from tomlkit_extras.descriptor._descriptor import TOMLDocumentDescriptor
-from tomlkit_extras.toml._update import update_non_aot_from_toml_source
+from tomlkit_extras.toml._update import update_toml_source
 from tomlkit_extras.toml._comments import (
     get_array_field_comment,
-    get_comments,
-    StructureComment
+    get_comments
 )
 from tomlkit_extras.descriptor._descriptors import (
     ArrayOfTablesDescriptor,
@@ -19,6 +18,10 @@ from tomlkit_extras.toml._insert import (
     attribute_insertion_into_toml_source,
     container_insertion_into_toml_source,
     general_insertion_into_toml_source
+)
+from tomlkit_extras.toml._out_of_order import (
+    fix_out_of_order_table,
+    fix_out_of_order_tables
 )
 from tomlkit_extras.toml._retrieval import (
     get_attribute_from_toml_source,
@@ -41,7 +44,7 @@ __all__ = [
     'Hierarchy',
     'delete_from_toml_source',
     'TOMLDocumentDescriptor',
-    'update_non_aot_from_toml_source',
+    'update_toml_source',
     'get_array_field_comment',
     'get_comments',
     'StructureComment',
@@ -53,6 +56,8 @@ __all__ = [
     'attribute_insertion_into_toml_source',
     'container_insertion_into_toml_source',
     'general_insertion_into_toml_source',
+    'fix_out_of_order_table',
+    'fix_out_of_order_tables',
     'get_attribute_from_toml_source',
     'get_positions',
     'is_toml_instance',

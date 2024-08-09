@@ -44,7 +44,7 @@ def _find_final_toml_level(hierarchy: Hierarchy) -> str:
     """"""
     if hierarchy.hierarchy_depth > 1:
         hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy))
-        hierarchy_remaining = cast(Hierarchy, hierarchy - hierarchy_parent)
+        hierarchy_remaining = cast(Hierarchy, hierarchy.diff(hierarchy=hierarchy_parent))
     else:
         hierarchy_remaining = hierarchy
     return str(hierarchy_remaining)

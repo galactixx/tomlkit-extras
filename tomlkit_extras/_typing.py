@@ -12,6 +12,8 @@ from tomlkit import items, TOMLDocument
 
 from tomlkit_extras._hierarchy import Hierarchy
 
+ContainerComments: TypeAlias = Tuple[int, str]
+
 # General types
 TOMLHierarchy: TypeAlias = Union[str, Hierarchy]
 TOMLSource: TypeAlias = Union[TOMLDocument, items.Table, items.AoT]

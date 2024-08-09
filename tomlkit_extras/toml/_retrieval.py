@@ -10,11 +10,13 @@ from typing import (
     Union
 )
 
+from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import (
     items, 
     TOMLDocument
 )
 
+from tomlkit_extras.toml._out_of_order import fix_out_of_order_table
 from tomlkit_extras._exceptions import InvalidHierarchyError
 from tomlkit_extras._utils import (
     decompose_body_item,
@@ -78,7 +80,7 @@ def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[in
 
 
 def get_attribute_from_toml_source(
-    hierarchy: TOMLHierarchy, toml_source: TOMLSource, array_priority: bool = True
+    hierarchy: TOMLHierarchy, toml_source: TOMLSource, out_of_order: bool = False, array_priority: bool = True
 ) -> Union[items.Item, List[items.Item]]:
     """"""
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
@@ -108,16 +110,26 @@ def get_attribute_from_toml_source(
 
         if isinstance(current_source, items.AoT) and not array_priority:
             return [aot_table for aot_table in current_source]
+        elif isinstance(current_source, OutOfOrderTableProxy) and out_of_order:
+            return fix_out_of_order_table(table=current_source)
         else:
             return current_source
         
 
 def is_toml_instance(
-    toml_type: Type[Any], *, hierarchy: TOMLHierarchy, toml_source: TOMLSource, array_priority: bool = True
+    toml_type: Type[Any],
+    *,
+    hierarchy: TOMLHierarchy,
+    toml_source: TOMLSource,
+    out_of_order: bool = False,
+    array_priority: bool = True
 ) -> bool:
     """"""
     toml_items = get_attribute_from_toml_source(
-        hierarchy=hierarchy, toml_source=toml_source, array_priority=array_priority
+        hierarchy=hierarchy,
+        toml_source=toml_source,
+        out_of_order=out_of_order,
+        array_priority=array_priority
     )
 
     if (
