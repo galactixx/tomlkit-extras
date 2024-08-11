@@ -43,7 +43,6 @@ from tomlkit_extras.descriptor._types import (
     ContainerItem,
     FieldPosition,
     ItemPosition,
-    StylingPosition,
     StylingPositions,
     TablePosition,
     TOMLItem,

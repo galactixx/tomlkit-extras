@@ -23,7 +23,9 @@ Table: TypeAlias = Union[items.Table, items.InlineTable]
 Retrieval: TypeAlias = Union[TOMLDocument, items.Item, List[items.Item]]
 
 ContainerItemDecomposed: TypeAlias = Tuple[Optional[str], items.Item]
-ContainerBody: TypeAlias = List[Tuple[Optional[items.Key], items.Item]]
+
+ContainerBodyItem: TypeAlias = Tuple[Optional[items.Key], items.Item]
+ContainerBody: TypeAlias = List[ContainerBodyItem]
 
 ContainerLike: TypeAlias = Union[
     TOMLDocument, 

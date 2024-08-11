@@ -4,14 +4,12 @@ from typing import (
     Dict,
     List,
     Optional,
-    Tuple,
     Union
 )
 
 import tomlkit
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import (
-    document, 
     items,
     TOMLDocument
 )
@@ -23,13 +21,14 @@ from tomlkit_extras._hierarchy import (
 from tomlkit_extras._typing import (
     Container,
     ContainerBody,
+    ContainerBodyItem,
     ContainerItemDecomposed, 
     TOMLHierarchy
 )
 
 def from_dict_to_toml_document(dictionary: Dict[str, Any]) -> TOMLDocument:
     """"""
-    toml_document: TOMLDocument = document()
+    toml_document: TOMLDocument = tomlkit.document()
 
     def conversion(toml_source: Dict[str, Any]) -> items.Table:
         toml_table: items.Table = tomlkit.table()
@@ -114,9 +113,7 @@ def get_container_body(toml_source: Container) -> ContainerBody:
     return table_body_items
 
 
-def decompose_body_item(
-    body_item: Tuple[Optional[items.Key], items.Item]
-) -> ContainerItemDecomposed:
+def decompose_body_item(body_item: ContainerBodyItem) -> ContainerItemDecomposed:
     """"""
     item_key: Optional[str] = (
         body_item[0].as_string().strip() if body_item[0] is not None else None
