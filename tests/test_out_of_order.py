@@ -19,7 +19,7 @@ def _detect_any_out_of_order_tables(
     """"""
     if isinstance(toml_source, (TOMLDocument, items.Table)):
         return any(
-             _detect_any_out_of_order_tables(toml_source=document_value)
+            _detect_any_out_of_order_tables(toml_source=document_value)
             for _, document_value in toml_source.items() if isinstance(document_value, VALID_TYPES)
         )
     elif isinstance(toml_source, items.AoT):
@@ -31,13 +31,10 @@ def _detect_any_out_of_order_tables(
         return True
 
 
-def test_out_of_order_toml_c() -> None:
+def _out_of_order_fix_test_and_return(hierarchy: str, toml_document: TOMLDocument) -> items.Table:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
-
-    HIERARCHY_TOOL_RUFF = 'tool.ruff'
     out_of_order_table = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_TOOL_RUFF, toml_source=toml_document
+        hierarchy=hierarchy, toml_source=toml_document
     )
     assert isinstance(out_of_order_table, OutOfOrderTableProxy)
 
@@ -45,6 +42,18 @@ def test_out_of_order_toml_c() -> None:
     fixed_order_table = fix_out_of_order_table(table=out_of_order_table)
     assert isinstance(fixed_order_table, items.Table)
     assert fixed_order_table == out_of_order_table
+
+    return fixed_order_table
+
+
+def test_out_of_order_toml_c() -> None:
+    """"""
+    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+
+    # Fix the out-of-order table and ensure true values/structure has not changed
+    fixed_order_table = _out_of_order_fix_test_and_return(
+        hierarchy='tool.ruff', toml_document=toml_document
+    )
 
     # Now that the values have been checked, ensure that the comments for each table
     # are as expected, and have remained unchanged/altered
@@ -67,16 +76,10 @@ def test_out_of_order_toml_d() -> None:
     """"""
     toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_d.toml')
 
-    HIERARCHY_SERVERS = 'servers'
-    out_of_order_table = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_SERVERS, toml_source=toml_document
-    )
-    assert isinstance(out_of_order_table, OutOfOrderTableProxy)
-
     # Fix the out-of-order table and ensure true values/structure has not changed
-    fixed_order_table = fix_out_of_order_table(table=out_of_order_table)
-    assert isinstance(fixed_order_table, items.Table)
-    assert fixed_order_table == out_of_order_table
+    fixed_order_table = _out_of_order_fix_test_and_return(
+        hierarchy='servers', toml_document=toml_document
+    )
 
     # Now that the values have been checked, ensure that the comments for each table
     # are as expected, and have remained unchanged/altered
@@ -98,27 +101,13 @@ def test_out_of_order_toml_e() -> None:
     """"""
     toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_e.toml')
 
-    HIERARCHY_PROJECT = 'project'
-    project_out_of_order_table = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_PROJECT, toml_source=toml_document
+    # Fix the out-of-order tables and ensure true values/structure has not changed
+    project_fixed_order_table = _out_of_order_fix_test_and_return(
+        hierarchy='project', toml_document=toml_document
     )
-    assert isinstance(project_out_of_order_table, OutOfOrderTableProxy)
-
-    # Fix the out-of-order table and ensure true values/structure has not changed
-    project_fixed_order_table = fix_out_of_order_table(table=project_out_of_order_table)
-    assert isinstance(project_fixed_order_table, items.Table)
-    assert project_fixed_order_table == project_out_of_order_table
-
-    HIERARCHY_SERVERS = 'servers'
-    servers_out_of_order_table = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_SERVERS, toml_source=toml_document
+    servers_fixed_order_table = _out_of_order_fix_test_and_return(
+        hierarchy='servers', toml_document=toml_document
     )
-    assert isinstance(servers_out_of_order_table, OutOfOrderTableProxy)
-
-    # Fix the out-of-order table and ensure true values/structure has not changed
-    servers_fixed_order_table = fix_out_of_order_table(table=servers_out_of_order_table)
-    assert isinstance(servers_fixed_order_table, items.Table)
-    assert servers_fixed_order_table == servers_out_of_order_table
 
     # Now that the values have been checked, ensure that the comments for each table
     # are as expected, and have remained unchanged/altered

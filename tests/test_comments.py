@@ -16,16 +16,13 @@ def test_comments_toml_a() -> None:
     assert document_comments == [(1, '# this is a document comment')]
 
     # Test a few tables that do not have any comments
-    HIERARCHY_PROJECT = 'project'
-    project_comments = get_comments(toml_source=toml_document, hierarchy=HIERARCHY_PROJECT)
+    project_comments = get_comments(toml_source=toml_document, hierarchy='project')
     assert project_comments is None
 
-    HIERARCHY_DETAILS = 'details'
-    details_comments = get_comments(toml_source=toml_document, hierarchy=HIERARCHY_DETAILS)
+    details_comments = get_comments(toml_source=toml_document, hierarchy='details')
     assert details_comments is None
 
-    HIERARCHY_MEMBERS = 'members'
-    members_comments = get_comments(toml_source=toml_document, hierarchy=HIERARCHY_MEMBERS)
+    members_comments = get_comments(toml_source=toml_document, hierarchy='members')
     assert members_comments is None
 
 
