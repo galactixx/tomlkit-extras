@@ -28,7 +28,7 @@ def get_comments(
         attribute = toml_source
     else:
         attribute = get_attribute_from_toml_source(
-            hierarchy=hierarchy, toml_source=toml_source, out_of_order=True
+            hierarchy=hierarchy, toml_source=toml_source, fix_order=True
         )
     
     if (

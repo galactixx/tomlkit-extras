@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 
 import tomlkit
 from tomlkit import (
@@ -20,7 +20,7 @@ def update_toml_source(
     """"""
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
-    hierarchy_remaining, retrieved_from_toml = find_parent_toml_source(
+    retrieved_from_toml = find_parent_toml_source(
         hierarchy=hierarchy_obj, toml_source=toml_source
     )
 
@@ -35,7 +35,14 @@ def update_toml_source(
         update_converted = update
     
     # Implement a full update
-    final_attribute = str(hierarchy_remaining)
+    hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy_obj))
+    final_attribute = str(cast(Hierarchy, hierarchy_obj.diff(hierarchy=hierarchy_parent)))
+    
+    if final_attribute not in retrieved_from_toml:
+        raise InvalidHierarchyError(
+            "Hierarchy specified does not exist in TOMLDocument instance"
+        )
+
     if full:
         retrieved_from_toml[final_attribute] = update_converted
     else:
@@ -46,5 +53,7 @@ def update_toml_source(
             isinstance(toml_edit_space, (items.Table, items.InlineTable))
         ):
             toml_edit_space.update(update_converted)
+        elif isinstance(toml_edit_space, items.AoT):
+            toml_edit_space.append(update_converted)
         else:
             retrieved_from_toml[final_attribute] = update_converted

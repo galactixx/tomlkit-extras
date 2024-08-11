@@ -12,7 +12,7 @@ def _retrieval_of_invalid_hierarchy(hierarchy: str, toml_document: TOMLDocument)
     """"""
     with pytest.raises(InvalidHierarchyError) as exc_info:
         _ = get_attribute_from_toml_source(
-            hierarchy=hierarchy, toml_source=toml_document, array_priority=False
+            hierarchy=hierarchy, toml_source=toml_document, array=False
         )
 
     assert str(exc_info.value) == (
@@ -46,7 +46,7 @@ def test_deletion_from_toml_a() -> None:
     HIERARCHY_MEMBERS_ROLES_ROLE = 'members.roles.role'
 
     members_roles_role_aot = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_MEMBERS_ROLES_ROLE, toml_source=toml_document, array_priority=False
+        hierarchy=HIERARCHY_MEMBERS_ROLES_ROLE, toml_source=toml_document, array=False
     )
     assert len(members_roles_role_aot) == 3
     _deletion_and_retrieval_test(hierarchy=HIERARCHY_MEMBERS_ROLES_ROLE, toml_document=toml_document)
@@ -61,7 +61,7 @@ def test_deletion_from_toml_a() -> None:
     HIERARCHY_MEMBERS_NAME = 'members.name'
 
     members_roles_role_aot = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_MEMBERS_NAME, toml_source=toml_document, array_priority=False
+        hierarchy=HIERARCHY_MEMBERS_NAME, toml_source=toml_document, array=False
     )
     assert len(members_roles_role_aot) == 2
     _deletion_and_retrieval_test(hierarchy=HIERARCHY_MEMBERS_NAME, toml_document=toml_document)

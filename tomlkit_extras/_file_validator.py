@@ -28,10 +28,8 @@ def __read_toml(toml_content: str) -> TOMLDocument:
     try:
         toml_content_parsed: TOMLDocument = tomlkit.parse(toml_content)
         return toml_content_parsed
-    except ParseError:
-        raise TOMLDecodingError(
-            "Issue occured when decoding the TOML source content"
-        )
+    except ParseError as e:
+        raise TOMLDecodingError(str(e))
     except Exception:
         raise TOMLConversionError(
             "Unexpected issue occured when loading the source from TOML"

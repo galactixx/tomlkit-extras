@@ -10,11 +10,32 @@ from tomlkit_extras import (
     TOMLDocumentDescriptor
 )
 
-from tests.utils import (
-    is_array_and_table_instance_test,
-    is_field_instance_test,
-    is_table_instance_test
-)
+def _is_field_instance_test(
+    document_descriptor: TOMLDocumentDescriptor, hierarchy: Hierarchy
+) -> None:
+    """"""
+    assert document_descriptor.is_field_instance(hierarchy=hierarchy)
+    assert not document_descriptor.is_table_instance(hierarchy=hierarchy)
+    assert not document_descriptor.is_array_of_tables_instance(hierarchy=hierarchy)
+    
+
+def _is_table_instance_test(
+    document_descriptor: TOMLDocumentDescriptor, hierarchy: Hierarchy
+) -> None:
+    """"""
+    assert document_descriptor.is_table_instance(hierarchy=hierarchy)
+    assert not document_descriptor.is_field_instance(hierarchy=hierarchy)
+    assert not document_descriptor.is_array_of_tables_instance(hierarchy=hierarchy)
+
+
+def _is_array_and_table_instance_test(
+    document_descriptor: TOMLDocumentDescriptor, hierarchy: Hierarchy
+) -> None:
+    """"""
+    assert document_descriptor.is_table_instance(hierarchy=hierarchy)
+    assert document_descriptor.is_array_of_tables_instance(hierarchy=hierarchy)
+    assert not document_descriptor.is_field_instance(hierarchy=hierarchy)
+
 
 def test_toml_a_descriptors() -> None:
     """"""
@@ -73,8 +94,8 @@ def test_toml_a_descriptors() -> None:
 
     assert document_descriptor.get_field(hierarchy=hierarchy_name) == descriptor_name
     assert document_descriptor.get_field(hierarchy=hierarchy_desc) == descriptor_desc
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_name)
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_desc)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_name)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_desc)
 
     # Fields from the tables within the *members* array of tables
     hierarchy_members_name = Hierarchy.from_str_hierarchy(hierarchy='members.name')
@@ -106,7 +127,7 @@ def test_toml_a_descriptors() -> None:
     assert document_descriptor.get_field_from_array_of_tables(hierarchy=hierarchy_members_name) == [
         descriptor_members_name_one, descriptor_members_name_two
     ]
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_members_name)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_members_name)
 
     # Tables from within the *members* array of tables
     hierarchy_members = Hierarchy.from_str_hierarchy(hierarchy='members')
@@ -140,7 +161,7 @@ def test_toml_a_descriptors() -> None:
     assert document_descriptor.get_table_from_array_of_tables(hierarchy=hierarchy_members) == [
         descriptor_members_table_one, descriptor_members_table_two
     ]
-    is_array_and_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_members)
+    _is_array_and_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_members)
 
     # For the *members* array of tables
     descriptor_members_array = ArrayOfTablesDescriptor(
@@ -231,7 +252,7 @@ def test_toml_b_descriptor() -> None:
     )
 
     assert document_descriptor.get_field(hierarchy=hierarchy_project) == descriptor_project
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_project)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_project)
 
     # Field descriptor for tool.ruff table
     hierarchy_line_length = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff.line-length')
@@ -249,7 +270,7 @@ def test_toml_b_descriptor() -> None:
     )
 
     assert document_descriptor.get_field(hierarchy=hierarchy_line_length) == descriptor_line_length
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_line_length)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_line_length)
 
     # Table descriptor for tool.ruff table
     hieraarchy_ruff = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff')
@@ -271,7 +292,7 @@ def test_toml_b_descriptor() -> None:
     )
 
     assert document_descriptor.get_table(hierarchy=hieraarchy_ruff) == descriptor_ruff
-    is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hieraarchy_ruff)
+    _is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hieraarchy_ruff)
 
     # Field descriptor for the convention field within the pydocstyle inline table
     hierarchy_convention = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff.lint.pydocstyle.convention')
@@ -289,7 +310,7 @@ def test_toml_b_descriptor() -> None:
     )
 
     assert document_descriptor.get_field(hierarchy=hierarchy_convention) == descriptor_convention
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_convention)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_convention)
 
     # Table descriptor for the pydocstyle inline table in tool.ruff.lint.pydocstyle
     hierarchy_pydocstyle = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff.lint.pydocstyle')
@@ -308,7 +329,7 @@ def test_toml_b_descriptor() -> None:
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_pydocstyle) == descriptor_pydocstyle
-    is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_pydocstyle)
+    _is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_pydocstyle)
 
     # Field descriptor for the fields within the main_table
     hierarchy_name = Hierarchy.from_str_hierarchy(hierarchy='main_table.name')
@@ -341,8 +362,8 @@ def test_toml_b_descriptor() -> None:
 
     assert document_descriptor.get_field(hierarchy=hierarchy_name) == descriptor_name
     assert document_descriptor.get_field(hierarchy=hierarchy_desc) == descriptor_desc
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_name)
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_desc)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_name)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_desc)
 
     # Table descriptor for the main_table table
     hierarchy_main_table = Hierarchy.from_str_hierarchy(hierarchy='main_table')
@@ -361,7 +382,7 @@ def test_toml_b_descriptor() -> None:
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_main_table) == descriptor_main_table
-    is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_main_table)
+    _is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_main_table)
 
     # Field descriptors for main_table.sub_tables array of tables
     hierarchy_sub_tables_name = Hierarchy.from_str_hierarchy(hierarchy='main_table.sub_tables.name')
@@ -393,7 +414,7 @@ def test_toml_b_descriptor() -> None:
     assert document_descriptor.get_field_from_array_of_tables(hierarchy=hierarchy_sub_tables_name) == [
         descriptor_sub_tables_name_one, descriptor_sub_tables_name_two
     ]
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_sub_tables_name)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_sub_tables_name)
     
     hierarchy_sub_tables_value = Hierarchy.from_str_hierarchy(hierarchy='main_table.sub_tables.value')
     descriptor_sub_tables_value_one = FieldDescriptor(
@@ -424,7 +445,7 @@ def test_toml_b_descriptor() -> None:
     assert document_descriptor.get_field_from_array_of_tables(hierarchy=hierarchy_sub_tables_value) == [
         descriptor_sub_tables_value_one, descriptor_sub_tables_value_two
     ]
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_sub_tables_value)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_sub_tables_value)
 
     # Table descriptors for the main_table.sub_tables
     hierarchy_sub_tables = Hierarchy.from_str_hierarchy(hierarchy='main_table.sub_tables')
@@ -458,7 +479,7 @@ def test_toml_b_descriptor() -> None:
     assert document_descriptor.get_table_from_array_of_tables(hierarchy=hierarchy_sub_tables) == [
         descriptor_main_sub_table_one, descriptor_main_sub_table_two
     ]
-    is_array_and_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_sub_tables)
+    _is_array_and_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_sub_tables)
 
     # For the *main_table.sub_tables* array of tables
     descriptor_main_sub_tables = ArrayOfTablesDescriptor(
@@ -520,7 +541,7 @@ def test_toml_c_descriptor() -> None:
     )
 
     assert document_descriptor.get_field(hierarchy=hierarchy_project) == descriptor_project
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_project)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_project)
 
     # Field descriptor for the convention field within the pydocstyle inline table
     hierarchy_convention = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff.lint.pydocstyle.convention')
@@ -538,7 +559,7 @@ def test_toml_c_descriptor() -> None:
     )
 
     assert document_descriptor.get_field(hierarchy=hierarchy_convention) == descriptor_convention
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_convention)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_convention)
 
     # Table descriptor for the pydocstyle inline table in tool.ruff.lint.pydocstyle
     hierarchy_pydocstyle = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff.lint.pydocstyle')
@@ -557,7 +578,7 @@ def test_toml_c_descriptor() -> None:
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_pydocstyle) == descriptor_pydocstyle
-    is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_pydocstyle)
+    _is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_pydocstyle)
 
     # Get comment from the tool.ruff.lint table
     hierarchy_ruff_lint = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff.lint')
@@ -591,7 +612,7 @@ def test_toml_c_descriptor() -> None:
     )
 
     assert document_descriptor.get_field(hierarchy=hierarchy_line_length) == descriptor_line_length
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_line_length)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_line_length)
 
     # Table descriptor for tool.ruff table
     hierarchy_ruff = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff')
@@ -610,7 +631,7 @@ def test_toml_c_descriptor() -> None:
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_ruff) == descriptor_ruff
-    is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_ruff)
+    _is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_ruff)
 
     # Get comment from the tool.ruff table
     descriptor_ruff_comment = StyleDescriptor(
@@ -643,7 +664,7 @@ def test_toml_c_descriptor() -> None:
     )
 
     assert document_descriptor.get_field(hierarchy=hierarchy_managed) == descriptor_managed
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_managed)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_managed)
 
     hierarchy_deps = Hierarchy.from_str_hierarchy(hierarchy='tool.rye.dev-dependencies')
     descriptor_deps = FieldDescriptor(
@@ -660,7 +681,7 @@ def test_toml_c_descriptor() -> None:
     )
 
     assert document_descriptor.get_field(hierarchy=hierarchy_deps) == descriptor_deps
-    is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_deps)
+    _is_field_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_deps)
 
     # Descriptor for table tool.rye
     hierarchy_rye = Hierarchy.from_str_hierarchy(hierarchy='tool.rye')
@@ -679,4 +700,4 @@ def test_toml_c_descriptor() -> None:
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_rye) == descriptor_rye
-    is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_rye)
+    _is_table_instance_test(document_descriptor=document_descriptor, hierarchy=hierarchy_rye)

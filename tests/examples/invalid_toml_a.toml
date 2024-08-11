@@ -1,0 +1,12 @@
+# Invalid TOML example
+profile = "Tom"
+age = 30
+
+[profile]
+  email = "tom@example.com"
+
+[[languages]]
+  name = "Python"
+
+[[languages]]
+  name = "Rust"

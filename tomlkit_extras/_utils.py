@@ -22,7 +22,7 @@ from tomlkit_extras._typing import (
     Container,
     ContainerBody,
     ContainerBodyItem,
-    ContainerItemDecomposed, 
+    ContainerItemDecomposed,
     TOMLHierarchy
 )
 

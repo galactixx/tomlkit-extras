@@ -80,7 +80,7 @@ def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[in
 
 
 def get_attribute_from_toml_source(
-    hierarchy: TOMLHierarchy, toml_source: TOMLSource, out_of_order: bool = False, array_priority: bool = True
+    hierarchy: TOMLHierarchy, toml_source: TOMLSource, fix_order: bool = False, array: bool = True
 ) -> Union[items.Item, List[items.Item]]:
     """"""
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
@@ -103,42 +103,34 @@ def get_attribute_from_toml_source(
             "Hierarchy specified does not exist in TOMLDocument instance"
         )
     else:
-        if not current_source:
+        if isinstance(current_source, list) and not current_source:
             raise InvalidHierarchyError(
                 "Hierarchy specified does not exist in TOMLDocument instance"
             )
 
-        if isinstance(current_source, items.AoT) and not array_priority:
+        if isinstance(current_source, items.AoT) and not array:
             return [aot_table for aot_table in current_source]
-        elif isinstance(current_source, OutOfOrderTableProxy) and out_of_order:
+        elif isinstance(current_source, OutOfOrderTableProxy) and fix_order:
             return fix_out_of_order_table(table=current_source)
         else:
             return current_source
         
 
 def is_toml_instance(
-    toml_type: Type[Any],
-    *,
-    hierarchy: TOMLHierarchy,
-    toml_source: TOMLSource,
-    out_of_order: bool = False,
-    array_priority: bool = True
+    _type: Type[Any], *, hierarchy: TOMLHierarchy, toml_source: TOMLSource, fix_order: bool = False, array: bool = True
 ) -> bool:
     """"""
     toml_items = get_attribute_from_toml_source(
-        hierarchy=hierarchy,
-        toml_source=toml_source,
-        out_of_order=out_of_order,
-        array_priority=array_priority
+        hierarchy=hierarchy, toml_source=toml_source, fix_order=fix_order, array=array
     )
 
     if (
         not isinstance(toml_items, list) or 
-        (isinstance(toml_items, items.AoT) and array_priority)
+        (isinstance(toml_items, items.AoT) and array)
     ):
-        return isinstance(toml_items, toml_type)
+        return isinstance(toml_items, _type)
     else:
-        return all(isinstance(item, toml_type) for item in toml_items)
+        return all(isinstance(item, _type) for item in toml_items)
     
 
 def _find_parent_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> Retrieval:
