@@ -1,21 +1,26 @@
-from typing import Any, cast
-
-import tomlkit
-from tomlkit import (
-    items, 
-    TOMLDocument
+from typing import (
+    Any,
+    cast,
+    Optional
 )
 
-from tomlkit_extras._typing import TOMLHierarchy
+from tomlkit.container import OutOfOrderTableProxy
+from tomlkit import items, TOMLDocument
+
+from tomlkit_extras._utils import convert_to_tomlkit_item
 from tomlkit_extras.toml._retrieval import find_parent_toml_source
 from tomlkit_extras._exceptions import InvalidHierarchyError
 from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )
+from tomlkit_extras._typing import (
+    ContainerLike, 
+    TOMLHierarchy
+)
 
 def update_toml_source(
-    hierarchy: TOMLHierarchy, toml_source: TOMLDocument, update: Any, full: bool = True
+    toml_source: ContainerLike, update: Any, hierarchy: Optional[TOMLHierarchy] = None, full: bool = True
 ) -> None:
     """"""
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
@@ -26,34 +31,40 @@ def update_toml_source(
 
     if isinstance(retrieved_from_toml, (list, items.AoT)):
         raise InvalidHierarchyError(
-            "Hierarchy maps to an existing array of tables, not a feature of this function"
+            "Hierarchy maps to multiple items within an array of tables, not a feature of this function"
         )
         
-    if not isinstance(update, items.Item):
-        update_converted = tomlkit.item(value=update)
-    else:
-        update_converted = update
+    update_as_toml_item: items.Item = convert_to_tomlkit_item(value=update)
     
     # Implement a full update
     hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy_obj))
-    final_attribute = str(cast(Hierarchy, hierarchy_obj.diff(hierarchy=hierarchy_parent)))
+    attribute = str(cast(Hierarchy, hierarchy_obj.diff(hierarchy=hierarchy_parent)))
     
-    if final_attribute not in retrieved_from_toml:
+    if attribute not in retrieved_from_toml:
         raise InvalidHierarchyError(
             "Hierarchy specified does not exist in TOMLDocument instance"
         )
 
     if full:
-        retrieved_from_toml[final_attribute] = update_converted
+        retrieved_from_toml[attribute] = update_as_toml_item
     else:
-        toml_edit_space = retrieved_from_toml[final_attribute]
-
-        if (
-            isinstance(update_converted, (items.Table, items.InlineTable)) and
-            isinstance(toml_edit_space, (items.Table, items.InlineTable))
-        ):
-            toml_edit_space.update(update_converted)
-        elif isinstance(toml_edit_space, items.AoT):
-            toml_edit_space.append(update_converted)
+        attribute_toml = retrieved_from_toml[attribute]
+        if isinstance(attribute_toml, items.Array):
+            attribute_toml.add_line(update_as_toml_item)
+        elif isinstance(attribute_toml, (
+            items.InlineTable,
+            items.Table,
+            OutOfOrderTableProxy,
+            TOMLDocument
+        )):
+            if not isinstance(update_as_toml_item.unwrap(), dict):
+                raise ValueError(
+                    "If a dict-like TOML item is being updated, then the instance of the update must "
+                    "be a subclass of a dict"
+                )
+            
+            attribute_toml.update(update_as_toml_item)
+        elif isinstance(attribute_toml, items.AoT):
+            attribute_toml.append(update_as_toml_item)
         else:
-            retrieved_from_toml[final_attribute] = update_converted
+            retrieved_from_toml[attribute] = update_as_toml_item

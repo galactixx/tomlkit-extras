@@ -7,7 +7,6 @@ from typing import (
     List,
     Optional,
     Set,
-    Tuple,
     Union
 )
 
@@ -16,9 +15,12 @@ from tomlkit import items, TOMLDocument
 
 from tomlkit_extras._utils import get_container_body
 from tomlkit_extras._typing import (
+    ContainerBody,
     ParentItem,
     StyleItem,
-    TOMLHierarchy
+    TOMLDescriptorType,
+    TOMLHierarchy,
+    TOMLType
 )
 from tomlkit_extras._hierarchy import (
     Hierarchy, 
@@ -43,6 +45,7 @@ from tomlkit_extras.descriptor._types import (
     ContainerItem,
     FieldPosition,
     ItemPosition,
+    StylingPosition,
     StylingPositions,
     TablePosition,
     TOMLItem,
@@ -67,8 +70,14 @@ class TOMLDocumentDescriptor:
         toml_source: Union[TOMLDocument, items.Table, items.AoT],
         top_level_only: bool = False
     ):
+        if not isinstance(toml_source, (TOMLDocument, items.Table, items.AoT)):
+            message_core = 'Expected an instance of TOMLSource'
+            raise TypeError(f"{message_core}, but got {type(toml_source).__name__}")
+
         self.top_level_only = top_level_only
-        self.top_level_type = get_item_type(toml_item=toml_source)
+        self.top_level_type = cast(
+            TOMLDescriptorType, get_item_type(toml_item=toml_source)
+        )
         
         self.top_level_hierarchy: Optional[str]
 
@@ -202,7 +211,7 @@ class TOMLDocumentDescriptor:
     def get_table_from_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[TableDescriptor]:
         """"""
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
-        hierarchy_as_str: str = str(hierarchy_obj)
+        hierarchy_as_str = str(hierarchy_obj)
 
         longest_hierarchy: Optional[str] = hierarchy_obj.longest_sub_hierarchy(
             hierarchies=set(self._array_of_tables.keys())
@@ -243,7 +252,7 @@ class TOMLDocumentDescriptor:
         """"""
         array_hierarchies: Set[str] = set(self._array_of_tables.keys())
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
-        hierarchy_as_str: str = str(hierarchy_obj)
+        hierarchy_as_str = str(hierarchy_obj)
 
         longest_hierarchy: Optional[str] = hierarchy_obj.longest_sub_hierarchy(
             hierarchies=array_hierarchies
@@ -302,7 +311,7 @@ class TOMLDocumentDescriptor:
     def get_field(self, hierarchy: TOMLHierarchy) -> FieldDescriptor:
         """"""
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
-        hierarchy_as_str: str = str(hierarchy_obj)
+        hierarchy_as_str = str(hierarchy_obj)
 
         if hierarchy_obj.hierarchy_depth == 1:
             if hierarchy_as_str not in self._document_lines:
@@ -343,7 +352,7 @@ class TOMLDocumentDescriptor:
     def get_table(self, hierarchy: TOMLHierarchy) -> TableDescriptor:
         """"""
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)   
-        hierarchy_as_str: str = str(hierarchy_obj)
+        hierarchy_as_str = str(hierarchy_obj)
 
         if hierarchy_as_str not in self._attribute_lines:
             raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
@@ -359,12 +368,16 @@ class TOMLDocumentDescriptor:
     
     def get_top_level_stylings(self, styling: StyleItem) -> List[StyleDescriptor]:
         """"""
+        stylings: Dict[str, List[StylingPosition]]
         styling_positions: StylingPositions
 
-        if self.top_level_hierarchy is None:
+        if self.top_level_type == 'document':
             styling_positions = self._document_stylings
-        elif self.top_level_hierarchy in self._attribute_lines:
-            styling_positions = self._attribute_lines[self.top_level_hierarchy].styling
+        elif (
+            self.top_level_type == 'table' and
+            self.top_level_hierarchy in self._attribute_lines
+        ):
+            styling_positions = self._attribute_lines[cast(str, self.top_level_hierarchy)].styling
         else:
             styling_positions = StylingPositions(comments=dict(), whitespace=dict())
 
@@ -604,11 +617,9 @@ class TOMLDocumentDescriptor:
                     hierarchy=new_hierarchy, position=position, container=container
                 )
 
-        table_body_items: List[Tuple[Optional[items.Key], items.Item]]
-
         # Since an inline table is contained only on a single line, and thus,
         # on the same line as the table header, the line number is intialized to 0
-        table_body_items = get_container_body(toml_source=container.item)
+        table_body_items: ContainerBody = get_container_body(toml_source=container.item)
         if (
             isinstance(container.item, TOMLDocument) or
             (isinstance(container.item, items.Table) and not container.item.is_super_table())

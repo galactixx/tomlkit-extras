@@ -1,10 +1,5 @@
-from typing import Union
-
 from pyrsistent import pdeque, PDeque
-from tomlkit import (
-    items, 
-    TOMLDocument
-)
+from tomlkit import items
 
 from tomlkit_extras._typing import TOMLHierarchy, TOMLSource
 from tomlkit_extras._exceptions import InvalidHierarchyError
@@ -43,10 +38,7 @@ def _delete_iteration_for_aot(
                 del table_source[attribute]
 
 
-def _recursive_deletion(
-    current_source: Union[TOMLDocument, items.Table, items.AoT],
-    hierarchy_queue: PDeque[str]
-) -> None:
+def _recursive_deletion(current_source: TOMLSource, hierarchy_queue: PDeque[str]) -> None:
     """"""
     try:
         current_table: str = hierarchy_queue[0]

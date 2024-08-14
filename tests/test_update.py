@@ -50,7 +50,7 @@ def test_update_toml_a() -> None:
             hierarchy='members.roles', toml_source=toml_document, update={'role': "Analyst"}
         )
     assert str(exc_info.value) == (
-        'Hierarchy maps to an existing array of tables, not a feature of this function'
+        'Hierarchy maps to multiple items within an array of tables, not a feature of this function'
     )
 
 

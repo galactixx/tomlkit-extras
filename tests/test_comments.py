@@ -13,7 +13,7 @@ def test_comments_toml_a() -> None:
 
     # Retrieve all comments from the top-level document space
     document_comments = get_comments(toml_source=toml_document)
-    assert document_comments == [(1, '# this is a document comment')]
+    assert document_comments == [(1, 1, '# this is a document comment')]
 
     # Test a few tables that do not have any comments
     project_comments = get_comments(toml_source=toml_document, hierarchy='project')
@@ -32,13 +32,13 @@ def test_comments_toml_b() -> None:
 
     # Retrieve all comments from the top-level document space
     document_comments = get_comments(toml_source=toml_document)
-    assert document_comments == [(4, '# this is a document comment')]
+    assert document_comments == [(1, 4, '# this is a document comment')]
 
     # Retrieve all table comments from the tool.ruff.lint table
     HIERARCHY_RUFF_LINT = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff.lint')
     RUFF_LINT_COMMENTS = [
-        (1, '# this is the first comment for lint table'),
-        (2, '# this is the second comment for lint table')
+        (1, 1, '# this is the first comment for lint table'),
+        (1, 2, '# this is the second comment for lint table')
     ]
 
     ruff_lint_comments = get_comments(toml_source=toml_document, hierarchy=HIERARCHY_RUFF_LINT)
@@ -63,11 +63,11 @@ def test_comments_toml_c() -> None:
 
     # Retrieve all comments from the top-level document space
     document_comments = get_comments(toml_source=toml_document)
-    assert document_comments == [(1, '# this is a document comment')]
+    assert document_comments == [(1, 1, '# this is a document comment')]
 
     # Retrieve all table comments from the tool.ruff.lint table
     HIERARCHY_RUFF_LINT = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff.lint')
-    RUFF_LINT_COMMENTS = [(3, '# this is the first comment for lint table')]
+    RUFF_LINT_COMMENTS = [(1, 3, '# this is the first comment for lint table')]
 
     ruff_lint_comments = get_comments(toml_source=toml_document, hierarchy=HIERARCHY_RUFF_LINT)
     assert ruff_lint_comments == RUFF_LINT_COMMENTS
@@ -83,7 +83,7 @@ def test_comments_toml_c() -> None:
     HIERARCHY_RUFF = Hierarchy.from_str_hierarchy(hierarchy='tool.ruff')
 
     ruff_comments = get_comments(toml_source=toml_document, hierarchy=HIERARCHY_RUFF)
-    assert ruff_comments == [(2, '# this is a tool.ruff comment')]
+    assert ruff_comments == [(1, 2, '# this is a tool.ruff comment')]
 
     # Test a table that does not have any comments
     HIERARCHY_RYE = Hierarchy.from_str_hierarchy(hierarchy='tool.rye')

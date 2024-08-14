@@ -10,6 +10,7 @@ from typing import (
 import tomlkit
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import (
+    container,
     items,
     TOMLDocument
 )
@@ -23,26 +24,26 @@ from tomlkit_extras._typing import (
     ContainerBody,
     ContainerBodyItem,
     ContainerItemDecomposed,
+    TOMLDictLike,
     TOMLHierarchy
 )
 
 def from_dict_to_toml_document(dictionary: Dict[str, Any]) -> TOMLDocument:
     """"""
     toml_document: TOMLDocument = tomlkit.document()
+    for document_key, document_value in dictionary.items():
+        toml_document.add(key=document_key, item=document_value)
 
-    def conversion(toml_source: Dict[str, Any]) -> items.Table:
-        toml_table: items.Table = tomlkit.table()
-
-        for source_key, source_value in toml_source.items():
-            if isinstance(source_value, dict):
-                toml_table[source_key] = conversion(toml_source=source_value)
-            else:
-                toml_table.update({source_key: source_value})
-        
-        return toml_table
-    
-    toml_document.update(conversion(toml_source=dictionary))
     return toml_document
+
+
+def convert_to_tomlkit_item(value: Any) -> items.Item:
+    """"""
+    if not isinstance(value, items.Item):
+        value_as_toml_item = tomlkit.item(value=value)
+    else:
+        value_as_toml_item = value
+    return value_as_toml_item
 
 
 def create_array_of_tables(tables: List[Union[items.Table, Dict[str, Any]]]) -> items.AoT:
@@ -68,22 +69,43 @@ def create_toml_document(hierarchy: TOMLHierarchy, update: items.Item) -> TOMLDo
     return source
 
 
-def partial_clear_toml_document(toml_document: TOMLDocument) -> None:
+def partial_clear_dict_like_toml_item(toml_source: TOMLDictLike) -> None:
     """"""
-    keys = list(toml_document.keys())
+    keys = list(toml_source.keys())
     for key in keys:
-        del toml_document[key]
+        del toml_source[key]
 
 
 def complete_clear_toml_document(toml_document: TOMLDocument) -> None:
     """"""
-    partial_clear_toml_document(toml_document=toml_document)
+    partial_clear_dict_like_toml_item(toml_source=toml_document)
 
     # Reset private attributes that store elements within document
     toml_document._map = {}
     toml_document._body = []
     toml_document._parsed = False
     toml_document._table_keys = []
+
+
+def complete_clear_table(table: Union[items.Table, OutOfOrderTableProxy]) -> None:
+    """"""
+    partial_clear_dict_like_toml_item(toml_source=table)
+
+    # Reset private attributes that store elements within table
+    table._value = container.Container()
+
+
+def complete_clear_inline_table(table: items.InlineTable) -> None:
+    """"""
+    partial_clear_dict_like_toml_item(toml_source=table)
+
+    # Reset private attributes that store elements within inline table
+    table._value = container.Container()
+
+
+def complete_clear_array(array: items.Array) -> None:
+    """"""
+    array.clear()
 
 
 def _reorganize_array(array: items.Array) -> ContainerBody:
@@ -99,17 +121,17 @@ def _reorganize_array(array: items.Array) -> ContainerBody:
 
 def get_container_body(toml_source: Container) -> ContainerBody:
     """"""
-    if isinstance(toml_source, (items.Table, items.InlineTable)):
-        table_body_items = toml_source.value.body
-    elif isinstance(toml_source, items.Array):
-        table_body_items = _reorganize_array(array=toml_source)
-    elif isinstance(toml_source, OutOfOrderTableProxy):
-        table_body_items = toml_source._container.body
-    elif isinstance(toml_source, TOMLDocument):
-        table_body_items = toml_source.body
-    else:
-        raise ValueError("Type is not a valid container-like structure")
-
+    match toml_source:
+        case items.Table() | items.InlineTable():
+            table_body_items = toml_source.value.body
+        case items.Array():
+            table_body_items = _reorganize_array(array=toml_source)
+        case OutOfOrderTableProxy():
+            table_body_items = toml_source._container.body
+        case TOMLDocument():
+            table_body_items = toml_source.body
+        case _:
+            raise ValueError("Type is not a valid container-like structure")
     return table_body_items
 
 

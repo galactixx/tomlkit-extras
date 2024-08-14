@@ -4,7 +4,6 @@ from typing import (
     Deque,
     Iterator,
     List,
-    Optional,
     Tuple,
     Type,
     Union
@@ -133,7 +132,7 @@ def is_toml_instance(
         return all(isinstance(item, _type) for item in toml_items)
     
 
-def _find_parent_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> Retrieval:
+def _find_parent_source(hierarchy: Hierarchy, toml_source: TOMLSource) -> Retrieval:
     """"""
     hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy))
     return get_attribute_from_toml_source(
@@ -141,7 +140,7 @@ def _find_parent_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> Retr
     )
 
 
-def find_parent_toml_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> Retrieval:
+def find_parent_toml_source(hierarchy: Hierarchy, toml_source: TOMLSource) -> Retrieval:
     """"""
     if hierarchy.hierarchy_depth > 1:
         parent_toml = _find_parent_source(hierarchy=hierarchy, toml_source=toml_source)
@@ -149,24 +148,3 @@ def find_parent_toml_source(hierarchy: Hierarchy, toml_source: TOMLDocument) -> 
         parent_toml = toml_source
 
     return parent_toml
-
-
-def find_parent_toml_sources(hierarchy: Hierarchy, toml_source: TOMLDocument) -> Tuple[
-    Optional[Retrieval], Retrieval
-]:
-    """"""
-    if hierarchy.hierarchy_depth > 1:
-        parent_toml = _find_parent_source(hierarchy=hierarchy, toml_source=toml_source)
-
-        if hierarchy.hierarchy_depth > 2:
-            grandparent_toml = _find_parent_source(
-                hierarchy=Hierarchy.parent_hierarchy(hierarchy=str(hierarchy)),
-                toml_source=toml_source
-            )
-        else:
-            grandparent_toml = toml_source
-    else:
-        grandparent_toml = None
-        parent_toml = toml_source
-
-    return grandparent_toml, parent_toml

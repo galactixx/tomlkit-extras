@@ -1,11 +1,11 @@
 from typing import (
     Any,
+    Iterator,
     List,
     Optional
 )
 
-from tomlkit import items, TOMLDocument
-from tomlkit.container import OutOfOrderTableProxy
+from tomlkit import items
 
 from tomlkit_extras._exceptions import InvalidArrayItemError
 from tomlkit_extras.descriptor._descriptor import TOMLDocumentDescriptor
@@ -15,13 +15,14 @@ from tomlkit_extras._utils import (
     get_container_body
 )
 from tomlkit_extras._typing import (
+    ContainerBodyItem,
     ContainerComments, 
-    ContainerLike, 
+    HasComments, 
     TOMLHierarchy
 )
 
 def get_comments(
-    toml_source: ContainerLike, hierarchy: Optional[TOMLHierarchy] = None
+    toml_source: HasComments, hierarchy: Optional[TOMLHierarchy] = None
 ) -> Optional[List[ContainerComments]]:
     """"""
     if hierarchy is None:
@@ -31,24 +32,24 @@ def get_comments(
             hierarchy=hierarchy, toml_source=toml_source, fix_order=True
         )
     
-    if (
-        isinstance(attribute, list) or
-        not isinstance(attribute, (TOMLDocument, items.Table, OutOfOrderTableProxy, items.Array))
-    ):
-        return None
+    if not isinstance(attribute, list):
+        attributes = [attribute]
     else:
-        comments: List[ContainerComments] = []
-        document_descriptor = TOMLDocumentDescriptor(toml_source=attribute, top_level_only=True)
+        attributes = attribute
+
+    comments: List[ContainerComments] = []
+    for attr_index, attr in enumerate(attributes):
+        document_descriptor = TOMLDocumentDescriptor(toml_source=attr, top_level_only=True)
 
         for comment_descriptor in document_descriptor.get_top_level_stylings(styling='comment'):
-            comments.append((comment_descriptor.line_no, comment_descriptor.style))
+            comments.append((attr_index + 1, comment_descriptor.line_no, comment_descriptor.style))
 
-        return comments if comments else None
+    return comments if comments else None
 
 
 def get_array_field_comment(array: items.Array, array_item: Any) -> Optional[str]:
     """"""
-    array_body_items = iter(get_container_body(toml_source=array))
+    array_body_items: Iterator[ContainerBodyItem] = iter(get_container_body(toml_source=array))
 
     seen_first_ws_after_comment = False
     seen_array_item = False

@@ -21,7 +21,7 @@ from tomlkit_extras._utils import (
     decompose_body_item,
     from_dict_to_toml_document,
     get_container_body,
-    partial_clear_toml_document
+    partial_clear_dict_like_toml_item
 )
 
 def _number_of_top_level_attributes(toml_document: TOMLDocument) -> int:
@@ -36,7 +36,7 @@ def _number_of_top_level_attributes(toml_document: TOMLDocument) -> int:
 def _document_partial_clear_assertion(num_attributes: int, toml_document: TOMLDocument) -> None:
     """"""
     assert _number_of_top_level_attributes(toml_document=toml_document) == num_attributes
-    partial_clear_toml_document(toml_document=toml_document)
+    partial_clear_dict_like_toml_item(toml_source=toml_document)
     assert _number_of_top_level_attributes(toml_document=toml_document) == 0
 
 
@@ -71,6 +71,11 @@ def _table_from_dict(to_table: Dict[str, Any]) -> items.Table:
     table: items.Table = tomlkit.table()
     table.update(to_table)
     return table
+
+
+def test_convert_to_tomlkit_item() -> None:
+    """"""
+    pass
 
 
 def test_complete_clear_toml_document() -> None:
@@ -257,7 +262,7 @@ def test_get_container_body() -> None:
     assert _validate_body_items(container_body=out_of_order_proxy_container)
 
 
-def test_partial_clear_toml_document() -> None:
+def test_partial_clear_dict_like_toml_item() -> None:
     """"""
     toml_document_a: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
     _document_partial_clear_assertion(num_attributes=3, toml_document=toml_document_a)

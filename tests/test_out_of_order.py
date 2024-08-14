@@ -58,11 +58,11 @@ def test_out_of_order_toml_c() -> None:
     # Now that the values have been checked, ensure that the comments for each table
     # are as expected, and have remained unchanged/altered
     tool_ruff_table_comments = get_comments(toml_source=fixed_order_table)
-    assert tool_ruff_table_comments == [(2, '# this is a tool.ruff comment')]
+    assert tool_ruff_table_comments == [(1, 2, '# this is a tool.ruff comment')]
 
     # Check for the nested tool.ruff.lint table as well
     tool_ruff_lint_table_comments = get_comments(toml_source=fixed_order_table, hierarchy='lint')
-    assert tool_ruff_lint_table_comments == [(3, '# this is the first comment for lint table')]
+    assert tool_ruff_lint_table_comments == [(1, 3, '# this is the first comment for lint table')]
 
     # Fix the out-order-table from the TOML document in place
     toml_document_original = copy.deepcopy(toml_document)
@@ -84,10 +84,10 @@ def test_out_of_order_toml_d() -> None:
     # Now that the values have been checked, ensure that the comments for each table
     # are as expected, and have remained unchanged/altered
     servers_alpha_comments = get_comments(toml_source=fixed_order_table, hierarchy='alpha')
-    assert servers_alpha_comments == [(3, '# Out-of-order table')]
+    assert servers_alpha_comments == [(1, 3, '# Out-of-order table')]
 
     servers_beta_comments = get_comments(toml_source=fixed_order_table, hierarchy='beta')
-    assert servers_beta_comments == [(1, '# Another out-of-order table')]
+    assert servers_beta_comments == [(1, 1, '# Another out-of-order table')]
 
     # Fix the out-order-table from the TOML document in place
     toml_document_original = copy.deepcopy(toml_document)
@@ -112,19 +112,19 @@ def test_out_of_order_toml_e() -> None:
     # Now that the values have been checked, ensure that the comments for each table
     # are as expected, and have remained unchanged/altered
     project_details_comments = get_comments(toml_source=project_fixed_order_table, hierarchy='details')
-    assert project_details_comments == [(1, '# Awkwardly nested table (sub-section before main section)')]
+    assert project_details_comments == [(1, 1, '# Awkwardly nested table (sub-section before main section)')]
 
     project_authors_comments = get_comments(toml_source=project_fixed_order_table, hierarchy='details.authors')
-    assert project_authors_comments == [(1, '# Nested table here is disjointed')]
+    assert project_authors_comments == [(1, 1, '# Nested table here is disjointed')]
 
     servers_comments = get_comments(toml_source=servers_fixed_order_table)
-    assert servers_comments == [(1, '# This table is nested under servers, but details are spread out')]
+    assert servers_comments == [(1, 1, '# This table is nested under servers, but details are spread out')]
 
     servers_beta_comments = get_comments(toml_source=servers_fixed_order_table, hierarchy='beta')
-    assert servers_beta_comments == [(3, '# This nesting is awkward')]
+    assert servers_beta_comments == [(1, 3, '# This nesting is awkward')]
 
     servers_beta_comments = get_comments(toml_source=servers_fixed_order_table, hierarchy='alpha.metadata')
-    assert servers_beta_comments == [(4, '# Too far from papa')]
+    assert servers_beta_comments == [(1, 4, '# Too far from papa')]
 
     # Fix the out-order-table from the TOML document in place
     toml_document_original = copy.deepcopy(toml_document)
