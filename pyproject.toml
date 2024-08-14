@@ -7,7 +7,7 @@ license = "MIT License"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.8"
 tomlkit = "^0.13.0"
 pyrsistent = "^0.20.0"
 charset-normalizer = "^3.3.2"
