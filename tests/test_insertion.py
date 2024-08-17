@@ -1,4 +1,4 @@
-from tomlkit import TOMLDocument
+from tomlkit import items, TOMLDocument
 from tomlkit_extras import (
     attribute_insertion_into_toml_source,
     container_insertion_into_toml_source,
@@ -62,7 +62,8 @@ def test_insertion_into_toml_a() -> None:
     project_version = get_attribute_from_toml_source(
         hierarchy=HIERARCHY_PROJECT_VERSION, toml_source=toml_document
     )
-    assert project_version == "0.1.0"
+    assert isinstance(project_version, items.String)
+    assert project_version.unwrap() == '0.1.0'
     _inserted_position_test(
         attribute_pos=2, container_pos=2, hierarchy=HIERARCHY_PROJECT_VERSION, toml_document=toml_document
     )
@@ -76,7 +77,8 @@ def test_insertion_into_toml_a() -> None:
     project_readme = get_attribute_from_toml_source(
         hierarchy=HIERARCHY_PROJECT_README, toml_source=toml_document
     )
-    assert project_readme == "README.md"
+    assert isinstance(project_readme, items.String)
+    assert project_readme.unwrap() == 'README.md'
     _inserted_position_test(
         attribute_pos=2, container_pos=2, hierarchy=HIERARCHY_PROJECT_README, toml_document=toml_document
     )
@@ -123,7 +125,8 @@ def test_insertion_into_toml_b() -> None:
     ruff_lint_cache = get_attribute_from_toml_source(
         hierarchy=HIERARCHY_RUFF_LINT, toml_source=toml_document
     )
-    assert ruff_lint_cache == True
+    assert isinstance(ruff_lint_cache, items.Bool)
+    assert ruff_lint_cache.unwrap() == True
     _inserted_position_test(
         attribute_pos=1, container_pos=2, hierarchy=HIERARCHY_RUFF_LINT, toml_document=toml_document
     )
@@ -140,7 +143,8 @@ def test_insertion_into_toml_c() -> None:
     pydocstyle_select = get_attribute_from_toml_source(
         hierarchy=HIERARCHY_PYDOCTYLE_SELECT, toml_source=toml_document
     )
-    assert pydocstyle_select == ["D200"]
+    assert isinstance(pydocstyle_select, items.Array)
+    assert pydocstyle_select.unwrap() == ["D200"]
     _inserted_position_test(
         attribute_pos=1, container_pos=1, hierarchy=HIERARCHY_PYDOCTYLE_SELECT, toml_document=toml_document
     )
@@ -152,7 +156,8 @@ def test_insertion_into_toml_c() -> None:
     ruff_lint_exclude = get_attribute_from_toml_source(
         hierarchy=HIERARCHY_LINT_EXCLUDE, toml_source=toml_document
     )
-    assert ruff_lint_exclude == ["tests/", "docs/conf.py"]
+    assert isinstance(ruff_lint_exclude, items.Array)
+    assert ruff_lint_exclude.unwrap() == ["tests/", "docs/conf.py"]
     _inserted_position_test(
         attribute_pos=2, container_pos=3, hierarchy=HIERARCHY_LINT_EXCLUDE, toml_document=toml_document
     )

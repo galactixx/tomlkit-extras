@@ -97,9 +97,7 @@ def test_create_array_of_tables() -> None:
     assert len(aot_from_dictionaries) == 2
 
     # Create an array of tables from a list of Table instances
-    raw_table_dicts_to_tables: List[items.Table] = [
-        _table_from_dict(to_table=table) for table in RAW_TABLE_DICTS
-    ]
+    raw_table_dicts_to_tables = [_table_from_dict(to_table=table) for table in RAW_TABLE_DICTS]
     aot_from_table_instances = create_array_of_tables(tables=raw_table_dicts_to_tables)
     assert isinstance(aot_from_table_instances, items.AoT)
     assert len(aot_from_table_instances) == 2
@@ -138,10 +136,11 @@ def test_create_toml_document() -> None:
     }
 
     # Test on the members array of tables
-    members = get_attribute_from_toml_source(hierarchy='members.roles', toml_source=toml_document)[0]
-    assert isinstance(members, items.AoT)
+    members = get_attribute_from_toml_source(hierarchy='members.roles', toml_source=toml_document)
+    assert isinstance(members, list)
+    assert isinstance(members[0], items.AoT)
 
-    members_toml_document = create_toml_document(hierarchy='members.roles.update', update=members)
+    members_toml_document = create_toml_document(hierarchy='members.roles.update', update=members[0])
     assert isinstance(members_toml_document, TOMLDocument)
     assert members_toml_document.unwrap() == {
         "members": {'roles': {'update': [{'role': 'Developer'}, {'role': 'Designer'}]}}
@@ -159,6 +158,7 @@ def test_decompose_body_item() -> None:
     # Test the function on the body of the tool.ruff.lint table
     toml_document_b: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
     tool_ruff_lint = get_attribute_from_toml_source(hierarchy='tool.ruff.lint', toml_source=toml_document_b)
+    assert isinstance(tool_ruff_lint, items.Table)
     table_body = get_container_body(toml_source=tool_ruff_lint)
     assert all(
         _validate_body_item(body_item=body_item) for body_item in table_body
@@ -231,16 +231,16 @@ def test_get_container_body() -> None:
 
     # Retrieve the container from a Table instance
     table_ruff = get_attribute_from_toml_source(hierarchy='tool.ruff', toml_source=toml_document_b)
-    table_container = get_container_body(toml_source=table_ruff)
     assert isinstance(table_ruff, items.Table)
+    table_container = get_container_body(toml_source=table_ruff)
     assert _validate_body_items(container_body=table_container)
 
     # Retrieve the container from a InlineTable instance
     table_pydocstyle = get_attribute_from_toml_source(
         hierarchy='tool.ruff.lint.pydocstyle', toml_source=toml_document_b
     )
-    inline_table_container = get_container_body(toml_source=table_pydocstyle)
     assert isinstance(table_pydocstyle, items.InlineTable)
+    inline_table_container = get_container_body(toml_source=table_pydocstyle)
     assert _validate_body_items(container_body=inline_table_container)
 
     toml_document_c: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
@@ -249,16 +249,16 @@ def test_get_container_body() -> None:
     array_dev_dependencies = get_attribute_from_toml_source(
         hierarchy='tool.rye.dev-dependencies', toml_source=toml_document_c
     )
-    array_container = get_container_body(toml_source=array_dev_dependencies)
     assert isinstance(array_dev_dependencies, items.Array)
+    array_container = get_container_body(toml_source=array_dev_dependencies)
     assert _validate_body_items(container_body=array_container)
 
     # Retrieve the container from an OutOfOrderTableProxy instance
     out_of_order_proxy_ruff = get_attribute_from_toml_source(
         hierarchy='tool.ruff', toml_source=toml_document_c
     )
-    out_of_order_proxy_container = get_container_body(toml_source=out_of_order_proxy_ruff)
     assert isinstance(out_of_order_proxy_ruff, OutOfOrderTableProxy)
+    out_of_order_proxy_container = get_container_body(toml_source=out_of_order_proxy_ruff)
     assert _validate_body_items(container_body=out_of_order_proxy_container)
 
 

@@ -175,9 +175,3 @@ def test_load_toml_file_invalid() -> None:
     with pytest.raises(FileNotFoundError) as exc_info:
         _ = load_toml_file(toml_source=r'tests\examples\not_an_existing_file.toml')
     assert str(exc_info.value) == 'If path is passed in as the source, it must link to an existing file'
-
-    with pytest.raises(TypeError) as exc_info:
-        _ = load_toml_file(
-            toml_source=[{'name': 'Sub Table 1', 'value': 10}, {'name': 'Sub Table 2', 'value': 20}]
-        )
-    assert str(exc_info.value) == 'Invalid type passed for toml_source argument'

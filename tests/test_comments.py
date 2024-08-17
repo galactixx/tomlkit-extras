@@ -1,3 +1,5 @@
+from typing import cast
+
 from tomlkit import items, TOMLDocument
 from tomlkit_extras import (
     get_attribute_from_toml_source,
@@ -45,9 +47,10 @@ def test_comments_toml_b() -> None:
     assert ruff_lint_comments == RUFF_LINT_COMMENTS
 
     # Retrieve from the lint table after navigating to the relevant location
-    tool_ruff_lint: items.Array = get_attribute_from_toml_source(
+    tool_ruff_lint = get_attribute_from_toml_source(
         hierarchy=HIERARCHY_RUFF_LINT, toml_source=toml_document
     )
+    tool_ruff_lint = cast(items.Table, tool_ruff_lint)
     ruff_lint_comments_again = get_comments(toml_source=tool_ruff_lint)
     assert ruff_lint_comments_again == RUFF_LINT_COMMENTS
 
@@ -73,9 +76,10 @@ def test_comments_toml_c() -> None:
     assert ruff_lint_comments == RUFF_LINT_COMMENTS
 
     # Retrieve from the lint table after navigating to the relevant location
-    tool_ruff_lint: items.Array = get_attribute_from_toml_source(
+    tool_ruff_lint = get_attribute_from_toml_source(
         hierarchy=HIERARCHY_RUFF_LINT, toml_source=toml_document
     )
+    tool_ruff_lint = cast(items.Table, tool_ruff_lint)
     ruff_lint_comments_again = get_comments(toml_source=tool_ruff_lint)
     assert ruff_lint_comments_again == RUFF_LINT_COMMENTS
 
@@ -92,9 +96,10 @@ def test_comments_toml_c() -> None:
     assert rye_comments is None
 
     # Grab all array comments
-    dev_dependencies_array: items.Array = get_attribute_from_toml_source(
+    dev_dependencies_array = get_attribute_from_toml_source(
         hierarchy='tool.rye.dev-dependencies', toml_source=toml_document
     )
+    dev_dependencies_array = cast(items.Array, dev_dependencies_array)
 
     ruff_comment = get_array_field_comment(array=dev_dependencies_array, array_item='ruff>=0.4.4')
     assert ruff_comment == '# ruff version'

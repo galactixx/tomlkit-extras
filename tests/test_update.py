@@ -36,9 +36,11 @@ def test_update_toml_a() -> None:
     update_toml_source(
         hierarchy='members', toml_source=toml_document, update={'name': "Jack"}, full=False
     )
-    assert get_attribute_from_toml_source(
+    members = get_attribute_from_toml_source(
         hierarchy='members', toml_source=toml_document
-    ).unwrap() == [
+    )
+    assert isinstance(members, list)
+    assert members == [
         {'name': 'Alice', 'roles': [{'role': 'Developer'}, {'role': 'Designer'}]},
         {'name': 'Bob', 'roles': [{'role': 'Manager'}]},
         {'name': 'Jack'}
@@ -69,18 +71,22 @@ def test_update_toml_b() -> None:
     update_toml_source(
         hierarchy='tool.ruff.lint.pydocstyle', toml_source=toml_document, update=inline_table
     )
-    assert get_attribute_from_toml_source(
+    lint_pydocstyle = get_attribute_from_toml_source(
         hierarchy='tool.ruff.lint.pydocstyle', toml_source=toml_document
-    ).unwrap() == inline_table.unwrap()
+    )
+    assert not isinstance(lint_pydocstyle, list)
+    assert lint_pydocstyle.unwrap() == inline_table.unwrap()
 
     inline_table_new = copy.deepcopy(inline_table)
     inline_table_new.update({'convention': ["numpy"]})
     update_toml_source(
         hierarchy='tool.ruff.lint.pydocstyle', toml_source=toml_document, update=inline_table_new, full=False
     )
-    assert get_attribute_from_toml_source(
+    lint_pydocstyle_updated = get_attribute_from_toml_source(
         hierarchy='tool.ruff.lint.pydocstyle', toml_source=toml_document
-    ).unwrap() == inline_table_new.unwrap()
+    )
+    assert not isinstance(lint_pydocstyle_updated, list)
+    assert lint_pydocstyle_updated.unwrap() == inline_table_new.unwrap()
 
 
 def test_update_toml_c() -> None:

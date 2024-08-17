@@ -6,8 +6,8 @@ from typing import (
     cast,
     Dict,
     List,
+    Literal,
     Optional,
-    Tuple,
     Union
 )
 
@@ -20,12 +20,13 @@ from tomlkit_extras.descriptor._descriptors import CommentDescriptor
 from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras._typing import (
     Container,
+    ContainerBodyItem,
     FieldItem,
     Item,
     ParentItem,
     StyleItem,
     TableItem,
-    TOMLType
+    TOMLValidReturn
 )
 
 @dataclass(frozen=True)
@@ -64,8 +65,8 @@ class ArrayOfTables:
 @dataclass
 class ArrayOfTablesPosition:
     """"""
-    item_type: TableItem
-    parent_type: ParentItem
+    item_type: Literal['array-of-tables']
+    parent_type: Optional[ParentItem]
     name: str
     line_no: int
     position: ItemPosition
@@ -126,16 +127,16 @@ class FieldPosition:
     position: ItemPosition
     value: Any
     comment: Optional[CommentDescriptor]
-    styling: Optional[StylingPositions]
+    styling: StylingPositions
 
     @classmethod
     def from_toml_item(cls, line_no: int, position: ItemPosition, item: TOMLItem) -> FieldPosition:
         """"""
+        comment_line_no: Optional[int]
+        styling = StylingPositions(comments=dict(), whitespace=dict())
         if isinstance(item.item, items.Array):
-            styling = StylingPositions(comments=dict(), whitespace=dict())
             comment_line_no = None
         else:
-            styling = None
             comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=item.item)
 
         comment = create_comment_descriptor(item=item.item, line_no=comment_line_no)
@@ -147,7 +148,7 @@ class FieldPosition:
             comment=comment,
             styling=styling
         )
-
+    
     def update_comment(self, item: TOMLItem, line_no: int) -> None:
         """"""
         comment_position = TablePosition.find_comment_line_no(line_no=line_no, item=item.item)
@@ -158,7 +159,7 @@ class FieldPosition:
 class ContainerItem:
     """"""
     item_type: ItemType
-    key: Optional[str]
+    key: str
     hierarchy: str
     item: Container
 
@@ -177,9 +178,9 @@ class ContainerItem:
 class TOMLItem:
     """"""
     item_type: ItemType
-    key: Optional[str]
+    key: str
     hierarchy: str
-    item: items.Item
+    item: TOMLValidReturn
 
     @property
     def full_hierarchy(self) -> str:
@@ -188,7 +189,7 @@ class TOMLItem:
 
     @classmethod
     def from_parent_type(
-        cls, key: str, hierarchy: str, toml_item: items.Item, parent_type: Optional[TOMLType] = None
+        cls, key: str, hierarchy: str, toml_item: TOMLValidReturn, parent_type: Optional[TOMLItem] = None
     ) -> TOMLItem:
         """"""
         item_type = ItemType(
@@ -200,10 +201,7 @@ class TOMLItem:
 
     @classmethod
     def from_body_item(
-        cls,
-        hierarchy: str,
-        body_item: Tuple[Optional[items.Key], items.Item],
-        container: ContainerItem
+        cls, hierarchy: str, body_item: ContainerBodyItem, container: ContainerItem
     ) -> TOMLItem:
         """"""
         item_key: Optional[str] = (
@@ -291,7 +289,7 @@ class TablePosition:
 
 class TOMLStatistics:
     """"""
-    def __init__(self):
+    def __init__(self) -> None:
         self._number_of_tables = 0
         self._number_of_inline_tables = 0
         self._number_of_aots = 0

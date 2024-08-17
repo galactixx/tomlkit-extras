@@ -7,41 +7,44 @@ from typing import (
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items, TOMLDocument
 
-from tomlkit_extras._typing import TOMLType
+from tomlkit_extras._typing import Item, TOMLValidReturn
 from tomlkit_extras._hierarchy import Hierarchy
 
 def find_child_tables(root_hierarchy: str, hierarchies: List[str]) -> Set[Hierarchy]:
     """"""
-    children_hierarchies: Set[str] = set()
+    children_hierarchies: Set[Hierarchy] = set()
 
     root_hierarchy_obj = Hierarchy.from_str_hierarchy(hierarchy=root_hierarchy) 
 
     for hierarchy in hierarchies:
         if root_hierarchy_obj.is_child_hierarchy(hierarchy=hierarchy):
-            children_hierarchies.add(hierarchy)
+            children_hierarchies.add(Hierarchy.from_str_hierarchy(hierarchy=hierarchy))
 
     return children_hierarchies
 
 
-def get_item_type(toml_item: items.Item) -> TOMLType:
+def get_item_type(toml_item: TOMLValidReturn) -> Item:
     """"""
-    if isinstance(toml_item, TOMLDocument):
-        toml_type = 'document'
-    elif isinstance(toml_item, items.Table):
-        toml_type = 'super-table' if toml_item.is_super_table() else 'table'
-    elif isinstance(toml_item, OutOfOrderTableProxy):
-        toml_type = 'table'
-    elif isinstance(toml_item, items.InlineTable):
-        toml_type = 'inline-table'
-    elif isinstance(toml_item, items.Comment):
-        toml_type = 'comment'
-    elif isinstance(toml_item, items.Whitespace):
-        toml_type = 'whitespace'
-    elif isinstance(toml_item, items.AoT):
-        toml_type = 'array-of-tables'
-    elif isinstance(toml_item, items.Array):
-        toml_type = 'array'
-    else:
-        toml_type = 'field'
+    toml_item_type: Item
 
-    return toml_type
+    match toml_item:
+        case TOMLDocument():
+            toml_item_type = 'document'
+        case items.Table():
+            toml_item_type = 'super-table' if toml_item.is_super_table() else 'table'
+        case OutOfOrderTableProxy():
+            toml_item_type = 'table'
+        case items.InlineTable():
+            toml_item_type = 'inline-table'
+        case items.Comment():
+            toml_item_type = 'comment'
+        case items.Whitespace():
+            toml_item_type = 'whitespace'
+        case items.AoT():
+            toml_item_type = 'array-of-tables'
+        case items.Array():
+            toml_item_type = 'array'
+        case _:
+            toml_item_type = 'field'
+    
+    return toml_item_type

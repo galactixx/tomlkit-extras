@@ -14,7 +14,7 @@ from tomlkit_extras._typing import TOMLSource
 
 def _fix_of_out_of_order_table_chain(
     current_table: items.Table, update_key: str, update_table: items.Table
-) -> items.Table:
+) -> None:
     """"""
     if update_key not in current_table:
         current_table[update_key] = update_table
@@ -61,16 +61,18 @@ def fix_out_of_order_table(table: OutOfOrderTableProxy) -> items.Table:
 
             if not co_table.is_super_table():
                 parent_table = co_table
-            elif co_table.name is not None and table_w_shortest_name is None:
-                table_w_shortest_name = co_table
-            elif (
-                co_table.name is not None and
-                len(co_table.name) < len(table_w_shortest_name.name)
-            ):
-                table_w_shortest_name = co_table
+            elif co_table.name is not None:
+                if table_w_shortest_name is None:
+                    table_w_shortest_name = co_table
+                elif (
+                    table_w_shortest_name.name is not None and
+                    len(co_table.name) < len(table_w_shortest_name.name)
+                ):
+                    table_w_shortest_name = co_table
     except StopIteration:
         parent_table = table_w_shortest_name
 
+    parent_table = cast(items.Table, parent_table)
     component_tables.remove(parent_table)
 
     for component_table in component_tables:

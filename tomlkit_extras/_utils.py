@@ -46,7 +46,7 @@ def convert_to_tomlkit_item(value: Any) -> items.Item:
     return value_as_toml_item
 
 
-def create_array_of_tables(tables: List[Union[items.Table, Dict[str, Any]]]) -> items.AoT:
+def create_array_of_tables(tables: Union[List[items.Table], List[Dict[str, Any]]]) -> items.AoT:
     """"""
     array_of_tables: items.AoT = tomlkit.aot()
     for table in tables:
@@ -59,7 +59,7 @@ def create_toml_document(hierarchy: TOMLHierarchy, update: items.Item) -> TOMLDo
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
     source: TOMLDocument = tomlkit.document()
 
-    current_source: Union[items.Item, TOMLDocument] = source
+    current_source: Union[items.Table, TOMLDocument] = source
     for table in hierarchy_obj.hierarchy:
         current_source[table] = tomlkit.table()
         current_source = cast(items.Table, current_source[table])
@@ -73,7 +73,7 @@ def partial_clear_dict_like_toml_item(toml_source: TOMLDictLike) -> None:
     """"""
     keys = list(toml_source.keys())
     for key in keys:
-        del toml_source[key]
+        dict.__delitem__(toml_source, key)
 
 
 def complete_clear_toml_document(toml_document: TOMLDocument) -> None:
@@ -87,19 +87,22 @@ def complete_clear_toml_document(toml_document: TOMLDocument) -> None:
     toml_document._table_keys = []
 
 
-def complete_clear_table(table: Union[items.Table, OutOfOrderTableProxy]) -> None:
+def complete_clear_out_of_order_table(table: OutOfOrderTableProxy) -> None:
     """"""
     partial_clear_dict_like_toml_item(toml_source=table)
 
     # Reset private attributes that store elements within table
-    table._value = container.Container()
+    table._container = container.Container()
+    table._internal_container = container.Container(True)
+    table._tables = []
+    table._tables_map = {}
 
 
-def complete_clear_inline_table(table: items.InlineTable) -> None:
+def complete_clear_tables(table: Union[items.Table, items.InlineTable]) -> None:
     """"""
     partial_clear_dict_like_toml_item(toml_source=table)
 
-    # Reset private attributes that store elements within inline table
+    # Reset private attributes that store elements within table
     table._value = container.Container()
 
 

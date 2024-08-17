@@ -18,9 +18,9 @@ from tomlkit_extras._typing import (
     ContainerBody,
     ParentItem,
     StyleItem,
-    TOMLDescriptorType,
+    TableItem,
     TOMLHierarchy,
-    TOMLType
+    TopLevelItem
 )
 from tomlkit_extras._hierarchy import (
     Hierarchy, 
@@ -67,16 +67,12 @@ class TOMLDocumentDescriptor:
     """"""
     def __init__(
         self,
-        toml_source: Union[TOMLDocument, items.Table, items.AoT],
+        toml_source: Union[TOMLDocument, items.Table, items.AoT, items.Array],
         top_level_only: bool = False
     ):
-        if not isinstance(toml_source, (TOMLDocument, items.Table, items.AoT)):
-            message_core = 'Expected an instance of TOMLSource'
-            raise TypeError(f"{message_core}, but got {type(toml_source).__name__}")
-
         self.top_level_only = top_level_only
-        self.top_level_type = cast(
-            TOMLDescriptorType, get_item_type(toml_item=toml_source)
+        self.top_level_type: TopLevelItem = cast(
+            TopLevelItem, get_item_type(toml_item=toml_source)
         )
         
         self.top_level_hierarchy: Optional[str]
@@ -101,6 +97,7 @@ class TOMLDocumentDescriptor:
         position = ItemPosition(attribute=1, container=1)
         if isinstance(toml_source, items.AoT):
             self.top_level_hierarchy = toml_source.name
+            assert toml_source.name is not None
             self._generate_descriptor_from_array_of_tables(
                 hierarchy=str(), array=toml_source, position=position
             )          
@@ -108,6 +105,7 @@ class TOMLDocumentDescriptor:
             if isinstance(toml_source, items.Table):
                 self.top_level_hierarchy = toml_source.name
                 update_key = toml_source.name
+                assert update_key is not None
             else:
                 self.top_level_hierarchy = None
                 update_key = str()
@@ -295,7 +293,7 @@ class TOMLDocumentDescriptor:
                 ArrayOfTablesDescriptor(
                     parent_type=array_of_table.parent_type,
                     name=array_of_table.name,
-                    hierarchy=hierarchy,
+                    hierarchy=hierarchy_obj,
                     line_no=array_of_table.line_no,
                     attribute_pos=array_of_table.position.attribute,
                     container_pos=array_of_table.position.container,
@@ -310,14 +308,17 @@ class TOMLDocumentDescriptor:
 
     def get_field(self, hierarchy: TOMLHierarchy) -> FieldDescriptor:
         """"""
+        field_position: FieldPosition
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str = str(hierarchy_obj)
+
+        parent_type: Union[TopLevelItem, TableItem]
 
         if hierarchy_obj.hierarchy_depth == 1:
             if hierarchy_as_str not in self._document_lines:
                 raise InvalidFieldError("Field does not exist in top-level document space")
             
-            field_position: FieldPosition = self._document_lines[hierarchy_as_str]
+            field_position = self._document_lines[hierarchy_as_str]
             parent_type = self.top_level_type
             field = hierarchy_as_str
         else:
@@ -337,7 +338,7 @@ class TOMLDocumentDescriptor:
             ):
                 raise InvalidFieldError("Hierarchy does not map to an existing field")
             
-            field_position: FieldPosition = table_position.fields[str(remaning_hierarchy)]
+            field_position = table_position.fields[str(remaning_hierarchy)]
             parent_type = table_position.item_type
             field = str(remaning_hierarchy)
 
@@ -386,11 +387,14 @@ class TOMLDocumentDescriptor:
         else:
             stylings = styling_positions.whitespace
 
+        hierarchy = (
+            Hierarchy.from_str_hierarchy(hierarchy=self.top_level_hierarchy)
+            if self.top_level_hierarchy is not None else None
+        )
+
         return [
             create_style_descriptor(
-                styling_position=styling_position,
-                hierarchy=self.top_level_hierarchy,
-                parent_type=self.top_level_type
+                styling_position=styling_position, hierarchy=hierarchy, parent_type=self.top_level_type
             )
             for stylings in stylings.values() for styling_position in stylings
         ]
@@ -463,7 +467,7 @@ class TOMLDocumentDescriptor:
         return array_of_tables.get_array(hierarchy=hierarchy).get_table(hierarchy=hierarchy)
 
     def _update_styling(
-        self, container: TOMLItem, style: TOMLItem, position: ItemPosition, is_aot: bool
+        self, container: ContainerItem, style: TOMLItem, position: ItemPosition, is_aot: bool
     ) -> None:
         """"""
         styling_positions: StylingPositions
@@ -557,10 +561,11 @@ class TOMLDocumentDescriptor:
         self, hierarchy: str, array: items.AoT, position: ItemPosition, parent_type: Optional[ParentItem] = None
     ) -> None:
         """"""
+        array_name = cast(str, array.name)
         array_of_tables = ArrayOfTablesPosition(
             item_type='array-of-tables',
             parent_type=parent_type,
-            name=array.name,
+            name=array_name,
             line_no=self._current_line_number,
             position=copy.copy(position), 
             tables=dict(),
@@ -579,7 +584,7 @@ class TOMLDocumentDescriptor:
             table_position = index + 1
             self._toml_statistics.add_table(table=table)
             table_item = TOMLItem.from_parent_type(
-                key=array.name, hierarchy=hierarchy_parent, toml_item=table, parent_type='array-of-tables'
+                key=array_name, hierarchy=hierarchy_parent, toml_item=table, parent_type='array-of-tables'
             )
 
             self._generate_descriptor_bridge(
@@ -666,7 +671,7 @@ class TOMLDocumentDescriptor:
                 self._generate_descriptor_from_array_of_tables(
                     hierarchy=toml_item.full_hierarchy,
                     array=toml_item.item,
-                    parent_type=get_item_type(toml_item=container.item),
+                    parent_type=cast(ParentItem, container.item_type.item_type),
                     position=new_position
                 )
                 new_position.update_positions()
@@ -687,5 +692,5 @@ class TOMLDocumentDescriptor:
                     if not isinstance(container.item, items.InlineTable):
                         self._current_line_number += 1
 
-                    self._toml_statistics.add_field(item=toml_item.item)
+                    self._toml_statistics.add_field(item=cast(items.Item, toml_item.item))
                 new_position.update_positions()

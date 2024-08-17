@@ -16,14 +16,15 @@ ContainerComments: TypeAlias = Tuple[int, int, str]
 
 # General types
 TOMLHierarchy: TypeAlias = Union[str, Hierarchy]
-TOMLSource: TypeAlias = Union[TOMLDocument, items.Table, items.AoT]
+TOMLSource: TypeAlias = Union[TOMLDocument, items.Table, items.AoT, OutOfOrderTableProxy]
 
 TOMLDictLike: TypeAlias = Union[TOMLDocument, items.Table, items.InlineTable, OutOfOrderTableProxy]
 Table: TypeAlias = Union[items.Table, items.InlineTable]
 
-Retrieval: TypeAlias = Union[TOMLDocument, items.Item, List[items.Item]]
-
 ContainerItemDecomposed: TypeAlias = Tuple[Optional[str], items.Item]
+
+TOMLValidReturn: TypeAlias = Union[TOMLDocument, OutOfOrderTableProxy, items.Item]
+Retrieval: TypeAlias = Union[OutOfOrderTableProxy, items.Item, List[items.Item]]
 
 ContainerBodyItem: TypeAlias = Tuple[Optional[items.Key], items.Item]
 ContainerBody: TypeAlias = List[ContainerBodyItem]
@@ -54,8 +55,7 @@ ContainerLike: TypeAlias = Union[
 ]
 
 # Descriptor types
-TOMLDescriptorType: TypeAlias = Literal['document', 'table', 'array-of-tables']
-TOMLType: TypeAlias = Literal[
+Item: TypeAlias = Literal[
     'document',
     'field',
     'table',
@@ -66,7 +66,7 @@ TOMLType: TypeAlias = Literal[
     'whitespace',
     'comment'
 ]
-Item: TypeAlias = Literal[
+ChildItem: TypeAlias = Literal[
     'field',
     'table',
     'inline-table',
@@ -86,3 +86,4 @@ ParentItem: TypeAlias = Literal[
 StyleItem: TypeAlias = Literal['whitespace', 'comment']
 TableItem: TypeAlias = Literal['table', 'inline-table']
 FieldItem: TypeAlias = Literal['field', 'array']
+TopLevelItem: TypeAlias = Literal['document', 'table', 'array-of-tables']

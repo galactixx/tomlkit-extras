@@ -288,7 +288,7 @@ def test_toml_b_descriptor() -> None:
         ),
         from_aot=False,
         fields={'line-length': descriptor_line_length},
-        child_tables={str(hierarchy_ruff_lint)}
+        child_tables={hierarchy_ruff_lint}
     )
 
     assert document_descriptor.get_table(hierarchy=hieraarchy_ruff) == descriptor_ruff
@@ -485,7 +485,7 @@ def test_toml_b_descriptor() -> None:
     descriptor_main_sub_tables = ArrayOfTablesDescriptor(
         parent_type='table',
         name='sub_tables',
-        hierarchy='main_table.sub_tables',
+        hierarchy=hierarchy_sub_tables,
         line_no=18,
         attribute_pos=3,
         container_pos=4,
@@ -627,7 +627,7 @@ def test_toml_c_descriptor() -> None:
         comment=None,
         from_aot=False,
         fields={'line-length': descriptor_line_length},
-        child_tables={str(hierarchy_ruff_lint)}
+        child_tables={hierarchy_ruff_lint}
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_ruff) == descriptor_ruff

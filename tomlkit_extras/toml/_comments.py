@@ -1,12 +1,16 @@
 from typing import (
     Any,
+    cast,
     Iterator,
     List,
-    Optional
+    Optional,
+    Union
 )
 
-from tomlkit import items
+from tomlkit import items, TOMLDocument
+from tomlkit.container import OutOfOrderTableProxy
 
+from tomlkit_extras.toml._out_of_order import fix_out_of_order_table
 from tomlkit_extras._exceptions import InvalidArrayItemError
 from tomlkit_extras.descriptor._descriptor import TOMLDocumentDescriptor
 from tomlkit_extras.toml._retrieval import get_attribute_from_toml_source
@@ -21,21 +25,34 @@ from tomlkit_extras._typing import (
     TOMLHierarchy
 )
 
+def _container_has_comments(attribute: items.Item) -> bool:
+    """"""
+    return isinstance(attribute, (TOMLDocument, items.Table, items.AoT, items.Array))
+
+
 def get_comments(
     toml_source: HasComments, hierarchy: Optional[TOMLHierarchy] = None
 ) -> Optional[List[ContainerComments]]:
     """"""
-    if hierarchy is None:
-        attribute = toml_source
+    if isinstance(toml_source, items.Array) or hierarchy is None:
+        if isinstance(toml_source, OutOfOrderTableProxy):
+            toml_source = fix_out_of_order_table(table=toml_source)
+
+        attributes = [toml_source]
     else:
         attribute = get_attribute_from_toml_source(
             hierarchy=hierarchy, toml_source=toml_source, fix_order=True
         )
-    
-    if not isinstance(attribute, list):
-        attributes = [attribute]
-    else:
-        attributes = attribute
+        if not isinstance(attribute, list) or isinstance(attribute, items.AoT):
+            attribute = [attribute]
+
+        if not all(_container_has_comments(attribute=attr) for attr in attribute):
+            raise ValueError("Attributes are not structures that contain comments")
+
+        attributes = cast(
+            List[Union[TOMLDocument, items.Table, items.AoT, items.Array]],
+            attribute
+        )
 
     comments: List[ContainerComments] = []
     for attr_index, attr in enumerate(attributes):

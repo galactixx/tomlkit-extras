@@ -15,6 +15,7 @@ from tomlkit import (
     TOMLDocument
 )
 
+from tomlkit_extras._constants import DICTIONARY_LIKE_TYPES
 from tomlkit_extras.toml._out_of_order import fix_out_of_order_table
 from tomlkit_extras._exceptions import InvalidHierarchyError
 from tomlkit_extras._utils import (
@@ -41,7 +42,7 @@ def _get_table_from_aot(current_source: List[items.Item], table: str) -> List[it
             next_source.extend(
                 aot_item[table] for aot_item in source_item if table in aot_item
             )
-        elif table in source_item:
+        elif isinstance(source_item, DICTIONARY_LIKE_TYPES) and table in source_item:
             next_source.append(source_item[table])
     
     return next_source

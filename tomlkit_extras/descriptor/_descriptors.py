@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import (
     Any,
     Dict,
+    List,
     Literal,
     Optional,
     Set,
@@ -48,7 +49,7 @@ class TableDescriptor(Descriptor):
 @dataclass(frozen=True)
 class ArrayOfTablesDescriptor(Descriptor):
     """"""
-    tables: Dict[str, TableDescriptor]
+    tables: List[TableDescriptor]
     item_type: Literal['array-of-tables'] = 'array-of-tables'
 
 
