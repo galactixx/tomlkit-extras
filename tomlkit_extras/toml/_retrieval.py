@@ -4,31 +4,35 @@ from typing import (
     Deque,
     Iterator,
     List,
+    Literal,
+    overload,
     Tuple,
     Type,
+    TypeAlias,
     Union
 )
 
 from tomlkit.container import OutOfOrderTableProxy
-from tomlkit import (
-    items, 
-    TOMLDocument
-)
+from tomlkit import items
 
-from tomlkit_extras._constants import DICTIONARY_LIKE_TYPES
 from tomlkit_extras.toml._out_of_order import fix_out_of_order_table
 from tomlkit_extras._exceptions import InvalidHierarchyError
 from tomlkit_extras._utils import (
     decompose_body_item,
     get_container_body
 )
+from tomlkit_extras._constants import (
+    DICTIONARY_LIKE_TYPES,
+    INSERTION_TYPES
+)
 from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )
 from tomlkit_extras._typing import (
-    ContainerBody,
+    ContainerBodyItem,
     Retrieval,
+    TOMLFieldSource,
     TOMLHierarchy,
     TOMLSource
 )
@@ -53,10 +57,12 @@ def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[in
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
     parent_source = find_parent_toml_source(hierarchy=hierarchy_obj, toml_source=toml_source)
-    table_body_items: Iterator[ContainerBody] = iter(get_container_body(toml_source=parent_source))
+    if not isinstance(parent_source, INSERTION_TYPES):
+        raise InvalidHierarchyError("Hierarchy maps to a non-container-like instance")
+
+    table_body_items: Iterator[ContainerBodyItem] = iter(get_container_body(toml_source=parent_source))
 
     container_position = attribute_position = 0
-
     finding_positions = True
 
     try:
@@ -79,25 +85,44 @@ def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[in
     return attribute_position, container_position
 
 
+@overload
 def get_attribute_from_toml_source(
-    hierarchy: TOMLHierarchy, toml_source: TOMLSource, fix_order: bool = False, array: bool = True
+    hierarchy: TOMLHierarchy, toml_source: TOMLFieldSource, array: bool = True, fix_order: Literal[True] = True
 ) -> Union[items.Item, List[items.Item]]:
+    ...
+
+
+@overload
+def get_attribute_from_toml_source(
+    hierarchy: TOMLHierarchy, toml_source: TOMLFieldSource, array: bool = True, fix_order: Literal[False] = False
+) -> Retrieval:
+    ...
+
+
+@overload
+def get_attribute_from_toml_source(
+    hierarchy: TOMLHierarchy, toml_source: TOMLFieldSource, array: bool = True, fix_order: bool = True
+) -> object:
+    ...
+
+
+def get_attribute_from_toml_source(
+    hierarchy: TOMLHierarchy, toml_source: TOMLFieldSource, array: bool = True, fix_order: bool = True
+) -> Retrieval:
     """"""
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
     hierarchy_of_tables: Deque[str] = deque(hierarchy_obj.full_hierarchy)
-    current_source: Union[TOMLDocument, items.Item, List[items.Item]] = toml_source
+    current_source: Retrieval = toml_source
 
     try:
         while hierarchy_of_tables:
             table: str = hierarchy_of_tables.popleft()
 
             if isinstance(current_source, list):
-                current_source = _get_table_from_aot(
-                    current_source=current_source, table=table
-                )
+                current_source = _get_table_from_aot(current_source=current_source, table=table)
             else:
-                current_source = current_source[table]
+                current_source = current_source[table] # type: ignore[index]
     except KeyError:
         raise InvalidHierarchyError(
             "Hierarchy specified does not exist in TOMLDocument instance"
@@ -117,7 +142,7 @@ def get_attribute_from_toml_source(
         
 
 def is_toml_instance(
-    _type: Type[Any], *, hierarchy: TOMLHierarchy, toml_source: TOMLSource, fix_order: bool = False, array: bool = True
+    _type: Type[Any], *, hierarchy: TOMLHierarchy, toml_source: TOMLSource, fix_order: bool = True, array: bool = True
 ) -> bool:
     """"""
     toml_items = get_attribute_from_toml_source(
@@ -133,16 +158,15 @@ def is_toml_instance(
         return all(isinstance(item, _type) for item in toml_items)
     
 
-def _find_parent_source(hierarchy: Hierarchy, toml_source: TOMLSource) -> Retrieval:
+def _find_parent_source(hierarchy: Hierarchy, toml_source: TOMLFieldSource) -> Retrieval:
     """"""
     hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy))
-    return get_attribute_from_toml_source(
-        hierarchy=hierarchy_parent, toml_source=toml_source
-    )
+    return get_attribute_from_toml_source(hierarchy=hierarchy_parent, toml_source=toml_source)
 
 
-def find_parent_toml_source(hierarchy: Hierarchy, toml_source: TOMLSource) -> Retrieval:
+def find_parent_toml_source(hierarchy: Hierarchy, toml_source: TOMLFieldSource) -> Union[Retrieval, TOMLFieldSource]:
     """"""
+    parent_toml: Union[Retrieval, TOMLFieldSource]
     if hierarchy.hierarchy_depth > 1:
         parent_toml = _find_parent_source(hierarchy=hierarchy, toml_source=toml_source)
     else:

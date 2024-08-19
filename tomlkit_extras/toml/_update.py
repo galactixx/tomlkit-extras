@@ -55,7 +55,7 @@ def update_toml_source(
         ):
             if not isinstance(update, dict):
                 raise ValueError(
-                    "If a dict-like TOML item is being updated, then the instance of the update must "
+                    "If a dict-like TOML item is being updated, then the update instance must "
                     "be a subclass of a dict"
                 )
             

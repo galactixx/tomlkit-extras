@@ -17,14 +17,22 @@ ContainerComments: TypeAlias = Tuple[int, int, str]
 # General types
 TOMLHierarchy: TypeAlias = Union[str, Hierarchy]
 TOMLSource: TypeAlias = Union[TOMLDocument, items.Table, items.AoT, OutOfOrderTableProxy]
+TOMLFieldSource: TypeAlias = Union[
+    TOMLDocument, 
+    items.Table, 
+    items.InlineTable,
+    items.AoT,
+    OutOfOrderTableProxy
+]
 
 TOMLDictLike: TypeAlias = Union[TOMLDocument, items.Table, items.InlineTable, OutOfOrderTableProxy]
 Table: TypeAlias = Union[items.Table, items.InlineTable]
 
+Stylings: TypeAlias = Union[items.Whitespace, items.Comment]
 ContainerItemDecomposed: TypeAlias = Tuple[Optional[str], items.Item]
 
-TOMLValidReturn: TypeAlias = Union[TOMLDocument, OutOfOrderTableProxy, items.Item]
-Retrieval: TypeAlias = Union[OutOfOrderTableProxy, items.Item, List[items.Item]]
+TOMLValidReturn: TypeAlias = Union[OutOfOrderTableProxy, items.Item]
+Retrieval: TypeAlias = Union[TOMLValidReturn, List[items.Item]]
 
 ContainerBodyItem: TypeAlias = Tuple[Optional[items.Key], items.Item]
 ContainerBody: TypeAlias = List[ContainerBodyItem]
@@ -37,6 +45,9 @@ HasComments: TypeAlias = Union[
     OutOfOrderTableProxy
 ]
 
+DescriptorInput = Union[TOMLDocument, items.Table, items.AoT, items.Array]
+
+ContainerInOrder: TypeAlias = Union[TOMLDocument, items.Table, items.InlineTable, items.Array]
 Container: TypeAlias = Union[
     TOMLDocument, 
     items.Table,

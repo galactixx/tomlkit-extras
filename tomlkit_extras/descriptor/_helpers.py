@@ -1,7 +1,8 @@
 from __future__ import annotations
 from typing import (
     List,
-    Set
+    Set,
+    Union
 )
 
 from tomlkit.container import OutOfOrderTableProxy
@@ -23,7 +24,7 @@ def find_child_tables(root_hierarchy: str, hierarchies: List[str]) -> Set[Hierar
     return children_hierarchies
 
 
-def get_item_type(toml_item: TOMLValidReturn) -> Item:
+def get_item_type(toml_item: Union[TOMLDocument, TOMLValidReturn]) -> Item:
     """"""
     toml_item_type: Item
 

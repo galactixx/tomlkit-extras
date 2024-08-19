@@ -7,3 +7,11 @@ DICTIONARY_LIKE_TYPES = (
     items.InlineTable,
     OutOfOrderTableProxy
 )
+
+INSERTION_TYPES = (
+    TOMLDocument,
+    items.Table,
+    items.InlineTable,
+    OutOfOrderTableProxy,
+    items.Array
+)

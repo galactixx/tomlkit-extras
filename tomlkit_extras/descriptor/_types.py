@@ -19,17 +19,49 @@ from tomlkit_extras.descriptor._create import create_comment_descriptor
 from tomlkit_extras.descriptor._descriptors import CommentDescriptor
 from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras._typing import (
-    Container,
-    ContainerBodyItem,
+    ContainerInOrder,
+    ContainerItemDecomposed,
+    DescriptorInput,
     FieldItem,
     Item,
     ParentItem,
     StyleItem,
-    TableItem,
-    TOMLValidReturn
+    Stylings,
+    Table,
+    TableItem
 )
 
 @dataclass(frozen=True)
+class BaseItem(object):
+    """"""
+    info: TOMLItemInfo
+
+
+@dataclass(frozen=True)
+class StylingInfo(BaseItem):
+    """"""
+    item: Stylings
+
+
+@dataclass(frozen=True)
+class ContainerInfo(BaseItem):
+    """"""
+    item: ContainerInOrder
+
+
+@dataclass(frozen=True)
+class TableInfo(BaseItem):
+    """"""
+    item: Table
+
+
+@dataclass(frozen=True)
+class FieldInfo(BaseItem):
+    """"""
+    item: items.Item
+
+
+@dataclass
 class ItemType:
     """"""
     item_type: Item
@@ -94,29 +126,27 @@ class StylingPositions:
     comments: Dict[str, List[StylingPosition]]
     whitespace: Dict[str, List[StylingPosition]]
 
-    def update_stylings(
-        self, style_item: TOMLItem, position: ItemPosition, line_no: int
-    ) -> None:
+    def update_stylings(self, style: StylingInfo, position: ItemPosition, line_no: int) -> None:
         """"""
-        style = cast(Union[items.Comment, items.Whitespace], style_item.item)
+        styling_value: str
 
-        if isinstance(style, items.Comment):
-            styling = style.trivia.comment
+        if isinstance(style.item, items.Comment):
+            styling_value = style.item.trivia.comment
             current_source = self.comments
         else:
-            styling = style.value
+            styling_value = style.item.value
             current_source = self.whitespace
 
         styling_position = StylingPosition(
-            item_type=cast(StyleItem, style_item.item_type.item_type),
-            style=styling,
+            item_type=cast(StyleItem, style.info.item_type.item_type),
+            style=styling_value,
             line_no=line_no,
             container=position.container
         )
-        if styling not in current_source:
-            current_source[styling] = [styling_position]
+        if styling_value not in current_source:
+            current_source[styling_value] = [styling_position]
         else:
-            current_source[styling].append(styling_position)
+            current_source[styling_value].append(styling_position)
 
 
 @dataclass
@@ -130,7 +160,7 @@ class FieldPosition:
     styling: StylingPositions
 
     @classmethod
-    def from_toml_item(cls, line_no: int, position: ItemPosition, item: TOMLItem) -> FieldPosition:
+    def from_toml_item(cls, item: FieldInfo, line_no: int, position: ItemPosition) -> FieldPosition:
         """"""
         comment_line_no: Optional[int]
         styling = StylingPositions(comments=dict(), whitespace=dict())
@@ -142,45 +172,25 @@ class FieldPosition:
         comment = create_comment_descriptor(item=item.item, line_no=comment_line_no)
         return cls(
             line_no=line_no,
-            item_type=cast(FieldItem, item.item_type.item_type),
+            item_type=cast(FieldItem, item.info.item_type.item_type),
             position=copy.copy(position),
             value=item.item.unwrap(),
             comment=comment,
             styling=styling
         )
     
-    def update_comment(self, item: TOMLItem, line_no: int) -> None:
+    def update_comment(self, item: items.Array, line_no: int) -> None:
         """"""
-        comment_position = TablePosition.find_comment_line_no(line_no=line_no, item=item.item)
-        self.comment = comment_position
+        comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=item)
+        self.comment = create_comment_descriptor(item=item, line_no=comment_line_no)
 
 
 @dataclass(frozen=True)
-class ContainerItem:
+class TOMLItemInfo:
     """"""
     item_type: ItemType
     key: str
     hierarchy: str
-    item: Container
-
-    @classmethod
-    def from_toml_item(cls, item: TOMLItem) -> ContainerItem:
-        """"""
-        return cls(
-            item_type=item.item_type,
-            key=item.key,
-            hierarchy=item.hierarchy,
-            item=cast(Container, item.item)
-        )
-
-
-@dataclass(frozen=True)
-class TOMLItem:
-    """"""
-    item_type: ItemType
-    key: str
-    hierarchy: str
-    item: TOMLValidReturn
 
     @property
     def full_hierarchy(self) -> str:
@@ -189,33 +199,25 @@ class TOMLItem:
 
     @classmethod
     def from_parent_type(
-        cls, key: str, hierarchy: str, toml_item: TOMLValidReturn, parent_type: Optional[TOMLItem] = None
-    ) -> TOMLItem:
+        cls, key: str, hierarchy: str, toml_item: DescriptorInput, parent_type: Optional[ParentItem] = None
+    ) -> TOMLItemInfo:
         """"""
-        item_type = ItemType(
-            item_type=get_item_type(toml_item=toml_item), parent_type=parent_type
-        )
-        return cls(
-            item_type=item_type, key=key, hierarchy=hierarchy, item=toml_item
-        )
+        item_type = ItemType(item_type=get_item_type(toml_item=toml_item), parent_type=parent_type)
+        return cls(item_type=item_type, key=key, hierarchy=hierarchy)
 
     @classmethod
     def from_body_item(
-        cls, hierarchy: str, body_item: ContainerBodyItem, container: ContainerItem
-    ) -> TOMLItem:
+        cls, hierarchy: str, container_info: TOMLItemInfo, body_item: ContainerItemDecomposed
+    ) -> TOMLItemInfo:
         """"""
-        item_key: Optional[str] = (
-            body_item[0].as_string().strip() if body_item[0] is not None else None
-        )
-        toml_item: items.Item = body_item[1]
-
+        item_key, toml_item = body_item
         item_type = ItemType(
             item_type=get_item_type(toml_item=toml_item),
-            parent_type=container.item_type.item_type
+            parent_type=cast(ParentItem, container_info.item_type.item_type)
         )
 
         return cls(
-            item_type=item_type, key=item_key, hierarchy=hierarchy, item=toml_item
+            item_type=item_type, key=item_key or '', hierarchy=hierarchy
         )
 
 
@@ -242,7 +244,7 @@ class ItemPosition:
 class TablePosition:
     """"""
     item_type: TableItem
-    parent_type: ParentItem
+    parent_type: Optional[ParentItem]
     line_no: int
     position: ItemPosition
     comment: Optional[CommentDescriptor]
@@ -264,27 +266,25 @@ class TablePosition:
         return comment_position
 
     @classmethod
-    def from_table_item(
-        cls, line_no: int, position: ItemPosition, container: ContainerItem
-    ) -> TablePosition:
+    def from_table_item(cls, line_no: int, position: ItemPosition, table: TableInfo) -> TablePosition:
         """"""
-        comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=container.item)
+        comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=table.item)
         styling = StylingPositions(comments=dict(), whitespace=dict())
-        comment = create_comment_descriptor(item=container.item, line_no=comment_line_no)
+        comment = create_comment_descriptor(item=table.item, line_no=comment_line_no)
         return cls(
             line_no=line_no,
-            item_type=cast(TableItem, container.item_type.item_type),
-            parent_type=container.item_type.parent_type,
+            item_type=cast(TableItem, table.info.item_type.item_type),
+            parent_type=table.info.item_type.parent_type,
             comment=comment,
             position=copy.copy(position),
             styling=styling,
             fields=dict()
         )
         
-    def add_field(self, item: TOMLItem, line_no: int, position: ItemPosition) -> None:
+    def add_field(self, item: FieldInfo, line_no: int, position: ItemPosition) -> None:
         """"""
-        field_position = FieldPosition.from_toml_item(line_no=line_no, position=position, item=item)
-        self.fields.update({item.key: field_position})
+        field_position = FieldPosition.from_toml_item(item=item, line_no=line_no, position=position)
+        self.fields.update({item.info.key: field_position})
 
 
 class TOMLStatistics:
@@ -297,7 +297,7 @@ class TOMLStatistics:
         self._number_of_fields = 0
         self._number_of_arrays = 0
 
-    def add_table(self, table: Union[items.Table, OutOfOrderTableProxy]) -> None:
+    def add_table(self, table: items.Table) -> None:
         """"""
         if not (isinstance(table, items.Table) and table.is_super_table()):
             self._number_of_tables += 1
