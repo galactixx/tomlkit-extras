@@ -80,10 +80,10 @@ def test_convert_to_tomlkit_item() -> None:
 
 def test_complete_clear_toml_document() -> None:
     """"""
-    toml_document_b: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document_b: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
     _document_complete_clear_assertion(num_attributes=3, toml_document=toml_document_b)
 
-    toml_document_d: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_d.toml')
+    toml_document_d: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_d.toml')
     _document_complete_clear_assertion(num_attributes=4, toml_document=toml_document_d)
 
 
@@ -112,7 +112,7 @@ def test_create_array_of_tables() -> None:
 
 def test_create_toml_document() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
 
     # Retrieve a couple items from the document to serve as inputs
     # to the create_toml_document function
@@ -149,14 +149,14 @@ def test_create_toml_document() -> None:
 
 def test_decompose_body_item() -> None:
     """"""
-    toml_document_a: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document_a: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
     document_body = get_container_body(toml_source=toml_document_a)
     assert all(
         _validate_body_item(body_item=body_item) for body_item in document_body
     )
 
     # Test the function on the body of the tool.ruff.lint table
-    toml_document_b: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document_b: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
     tool_ruff_lint = get_attribute_from_toml_source(hierarchy='tool.ruff.lint', toml_source=toml_document_b)
     assert isinstance(tool_ruff_lint, items.Table)
     table_body = get_container_body(toml_source=tool_ruff_lint)
@@ -170,7 +170,7 @@ def test_from_dict_to_toml_document() -> None:
     # The below assertions are just ensuring that the structure and values
     # of the converted dictionary are the same. Of course this convereted dictionary
     # is missing comments and the inline table in this case will be converted to a table.
-    toml_document_c: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document_c: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
     DICT_CONVERT_C = {
         'project': 'Example Project',
         'tool': {
@@ -195,7 +195,7 @@ def test_from_dict_to_toml_document() -> None:
     assert isinstance(toml_convert_document_c, TOMLDocument)
     assert toml_convert_document_c == toml_document_c
 
-    toml_document_b: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document_b: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
     DICT_CONVERT_B = {
         'project': 'Example Project',
         'tool': {
@@ -222,7 +222,7 @@ def test_from_dict_to_toml_document() -> None:
 
 def test_get_container_body() -> None:
     """"""
-    toml_document_b: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document_b: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
 
     # Retrieve the container from a TOMLDocument instance
     document_container = get_container_body(toml_source=toml_document_b)
@@ -243,7 +243,7 @@ def test_get_container_body() -> None:
     inline_table_container = get_container_body(toml_source=table_pydocstyle)
     assert _validate_body_items(container_body=inline_table_container)
 
-    toml_document_c: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document_c: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
 
     # Retrieve the container from an Array instance
     array_dev_dependencies = get_attribute_from_toml_source(
@@ -264,11 +264,11 @@ def test_get_container_body() -> None:
 
 def test_partial_clear_dict_like_toml_item() -> None:
     """"""
-    toml_document_a: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document_a: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
     _document_partial_clear_assertion(num_attributes=3, toml_document=toml_document_a)
 
-    toml_document_b: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document_b: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
     _document_partial_clear_assertion(num_attributes=3, toml_document=toml_document_b)
 
-    toml_document_d: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_d.toml')
+    toml_document_d: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_d.toml')
     _document_partial_clear_assertion(num_attributes=4, toml_document=toml_document_d)

@@ -39,7 +39,7 @@ def _is_array_and_table_instance_test(
 
 def test_toml_a_descriptors() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
     document_descriptor = TOMLDocumentDescriptor(toml_source=toml_document)
 
     # Basic statistics of the TOML file
@@ -184,7 +184,7 @@ def test_toml_a_descriptors() -> None:
 
 def test_toml_b_descriptor() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
     document_descriptor = TOMLDocumentDescriptor(toml_source=toml_document)
 
     # Basic statistics of the TOML file
@@ -501,7 +501,7 @@ def test_toml_b_descriptor() -> None:
 
 def test_toml_c_descriptor() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
     document_descriptor = TOMLDocumentDescriptor(toml_source=toml_document)
 
     # Basic statistics of the TOML file

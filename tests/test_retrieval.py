@@ -28,7 +28,7 @@ def _double_toml_type_test(
 
 def test_retrieval_from_toml_a() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
 
     # Testing for project.name hierarchy
     _attribute_value_test(
@@ -75,7 +75,7 @@ def test_retrieval_from_toml_a() -> None:
 
 def test_retrieval_from_toml_b() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
 
     # Testing for project hierarchy
     _attribute_value_test(
@@ -154,7 +154,7 @@ def test_retrieval_from_toml_b() -> None:
 
 def test_retrieval_from_toml_c() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
     
     # Testing for project hierarchy
     _attribute_value_test(

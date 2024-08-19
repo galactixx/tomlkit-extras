@@ -11,7 +11,7 @@ from tomlkit_extras import (
 
 def test_comments_toml_a() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
 
     # Retrieve all comments from the top-level document space
     document_comments = get_comments(toml_source=toml_document)
@@ -30,7 +30,7 @@ def test_comments_toml_a() -> None:
 
 def test_comments_toml_b() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
 
     # Retrieve all comments from the top-level document space
     document_comments = get_comments(toml_source=toml_document)
@@ -62,7 +62,7 @@ def test_comments_toml_b() -> None:
 
 def test_comments_toml_c() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
 
     # Retrieve all comments from the top-level document space
     document_comments = get_comments(toml_source=toml_document)

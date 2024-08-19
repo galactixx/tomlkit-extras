@@ -28,7 +28,7 @@ def _deletion_and_retrieval_test(hierarchy: str, toml_document: TOMLDocument) ->
 
 def test_deletion_from_toml_a() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
 
     HIERARCHY_PROJECT_NAME = 'project.name'
 
@@ -77,7 +77,7 @@ def test_deletion_from_toml_a() -> None:
 
 def test_deletion_from_toml_b() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
 
     HIERARCHY_PROJECT = 'project'
 
@@ -149,7 +149,7 @@ def test_deletion_from_toml_b() -> None:
 
 def test_deletion_from_toml_c() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
 
     HIERARCHY_TOOL_RUFF = 'tool.ruff'
 
@@ -178,7 +178,7 @@ def test_deletion_from_toml_c() -> None:
 
 def test_deletion_errors() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
 
     HIERARCHY_TOOL_POETRY = 'tool.poetry'
 

@@ -25,7 +25,7 @@ def _update_and_assertion_test(
 
 def test_update_toml_a() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
 
     # Update the project.name hierarchy
     _update_and_assertion_test(
@@ -58,7 +58,7 @@ def test_update_toml_a() -> None:
 
 def test_update_toml_b() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
 
     # Update the project hierarchy
     _update_and_assertion_test(
@@ -91,7 +91,7 @@ def test_update_toml_b() -> None:
 
 def test_update_toml_c() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
 
     # Update the tool.ruff.line-length hierarchy
     _update_and_assertion_test(

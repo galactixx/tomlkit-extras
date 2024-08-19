@@ -8,18 +8,18 @@ from tomlkit_extras import (
 
 def test_filepath_load_toml_file() -> None:
     """"""
-    _ = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
-    _ = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
-    _ = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
-    _ = load_toml_file(toml_source=r'tests\examples\toml_d.toml')
+    _ = load_toml_file(toml_source='./tests/examples/toml_a.toml')
+    _ = load_toml_file(toml_source='./tests/examples/toml_b.toml')
+    _ = load_toml_file(toml_source='./tests/examples/toml_c.toml')
+    _ = load_toml_file(toml_source='./tests/examples/toml_d.toml')
 
 
 def test_path_load_toml_file() -> None:
     """"""
-    _ = load_toml_file(toml_source=Path(r'tests\examples\toml_a.toml'))
-    _ = load_toml_file(toml_source=Path(r'tests\examples\toml_b.toml'))
-    _ = load_toml_file(toml_source=Path(r'tests\examples\toml_c.toml'))
-    _ = load_toml_file(toml_source=Path(r'tests\examples\toml_d.toml'))
+    _ = load_toml_file(toml_source=Path('./tests/examples/toml_a.toml'))
+    _ = load_toml_file(toml_source=Path('./tests/examples/toml_b.toml'))
+    _ = load_toml_file(toml_source=Path('./tests/examples/toml_c.toml'))
+    _ = load_toml_file(toml_source=Path('./tests/examples/toml_d.toml'))
 
 
 def test_string_load_toml_file() -> None:
@@ -129,10 +129,10 @@ def test_bytearray_load_toml_file() -> None:
 
 def test_tomldocument_load_toml_file() -> None:
     """"""
-    toml_document_a = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document_a = load_toml_file(toml_source='./tests/examples/toml_a.toml')
     _ = load_toml_file(toml_source=toml_document_a)
 
-    toml_document_b = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document_b = load_toml_file(toml_source='./tests/examples/toml_b.toml')
     _ = load_toml_file(toml_source=toml_document_b)
 
 
@@ -169,9 +169,9 @@ def test_dict_load_toml_file() -> None:
 def test_load_toml_file_invalid() -> None:
     """"""
     with pytest.raises(TOMLDecodingError) as exc_info:
-        _ = load_toml_file(toml_source=r'tests\examples\invalid_toml_a.toml')
+        _ = load_toml_file(toml_source='./tests/examples/invalid_toml_a.toml')
     assert str(exc_info.value) == 'Key "profile" already exists. at line 8 col 7'
 
     with pytest.raises(FileNotFoundError) as exc_info:
-        _ = load_toml_file(toml_source=r'tests\examples\not_an_existing_file.toml')
+        _ = load_toml_file(toml_source='./tests/examples/not_an_existing_file.toml')
     assert str(exc_info.value) == 'If path is passed in as the source, it must link to an existing file'

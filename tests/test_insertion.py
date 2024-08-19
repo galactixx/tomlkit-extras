@@ -19,7 +19,7 @@ def _inserted_position_test(
 
 def test_insertion_into_toml_a() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_a.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
 
     # Insert a single field in the top-level document space
     HIERARCHY_PORT = 'port'
@@ -86,7 +86,7 @@ def test_insertion_into_toml_a() -> None:
 
 def test_insertion_into_toml_b() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_b.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
 
     HIERARCHY_TITLE = 'title'
     attribute_insertion_into_toml_source(
@@ -133,7 +133,7 @@ def test_insertion_into_toml_b() -> None:
 
 def test_insertion_into_toml_c() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
 
     HIERARCHY_PYDOCTYLE_SELECT = 'tool.ruff.lint.pydocstyle.select'
     attribute_insertion_into_toml_source(

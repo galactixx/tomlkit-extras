@@ -48,7 +48,7 @@ def _out_of_order_fix_test_and_return(hierarchy: str, toml_document: TOMLDocumen
 
 def test_out_of_order_toml_c() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_c.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
 
     # Fix the out-of-order table and ensure true values/structure has not changed
     fixed_order_table = _out_of_order_fix_test_and_return(
@@ -74,7 +74,7 @@ def test_out_of_order_toml_c() -> None:
 
 def test_out_of_order_toml_d() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_d.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_d.toml')
 
     # Fix the out-of-order table and ensure true values/structure has not changed
     fixed_order_table = _out_of_order_fix_test_and_return(
@@ -99,7 +99,7 @@ def test_out_of_order_toml_d() -> None:
 
 def test_out_of_order_toml_e() -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source=r'tests\examples\toml_e.toml')
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_e.toml')
 
     # Fix the out-of-order tables and ensure true values/structure has not changed
     project_fixed_order_table = _out_of_order_fix_test_and_return(
