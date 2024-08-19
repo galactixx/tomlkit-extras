@@ -1,6 +1,7 @@
 from collections import deque
 from typing import (
     Any,
+    cast,
     Deque,
     Iterator,
     List,
@@ -8,12 +9,11 @@ from typing import (
     overload,
     Tuple,
     Type,
-    TypeAlias,
     Union
 )
 
 from tomlkit.container import OutOfOrderTableProxy
-from tomlkit import items
+from tomlkit import items, TOMLDocument
 
 from tomlkit_extras.toml._out_of_order import fix_out_of_order_table
 from tomlkit_extras._exceptions import InvalidHierarchyError
@@ -107,13 +107,13 @@ def get_attribute_from_toml_source(
 
 
 def get_attribute_from_toml_source(
-    hierarchy: TOMLHierarchy, toml_source: TOMLFieldSource, array: bool = True, fix_order: bool = True
+    hierarchy: TOMLHierarchy, toml_source: TOMLFieldSource, array: bool = True, fix_order: bool = False
 ) -> Retrieval:
     """"""
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
     hierarchy_of_tables: Deque[str] = deque(hierarchy_obj.full_hierarchy)
-    current_source: Retrieval = toml_source
+    current_source: Union[Retrieval, TOMLFieldSource] = toml_source
 
     try:
         while hierarchy_of_tables:
@@ -122,7 +122,7 @@ def get_attribute_from_toml_source(
             if isinstance(current_source, list):
                 current_source = _get_table_from_aot(current_source=current_source, table=table)
             else:
-                current_source = current_source[table] # type: ignore[index]
+                current_source = cast(Retrieval, current_source[table]) # type: ignore[index]
     except KeyError:
         raise InvalidHierarchyError(
             "Hierarchy specified does not exist in TOMLDocument instance"
@@ -138,15 +138,15 @@ def get_attribute_from_toml_source(
         elif isinstance(current_source, OutOfOrderTableProxy) and fix_order:
             return fix_out_of_order_table(table=current_source)
         else:
-            return current_source
+            return cast(Retrieval, current_source)
         
 
 def is_toml_instance(
-    _type: Type[Any], *, hierarchy: TOMLHierarchy, toml_source: TOMLSource, fix_order: bool = True, array: bool = True
+    _type: Type[Any], *, hierarchy: TOMLHierarchy, toml_source: TOMLSource, array: bool = True, fix_order: bool = False
 ) -> bool:
     """"""
     toml_items = get_attribute_from_toml_source(
-        hierarchy=hierarchy, toml_source=toml_source, fix_order=fix_order, array=array
+        hierarchy=hierarchy, toml_source=toml_source, array=array, fix_order=fix_order
     )
 
     if (

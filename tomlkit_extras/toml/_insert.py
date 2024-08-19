@@ -112,8 +112,8 @@ class DictLikeInserter(BaseInserter):
 
     def add(self, item: items.Item, key: Optional[str] = None) -> None:
         """"""
-        if key is None:
-            self.container.add(cast(Union[items.Comment, items.Whitespace], item))
+        if isinstance(item, (items.Comment, items.Whitespace)):
+            self.container.add(item)
         else:
             self.container.add(key, item)
 

@@ -7,7 +7,6 @@ from typing import (
     List,
     Optional,
     Set,
-    Tuple,
     Union
 )
 
@@ -22,8 +21,6 @@ from tomlkit_extras._typing import (
     DescriptorInput,
     ParentItem,
     StyleItem,
-    Stylings,
-    Table,
     TableItem,
     TOMLHierarchy,
     TopLevelItem
@@ -104,15 +101,15 @@ class TOMLDocumentDescriptor:
         position = ItemPosition(attribute=1, container=1)
         if isinstance(toml_source, items.AoT):
             self.top_level_hierarchy = toml_source.name
-            assert toml_source.name is not None
+            assert toml_source.name is not None, 'array of tables must have a string name'
             self._generate_descriptor_from_array_of_tables(
-                hierarchy=str(), array=toml_source, position=position
+                hierarchy=toml_source.name, array=toml_source, position=position
             )          
         else:
             if isinstance(toml_source, items.Table):
                 self.top_level_hierarchy = toml_source.name
                 update_key = toml_source.name
-                assert update_key is not None
+                assert update_key is not None, 'table must have a string name'
             else:
                 self.top_level_hierarchy = None
                 update_key = str()
@@ -579,7 +576,7 @@ class TOMLDocumentDescriptor:
             self._array_of_tables[hierarchy] = ArrayOfTables(aots=[array_of_tables], array_indices={hierarchy: 0})
         else:
             self._array_of_tables[hierarchy].update_arrays(hierarchy=hierarchy, array=array_of_tables)
-
+            
         hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=hierarchy)
 
         for index, table in enumerate(array.body):
@@ -673,7 +670,7 @@ class TOMLDocumentDescriptor:
             elif isinstance(toml_item, items.AoT) and not self.top_level_only:
                 self._toml_statistics.add_aot()
                 self._generate_descriptor_from_array_of_tables(
-                    hierarchy=container_info.full_hierarchy,
+                    hierarchy=toml_item_info.full_hierarchy,
                     array=toml_item,
                     parent_type=cast(ParentItem, container_info.item_type.item_type),
                     position=new_position

@@ -11,15 +11,15 @@ from tomlkit import items, TOMLDocument
 from tomlkit_extras._typing import Item, TOMLValidReturn
 from tomlkit_extras._hierarchy import Hierarchy
 
-def find_child_tables(root_hierarchy: str, hierarchies: List[str]) -> Set[Hierarchy]:
+def find_child_tables(root_hierarchy: str, hierarchies: List[str]) -> Set[str]:
     """"""
-    children_hierarchies: Set[Hierarchy] = set()
+    children_hierarchies: Set[str] = set()
 
     root_hierarchy_obj = Hierarchy.from_str_hierarchy(hierarchy=root_hierarchy) 
 
     for hierarchy in hierarchies:
         if root_hierarchy_obj.is_child_hierarchy(hierarchy=hierarchy):
-            children_hierarchies.add(Hierarchy.from_str_hierarchy(hierarchy=hierarchy))
+            children_hierarchies.add(hierarchy)
 
     return children_hierarchies
 

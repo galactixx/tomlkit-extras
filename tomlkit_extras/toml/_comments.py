@@ -47,7 +47,7 @@ def get_comments(
             attribute = [attribute]
 
         if not all(_container_has_comments(attribute=attr) for attr in attribute):
-            raise ValueError("Attributes are not structures that contain comments")
+            raise ValueError("Attribute is not a structures that can contain comments")
 
         attributes = cast(
             List[Union[TOMLDocument, items.Table, items.AoT, items.Array]],

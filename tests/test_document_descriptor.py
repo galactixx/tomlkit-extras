@@ -288,7 +288,7 @@ def test_toml_b_descriptor() -> None:
         ),
         from_aot=False,
         fields={'line-length': descriptor_line_length},
-        child_tables={hierarchy_ruff_lint}
+        child_tables={'tool.ruff.lint'}
     )
 
     assert document_descriptor.get_table(hierarchy=hieraarchy_ruff) == descriptor_ruff
@@ -627,7 +627,7 @@ def test_toml_c_descriptor() -> None:
         comment=None,
         from_aot=False,
         fields={'line-length': descriptor_line_length},
-        child_tables={hierarchy_ruff_lint}
+        child_tables={'tool.ruff.lint'}
     )
 
     assert document_descriptor.get_table(hierarchy=hierarchy_ruff) == descriptor_ruff

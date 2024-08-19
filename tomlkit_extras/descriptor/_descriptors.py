@@ -43,7 +43,7 @@ class TableDescriptor(Descriptor):
     """"""
     item_type: TableItem
     fields: Dict[str, FieldDescriptor]
-    child_tables: Optional[Set[Hierarchy]]
+    child_tables: Optional[Set[str]]
 
 
 @dataclass(frozen=True)

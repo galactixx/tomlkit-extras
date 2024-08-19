@@ -1,11 +1,22 @@
-from pyrsistent import pdeque, PDeque
-from tomlkit import items
+from typing import (
+    cast,
+    Union
+)
 
-from tomlkit_extras._typing import TOMLHierarchy, TOMLSource
+from pyrsistent import pdeque, PDeque
+from tomlkit import items, TOMLDocument
+from tomlkit.container import OutOfOrderTableProxy
+
 from tomlkit_extras._exceptions import InvalidHierarchyError
 from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
+)
+from tomlkit_extras._typing import (
+    TOMLDictLike,
+    TOMLHierarchy,
+    TOMLSource,
+    TOMLValidReturn
 )
 
 def _delete_attribute_from_aot(attribute: str, current_source: items.AoT) -> None:
@@ -38,7 +49,9 @@ def _delete_iteration_for_aot(
                 del table_source[attribute]
 
 
-def _recursive_deletion(current_source: TOMLSource, hierarchy_queue: PDeque[str]) -> None:
+def _recursive_deletion(
+    current_source: Union[TOMLDocument, OutOfOrderTableProxy, items.Item], hierarchy_queue: PDeque[str]
+) -> None:
     """"""
     try:
         current_table: str = hierarchy_queue[0]
@@ -48,18 +61,18 @@ def _recursive_deletion(current_source: TOMLSource, hierarchy_queue: PDeque[str]
             if isinstance(current_source, items.AoT):
                 _delete_attribute_from_aot(attribute=current_table, current_source=current_source)
             else:
-                del current_source[current_table]
+                del cast(TOMLDictLike, current_source)[current_table]
         elif isinstance(current_source, items.AoT):
             _delete_iteration_for_aot(
                 attribute=current_table, current_source=current_source, hierarchy_queue=hierarchy_queue_new
             )
         else:
-            next_source = current_source[current_table]
+            next_source = cast(TOMLValidReturn, current_source[current_table]) # type: ignore[index]
             _recursive_deletion(
                 current_source=next_source, hierarchy_queue=hierarchy_queue_new
             )
             if not next_source:
-                del current_source[current_table]
+                del cast(TOMLDictLike, current_source)[current_table]
     except KeyError:
         raise InvalidHierarchyError("Hierarchy does not exist in TOML source space")
 

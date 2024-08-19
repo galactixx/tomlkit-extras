@@ -125,8 +125,7 @@ def test_insertion_into_toml_b() -> None:
     ruff_lint_cache = get_attribute_from_toml_source(
         hierarchy=HIERARCHY_RUFF_LINT, toml_source=toml_document
     )
-    assert isinstance(ruff_lint_cache, items.Bool)
-    assert ruff_lint_cache.unwrap() == True
+    assert ruff_lint_cache == True
     _inserted_position_test(
         attribute_pos=1, container_pos=2, hierarchy=HIERARCHY_RUFF_LINT, toml_document=toml_document
     )

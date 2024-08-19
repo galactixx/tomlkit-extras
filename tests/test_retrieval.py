@@ -62,7 +62,7 @@ def test_retrieval_from_toml_a() -> None:
 
     # Testing for the members.roles hierarchy
     members_roles = get_attribute_from_toml_source(hierarchy='members.roles', toml_source=toml_document)
-    assert isinstance(members_roles, items.AoT) and len(members_roles) == 2
+    assert isinstance(members_roles, list) and len(members_roles) == 2
     assert is_toml_instance(items.AoT, hierarchy='members.roles', toml_source=toml_document)
 
     # Testing for the members.roles.role hierarchy
@@ -126,8 +126,9 @@ def test_retrieval_from_toml_b() -> None:
 
     # Testing for main_table.sub_tables hierarchy
     main_table_sub_tables = get_attribute_from_toml_source(
-        hierarchy='main_table.sub_tables', toml_source=toml_document, array=False
+        hierarchy='main_table.sub_tables', toml_source=toml_document
     )
+
     assert isinstance(main_table_sub_tables, items.AoT) and len(main_table_sub_tables) == 2
     assert is_toml_instance(items.AoT, hierarchy='main_table.sub_tables', toml_source=toml_document)
     assert is_toml_instance(
