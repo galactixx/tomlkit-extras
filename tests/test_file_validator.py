@@ -170,7 +170,7 @@ def test_load_toml_file_invalid() -> None:
     """"""
     with pytest.raises(TOMLDecodingError) as exc_info:
         _ = load_toml_file(toml_source='./tests/examples/invalid_toml_a.toml')
-    assert str(exc_info.value) == 'Key "profile" already exists. at line 8 col 7'
+    assert str(exc_info.value) == 'Issue occured when decoding the TOML source content'
 
     with pytest.raises(FileNotFoundError) as exc_info:
         _ = load_toml_file(toml_source='./tests/examples/not_an_existing_file.toml')
