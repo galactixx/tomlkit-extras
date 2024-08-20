@@ -1,3 +1,5 @@
+from typing import cast
+
 from tomlkit import items, TOMLDocument
 from tomlkit_extras import (
     attribute_insertion_into_toml_source,
@@ -125,7 +127,7 @@ def test_insertion_into_toml_b() -> None:
     ruff_lint_cache = get_attribute_from_toml_source(
         hierarchy=HIERARCHY_RUFF_LINT, toml_source=toml_document
     )
-    assert ruff_lint_cache == True
+    assert not isinstance(ruff_lint_cache, list) and cast(bool, ruff_lint_cache) == True
     _inserted_position_test(
         attribute_pos=1, container_pos=2, hierarchy=HIERARCHY_RUFF_LINT, toml_document=toml_document
     )

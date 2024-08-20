@@ -173,7 +173,7 @@ class TOMLDocumentDescriptor:
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str: str = str(hierarchy_obj)
 
-        longest_hierarchy: Optional[str] = hierarchy_obj.longest_sub_hierarchy(
+        longest_hierarchy: Optional[str] = hierarchy_obj.longest_ancestor_hierarchy(
             hierarchies=set(self._array_of_tables.keys())
         )
 
@@ -188,7 +188,7 @@ class TOMLDocumentDescriptor:
         field_descriptors: List[FieldDescriptor] = []
 
         hierarchy_table = Hierarchy.parent_hierarchy(hierarchy=hierarchy_as_str)
-        hierarchy_field = str(cast(Hierarchy, hierarchy_obj.diff(hierarchy=hierarchy_table)))
+        hierarchy_field = hierarchy_obj.attribute
 
         for array_of_table in arrays:
             if hierarchy_table in array_of_table.tables:
@@ -216,7 +216,7 @@ class TOMLDocumentDescriptor:
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str = str(hierarchy_obj)
 
-        longest_hierarchy: Optional[str] = hierarchy_obj.longest_sub_hierarchy(
+        longest_hierarchy: Optional[str] = hierarchy_obj.longest_ancestor_hierarchy(
             hierarchies=set(self._array_of_tables.keys())
         )
 
@@ -233,7 +233,7 @@ class TOMLDocumentDescriptor:
             
             if hierarchy_as_str in array_of_table.tables:
                 for table_position in array_of_table.tables[hierarchy_as_str]:
-                    child_tables: Set[Hierarchy] = find_child_tables(
+                    child_tables: Set[str] = find_child_tables(
                         root_hierarchy=hierarchy_as_str, hierarchies=tables_from_array_of_table
                     )
 
@@ -257,7 +257,7 @@ class TOMLDocumentDescriptor:
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str = str(hierarchy_obj)
 
-        longest_hierarchy: Optional[str] = hierarchy_obj.longest_sub_hierarchy(
+        longest_hierarchy: Optional[str] = hierarchy_obj.longest_ancestor_hierarchy(
             hierarchies=array_hierarchies
         )
 
@@ -266,7 +266,7 @@ class TOMLDocumentDescriptor:
                 "Hierarchy does not map to an existing array of tables"
             )
 
-        shortest_hierarchy: Optional[str] = hierarchy_obj.shortest_sub_hierarchy(
+        shortest_hierarchy: Optional[str] = hierarchy_obj.shortest_ancestor_hierarchy(
             hierarchies=array_hierarchies
         )
         from_aot = shortest_hierarchy is not None and shortest_hierarchy != longest_hierarchy
@@ -282,7 +282,7 @@ class TOMLDocumentDescriptor:
 
             for table_hierarchy, tables in array_of_table.tables.items():
                 for table_position in tables:
-                    child_tables: Set[Hierarchy] = find_child_tables(
+                    child_tables: Set[str] = find_child_tables(
                         root_hierarchy=table_hierarchy, hierarchies=tables_from_array_of_table
                     )
 
@@ -327,7 +327,7 @@ class TOMLDocumentDescriptor:
             parent_type = self.top_level_type
             field = hierarchy_as_str
         else:
-            longest_hierarchy: Optional[str] = hierarchy_obj.longest_sub_hierarchy(
+            longest_hierarchy: Optional[str] = hierarchy_obj.longest_ancestor_hierarchy(
                 hierarchies=set(self._attribute_lines.keys())
             )
 
@@ -335,17 +335,19 @@ class TOMLDocumentDescriptor:
                 raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
 
             table_position: TablePosition = self._attribute_lines[longest_hierarchy]
-            remaning_hierarchy: Optional[Hierarchy] = hierarchy_obj.diff(hierarchy=longest_hierarchy)
 
+            remaining_heirarchy = hierarchy_as_str.replace(longest_hierarchy, str())
+            remaining_heirarchy = remaining_heirarchy.lstrip('.')
+            
             if (
-                remaning_hierarchy is None or
-                str(remaning_hierarchy) not in table_position.fields
+                not remaining_heirarchy or
+                remaining_heirarchy not in table_position.fields
             ):
                 raise InvalidFieldError("Hierarchy does not map to an existing field")
             
-            field_position = table_position.fields[str(remaning_hierarchy)]
+            field_position = table_position.fields[remaining_heirarchy]
             parent_type = table_position.item_type
-            field = str(remaning_hierarchy)
+            field = remaining_heirarchy
 
         return create_field_descriptor(
             field=field,
@@ -460,7 +462,7 @@ class TOMLDocumentDescriptor:
         else:
             hierarchy_obj = Hierarchy.from_str_hierarchy(hierarchy=hierarchy)
         
-        return hierarchy_obj.longest_sub_hierarchy(
+        return hierarchy_obj.longest_ancestor_hierarchy(
             hierarchies=set(self._array_of_tables.keys())
         )
 
@@ -603,7 +605,7 @@ class TOMLDocumentDescriptor:
         if isinstance(container, items.Array):
             new_hierarchy = container_info.hierarchy
         else:
-            new_hierarchy = Hierarchy.create_hierarchy(hierarchy=container_info.hierarchy, update=container_info.key)
+            new_hierarchy = Hierarchy.create_hierarchy(hierarchy=container_info.hierarchy, attribute=container_info.key)
 
         # Add a new table to the data structures
         if (

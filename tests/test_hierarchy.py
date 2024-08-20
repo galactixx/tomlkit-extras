@@ -32,15 +32,15 @@ def test_hierarchy() -> None:
     assert hierarchy_tool_ruff.hierarchy_depth == 2
     assert hierarchy_tool_ruff.root_attribute == 'tool'
     assert hierarchy_tool_ruff.base_hierarchy_str == 'tool'
-    assert hierarchy_tool_ruff.sub_hierarchies == ['tool', 'tool.ruff']
+    assert hierarchy_tool_ruff.ancestor_hierarchies == ['tool', 'tool.ruff']
 
     # Test class methods
     HIERARCHIES = {'tool', 'tool.ruff.lint', 'tool.rye', 'build-system', 'tool.ruff'}
-    shortest_sub_hierarchy = hierarchy_tool_ruff.shortest_sub_hierarchy(hierarchies=HIERARCHIES)
-    assert shortest_sub_hierarchy == 'tool'
+    shortest_ancestor_hierarchy = hierarchy_tool_ruff.shortest_ancestor_hierarchy(hierarchies=HIERARCHIES)
+    assert shortest_ancestor_hierarchy == 'tool'
 
-    longest_sub_hierarchy = hierarchy_tool_ruff.longest_sub_hierarchy(hierarchies=HIERARCHIES)
-    assert longest_sub_hierarchy == 'tool.ruff'
+    longest_ancestor_hierarchy = hierarchy_tool_ruff.longest_ancestor_hierarchy(hierarchies=HIERARCHIES)
+    assert longest_ancestor_hierarchy == 'tool.ruff'
 
     # Test static and other methods
     hierarchy_tool_ruff.add_to_hierarchy(update='lint')

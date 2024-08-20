@@ -69,7 +69,7 @@ def create_field_descriptor(
 
 
 def create_table_descriptor(
-    hierarchy: Hierarchy, table_position: 'TablePosition', tables: Set[Hierarchy], from_aot: bool
+    hierarchy: Hierarchy, table_position: 'TablePosition', tables: Set[str], from_aot: bool
 ) -> TableDescriptor:
     """"""
     fields = {

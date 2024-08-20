@@ -29,6 +29,7 @@ from tomlkit_extras._typing import (
     Container,
     ContainerBody,
     ContainerInOrder,
+    Stylings,
     TOMLFieldSource,
     TOMLHierarchy
 )
@@ -63,11 +64,10 @@ def attribute_insertion_into_toml_source(
 def _find_final_toml_level(hierarchy: Hierarchy) -> str:
     """"""
     if hierarchy.hierarchy_depth > 1:
-        hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy))
-        hierarchy_remaining = cast(Hierarchy, hierarchy.diff(hierarchy=hierarchy_parent))
+        hierarchy_remaining = hierarchy.attribute
     else:
-        hierarchy_remaining = hierarchy
-    return str(hierarchy_remaining)
+        hierarchy_remaining = str(hierarchy)
+    return hierarchy_remaining
 
 
 class BaseInserter(ABC):
@@ -112,8 +112,8 @@ class DictLikeInserter(BaseInserter):
 
     def add(self, item: items.Item, key: Optional[str] = None) -> None:
         """"""
-        if isinstance(item, (items.Comment, items.Whitespace)):
-            self.container.add(item)
+        if key is None:
+            self.container.add(cast(Stylings, item))
         else:
             self.container.add(key, item)
 

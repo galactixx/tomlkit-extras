@@ -195,7 +195,7 @@ class TOMLItemInfo:
     @property
     def full_hierarchy(self) -> str:
         """"""
-        return Hierarchy.create_hierarchy(hierarchy=self.hierarchy, update=self.key)
+        return Hierarchy.create_hierarchy(hierarchy=self.hierarchy, attribute=self.key)
 
     @classmethod
     def from_parent_type(

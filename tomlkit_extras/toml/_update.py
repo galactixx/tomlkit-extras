@@ -1,7 +1,4 @@
-from typing import (
-    Any,
-    cast
-)
+from typing import Any
 
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items, TOMLDocument
@@ -35,19 +32,16 @@ def update_toml_source(
     elif not isinstance(retrieved_from_toml, DICTIONARY_LIKE_TYPES):
         raise ValueError("Type is not a valid container-like structure")
             
-    # Implement a full update
-    hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy_obj))
-    attribute = str(cast(Hierarchy, hierarchy_obj.diff(hierarchy=hierarchy_parent)))
-
-    if attribute not in retrieved_from_toml:
+    hierarchy_field = hierarchy_obj.attribute
+    if hierarchy_field not in retrieved_from_toml:
         raise InvalidHierarchyError(
             "Hierarchy specified does not exist in TOMLDocument instance"
         )
 
     if full:
-        retrieved_from_toml[attribute] = update
+        retrieved_from_toml[hierarchy_field] = update
     else:
-        attribute_toml = retrieved_from_toml[attribute]
+        attribute_toml = retrieved_from_toml[hierarchy_field]
         if isinstance(attribute_toml, items.Array):
             attribute_toml.add_line(update)
         elif isinstance(
@@ -63,4 +57,4 @@ def update_toml_source(
         elif isinstance(attribute_toml, items.AoT):
             attribute_toml.append(update)
         else:
-            retrieved_from_toml[attribute] = update
+            retrieved_from_toml[hierarchy_field] = update

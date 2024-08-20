@@ -21,7 +21,7 @@ from tomlkit_extras._utils import (
     decompose_body_item,
     from_dict_to_toml_document,
     get_container_body,
-    partial_clear_dict_like_toml_item
+    _partial_clear_dict_like_toml_item
 )
 
 def _number_of_top_level_attributes(toml_document: TOMLDocument) -> int:
@@ -36,7 +36,7 @@ def _number_of_top_level_attributes(toml_document: TOMLDocument) -> int:
 def _document_partial_clear_assertion(num_attributes: int, toml_document: TOMLDocument) -> None:
     """"""
     assert _number_of_top_level_attributes(toml_document=toml_document) == num_attributes
-    partial_clear_dict_like_toml_item(toml_source=toml_document)
+    _partial_clear_dict_like_toml_item(toml_source=toml_document)
     assert _number_of_top_level_attributes(toml_document=toml_document) == 0
 
 
@@ -121,7 +121,7 @@ def test_create_toml_document() -> None:
     project = get_attribute_from_toml_source(hierarchy='project', toml_source=toml_document)
     assert isinstance(project, items.Table)
 
-    project_toml_document = create_toml_document(hierarchy='project.update', update=project)
+    project_toml_document = create_toml_document(hierarchy='project.update', value=project)
     assert isinstance(project_toml_document, TOMLDocument)
     assert project_toml_document.unwrap() == {'project': {'update': {'name': 'Example Project'}}}
 
@@ -129,7 +129,7 @@ def test_create_toml_document() -> None:
     details = get_attribute_from_toml_source(hierarchy='details', toml_source=toml_document)
     assert isinstance(details, items.Table)
 
-    details_toml_document = create_toml_document(hierarchy='details.new.update', update=details)
+    details_toml_document = create_toml_document(hierarchy='details.new.update', value=details)
     assert isinstance(details_toml_document, TOMLDocument)
     assert details_toml_document.unwrap() == {
         'details': {'new': {'update': {'description': 'A sample project configuration'}}}
@@ -140,7 +140,7 @@ def test_create_toml_document() -> None:
     assert isinstance(members, list)
     assert isinstance(members[0], items.AoT)
 
-    members_toml_document = create_toml_document(hierarchy='members.roles.update', update=members[0])
+    members_toml_document = create_toml_document(hierarchy='members.roles.update', value=members[0])
     assert isinstance(members_toml_document, TOMLDocument)
     assert members_toml_document.unwrap() == {
         "members": {'roles': {'update': [{'role': 'Developer'}, {'role': 'Designer'}]}}
