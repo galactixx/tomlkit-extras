@@ -5,7 +5,6 @@ from typing import (
 
 from pyrsistent import pdeque, PDeque
 from tomlkit import items, TOMLDocument
-from tomlkit.container import OutOfOrderTableProxy
 
 from tomlkit_extras._exceptions import InvalidHierarchyError
 from tomlkit_extras._hierarchy import (
@@ -20,7 +19,9 @@ from tomlkit_extras._typing import (
 )
 
 def _delete_attribute_from_aot(attribute: str, current_source: items.AoT) -> None:
-    """"""
+    """
+    A private function that deletes the deepest level of a specified hierarchy. 
+    """
     table_deleted = False
 
     for table_source in current_source[:]:
@@ -38,7 +39,10 @@ def _delete_attribute_from_aot(attribute: str, current_source: items.AoT) -> Non
 def _delete_iteration_for_aot(
     attribute: str, current_source: items.AoT, hierarchy_queue: PDeque[str]
 ) -> None:
-    """"""
+    """
+    A private function that executes the recursive deletion for a tomlkit.items.AoT
+    instance.
+    """
     for table_source in current_source:
         if attribute in table_source:
             next_source = table_source[attribute]
@@ -50,9 +54,12 @@ def _delete_iteration_for_aot(
 
 
 def _recursive_deletion(
-    current_source: Union[TOMLDocument, OutOfOrderTableProxy, items.Item], hierarchy_queue: PDeque[str]
+    current_source: Union[TOMLDocument, TOMLValidReturn], hierarchy_queue: PDeque[str]
 ) -> None:
-    """"""
+    """
+    A private function that executes a recursive deletion of an item within a tomkit
+    type, given a hierarchy marking the location of that item.
+    """
     try:
         current_table: str = hierarchy_queue[0]
         hierarchy_queue_new: PDeque[str] = hierarchy_queue.popleft()
@@ -79,7 +86,18 @@ def _recursive_deletion(
 
 
 def delete_from_toml_source(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> None:
-    """"""
+    """
+    Deletes the tomlkit item residing at a speicifc hierarchy within a TOMLSource
+    instance. In addition, the deletion will continue to cascade backwards as long
+    as the last deletion resulted in an empty tomlkit structure.
+    
+    Accepts a TOMLHierarchy instance, being an instance of string or Hierarchy,
+    and an instance of TOMLSource.
+
+    Args:
+        hierarchy (TOMLHierarchy): A TOMLHierarchy instance.
+        toml_source (TOMLSource): A TOMLSource instance.
+    """
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
     hierarchy_queue: PDeque[str] = pdeque(hierarchy_obj.full_hierarchy)

@@ -20,10 +20,10 @@ from tomlkit_extras._hierarchy import (
     standardize_hierarchy
 )
 from tomlkit_extras._typing import (
-    Container,
-    ContainerBody,
-    ContainerBodyItem,
-    ContainerItemDecomposed,
+    BodyContainer,
+    BodyContainerItem,
+    BodyContainerItemDecomposed,
+    BodyContainerItems,
     TOMLDictLike,
     TOMLHierarchy
 )
@@ -193,12 +193,12 @@ def complete_clear_array(array: items.Array) -> None:
     array.clear()
 
 
-def _reorganize_array(array: items.Array) -> ContainerBody:
+def _reorganize_array(array: items.Array) -> BodyContainerItems:
     """
     A private function which reorganizes a tomlkit.items.Array instance and
-    returns a ContainerBody type.
+    returns a BodyContainerItems type.
     """
-    array_body_items: ContainerBody = []
+    array_body_items: BodyContainerItems = []
 
     for array_item_group in array._value:
         for array_item in array_item_group:
@@ -207,16 +207,16 @@ def _reorganize_array(array: items.Array) -> ContainerBody:
     return array_body_items
 
 
-def get_container_body(toml_source: Container) -> ContainerBody:
+def get_container_body(toml_source: BodyContainer) -> BodyContainerItems:
     """
-    Retrieves the core elements, making up the body of a Container type, 
-    and returns a ContainerBody type.
+    Retrieves the core elements, making up the body of a BodyContainer type, 
+    and returns a BodyContainerItems type.
 
     Args:
-        toml_source (Container): A Container instance.
+        toml_source (BodyContainer): A BodyContainer instance.
 
     Returns:
-        ContainerBody: A ContainerBody instance.
+        BodyContainerItems: A BodyContainerItems instance.
     """
     match toml_source:
         case items.Table() | items.InlineTable():
@@ -232,16 +232,16 @@ def get_container_body(toml_source: Container) -> ContainerBody:
     return table_body_items
 
 
-def decompose_body_item(body_item: ContainerBodyItem) -> ContainerItemDecomposed:
+def decompose_body_item(body_item: BodyContainerItem) -> BodyContainerItemDecomposed:
     """
-    Decomposes an item, from the body of a Container type, being
-    of type ContainerBodyItem, and returns a ContainerItemDecomposed type.
+    Decomposes an item, from the body of a BodyContainer type, being
+    of type BodyContainerItem, and returns a BodyContainerItemDecomposed type.
 
     Args:
-        body_item (ContainerBodyItem): A ContainerBodyItem instance.
+        body_item (BodyContainerItem): A BodyContainerItem instance.
 
     Returns:
-        ContainerItemDecomposed: A ContainerItemDecomposed instance.
+        BodyContainerItemDecomposed: A BodyContainerItemDecomposed instance.
     """
     item_key: Optional[str] = (
         body_item[0].as_string().strip() if body_item[0] is not None else None

@@ -19,21 +19,47 @@ from tomlkit_extras._utils import (
     get_container_body
 )
 from tomlkit_extras._typing import (
-    ContainerBodyItem,
-    ContainerComments, 
-    HasComments, 
+    AnnotatedContainer,
+    BodyContainerItem,
+    ContainerComment,
     TOMLHierarchy
 )
 
-def _container_has_comments(attribute: items.Item) -> bool:
-    """"""
+def _container_has_comments(attribute: Union[TOMLDocument, items.Item]) -> bool:
+    """
+    Private function to determine if a specific tomlkit type can contain
+    annotations.
+    """
     return isinstance(attribute, (TOMLDocument, items.Table, items.AoT, items.Array))
 
 
 def get_comments(
-    toml_source: HasComments, hierarchy: Optional[TOMLHierarchy] = None
-) -> Optional[List[ContainerComments]]:
-    """"""
+    toml_source: AnnotatedContainer, hierarchy: Optional[TOMLHierarchy] = None
+) -> Optional[List[ContainerComment]]:
+    """
+    Retrieves and returns all comments appearing in the top-level space of a given
+    tomklit type. A TOML source of type AnnotatedContainer must be passed in.
+    
+    If no heirarchy is specified then the search will occur in the TOML source
+    passed. Otherwise if a hierarchy is included, then it must be relative to
+    the source. The item located at the hierarchy will be retrieved and the
+    search will occur within that item.
+
+    Returns a tuple where the first item is the item position (only relevant
+    in the cases where multiple hierarchies can exist due to an array of tables,
+    otherwise the default position is 1), the second item is the line number where
+    the comment is located and the third and final item is the comment itself.
+
+    Will return None if no comments were found.
+
+    Args:
+        toml_source (AnnotatedContainer): An AnnotatedContainer instance.
+        hierarchy (TOMLHierarchy | None): None or a TOMLHierarchy instance.
+
+    Returns:
+        List[ContainerComment] | None: None if no comments were found, or a list of
+            ContainerComment instances.
+    """
     if isinstance(toml_source, items.Array) or hierarchy is None:
         if isinstance(toml_source, OutOfOrderTableProxy):
             toml_source = fix_out_of_order_table(table=toml_source)
@@ -47,14 +73,14 @@ def get_comments(
             attribute = [attribute]
 
         if not all(_container_has_comments(attribute=attr) for attr in attribute):
-            raise ValueError("Attribute is not a structures that can contain comments")
+            raise ValueError("Attribute is not a structure that can contain comments")
 
         attributes = cast(
-            List[Union[TOMLDocument, items.Table, items.AoT, items.Array]],
+            List[Union[TOMLDocument, items.Table, items.Array]],
             attribute
         )
 
-    comments: List[ContainerComments] = []
+    comments: List[ContainerComment] = []
     for attr_index, attr in enumerate(attributes):
         document_descriptor = TOMLDocumentDescriptor(toml_source=attr, top_level_only=True)
 
@@ -65,8 +91,21 @@ def get_comments(
 
 
 def get_array_field_comment(array: items.Array, array_item: Any) -> Optional[str]:
-    """"""
-    array_body_items: Iterator[ContainerBodyItem] = iter(get_container_body(toml_source=array))
+    """
+    Will return the comment associated with an array item appearing within a
+    tomlkit.items.Array instance. Association in this case means the first comment
+    appearing after the item in question, but before any whitespace (a new line).
+
+    Will return None if no comment was found.
+    
+    Args:
+        array (tomlkit.items.Array): A tomlkit.items.Array instance.
+        array_item (Any): Any type corresponding to an array item.
+    
+    Returns:
+        str | None: None if no comment was found, or a string comment if found.
+    """
+    array_body_items: Iterator[BodyContainerItem] = iter(get_container_body(toml_source=array))
 
     seen_first_ws_after_comment = False
     seen_array_item = False

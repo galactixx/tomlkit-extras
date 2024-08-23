@@ -13,7 +13,7 @@ from tomlkit_extras import (
     load_toml_file
 )
 
-from tomlkit_extras._typing import ContainerBodyItem
+from tomlkit_extras._typing import BodyContainerItem
 from tomlkit_extras._utils import (
     complete_clear_toml_document,
     create_array_of_tables,
@@ -60,7 +60,7 @@ def _validate_body_items(container_body: List[Tuple[Any, Any]]) -> bool:
     )
 
 
-def _validate_body_item(body_item: ContainerBodyItem) -> bool:
+def _validate_body_item(body_item: BodyContainerItem) -> bool:
     """"""
     item_key, toml_item = decompose_body_item(body_item=body_item)
     return (item_key is None or isinstance(item_key, str)) and isinstance(toml_item, items.Item)

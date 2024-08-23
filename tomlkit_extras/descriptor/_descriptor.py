@@ -16,8 +16,8 @@ from tomlkit import items, TOMLDocument
 from tomlkit_extras.toml._out_of_order import fix_out_of_order_table
 from tomlkit_extras._utils import decompose_body_item, get_container_body
 from tomlkit_extras._typing import (
-    ContainerBody,
-    ContainerInOrder,
+    BodyContainerInOrder,
+    BodyContainerItems,
     DescriptorInput,
     ParentItem,
     StyleItem,
@@ -596,7 +596,7 @@ class TOMLDocumentDescriptor:
             )
 
     def _generate_descriptor(
-        self, container: ContainerInOrder, container_info: TOMLItemInfo, position: ItemPosition, is_aot: bool = False
+        self, container: BodyContainerInOrder, container_info: TOMLItemInfo, position: ItemPosition, is_aot: bool = False
     ) -> None:
         """"""
         new_position = ItemPosition(attribute=1, container=1)
@@ -620,7 +620,7 @@ class TOMLDocumentDescriptor:
 
         # Since an inline table is contained only on a single line, and thus,
         # on the same line as the table header, the line number is intialized to 0
-        table_body_items: ContainerBody = get_container_body(toml_source=container)
+        table_body_items: BodyContainerItems = get_container_body(toml_source=container)
         if (
             isinstance(container, TOMLDocument) or
             (isinstance(container, items.Table) and not container.is_super_table())

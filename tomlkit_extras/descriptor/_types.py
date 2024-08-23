@@ -7,11 +7,9 @@ from typing import (
     Dict,
     List,
     Literal,
-    Optional,
-    Union
+    Optional
 )
 
-from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items
 
 from tomlkit_extras.descriptor._helpers import get_item_type
@@ -19,8 +17,8 @@ from tomlkit_extras.descriptor._create import create_comment_descriptor
 from tomlkit_extras.descriptor._descriptors import CommentDescriptor
 from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras._typing import (
-    ContainerInOrder,
-    ContainerItemDecomposed,
+    BodyContainerInOrder,
+    BodyContainerItemDecomposed,
     DescriptorInput,
     FieldItem,
     Item,
@@ -46,7 +44,7 @@ class StylingInfo(BaseItem):
 @dataclass(frozen=True)
 class ContainerInfo(BaseItem):
     """"""
-    item: ContainerInOrder
+    item: BodyContainerInOrder
 
 
 @dataclass(frozen=True)
@@ -207,7 +205,7 @@ class TOMLItemInfo:
 
     @classmethod
     def from_body_item(
-        cls, hierarchy: str, container_info: TOMLItemInfo, body_item: ContainerItemDecomposed
+        cls, hierarchy: str, container_info: TOMLItemInfo, body_item: BodyContainerItemDecomposed
     ) -> TOMLItemInfo:
         """"""
         item_key, toml_item = body_item

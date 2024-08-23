@@ -26,9 +26,9 @@ from tomlkit_extras._constants import (
     INSERTION_TYPES
 )
 from tomlkit_extras._typing import (
-    Container,
-    ContainerBody,
-    ContainerInOrder,
+    BodyContainer,
+    BodyContainerInOrder,
+    BodyContainerItems,
     Stylings,
     TOMLFieldSource,
     TOMLHierarchy
@@ -135,7 +135,7 @@ class ListLikeInserter(BaseInserter):
 
 
 def _insert_item_at_position_in_container(
-    position: int, inserter: BaseInserter, toml_body_items: ContainerBody
+    position: int, inserter: BaseInserter, toml_body_items: BodyContainerItems
 ) -> None:
     """"""
     for toml_table_item in toml_body_items:
@@ -156,7 +156,7 @@ def _insert_item_at_position_in_container(
         inserter.insert_attribute()
 
 
-def _refresh_container(initial_container: Container) -> None:
+def _refresh_container(initial_container: BodyContainer) -> None:
     """"""
     match initial_container:
         case items.Table() | items.InlineTable():
@@ -171,7 +171,7 @@ def _refresh_container(initial_container: Container) -> None:
             raise ValueError("Type is not a valid container-like structure")
 
 
-def _inline_table_insertion_check(parent: Container, insertion: items.Item) -> None:
+def _inline_table_insertion_check(parent: BodyContainer, insertion: items.Item) -> None:
     """"""
     if (
         isinstance(parent, items.InlineTable) and
@@ -196,6 +196,10 @@ def _positional_insertion_into_toml_source(
     # Ensure the hierarchy does not map to multiple items
     if isinstance(parent_toml, (list, items.AoT)):
         raise InvalidHierarchyError("Hierarchy maps to multiple items, insertion is not possible")
+    elif not isinstance(parent_toml, INSERTION_TYPES):
+        
+        # Ensure that the hierarchy does not map to a type that does not support insertion
+        raise InvalidHierarchyError("Hierarchy maps to an instance that does not support insertion")
 
     if (
         isinstance(parent_toml, DICTIONARY_LIKE_TYPES) and
@@ -214,9 +218,6 @@ def _positional_insertion_into_toml_source(
             else:
                 assert attribute_toml is None
 
-        if not isinstance(parent_toml, INSERTION_TYPES):
-            raise InvalidHierarchyError("Hierarchy maps to an instance that does not support insertion")
-
         inserter: BaseInserter
         _inline_table_insertion_check(parent=parent_toml, insertion=insertion_as_toml_item)
 
@@ -224,7 +225,7 @@ def _positional_insertion_into_toml_source(
         toml_body_items = copy.deepcopy(get_container_body(toml_source=parent_toml))
         _refresh_container(initial_container=parent_toml)
 
-        container: ContainerInOrder
+        container: BodyContainerInOrder
         if isinstance(parent_toml, OutOfOrderTableProxy):
             container = tomlkit.table()
         else:

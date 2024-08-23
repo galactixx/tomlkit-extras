@@ -12,11 +12,44 @@ from tomlkit import items, TOMLDocument
 
 from tomlkit_extras._hierarchy import Hierarchy
 
-ContainerComments: TypeAlias = Tuple[int, int, str]
+# The return type of get_comments function, returning a tuple where the first item
+# is the container number in which the comment is located (only relevant if more than one item was returned).
+# Also included is the line number where the comment is located and the comment itself
+ContainerComment: TypeAlias = Tuple[int, int, str]
 
-# General types
+# Tomlkit types that are subclasses of dictionaries
+TOMLDictLike: TypeAlias = Union[TOMLDocument, items.Table, items.InlineTable, OutOfOrderTableProxy]
+
+# Tomlkit types that are tables
+Table: TypeAlias = Union[items.Table, items.InlineTable]
+
+# Tomlkit types that are classified as styles/stylings
+Stylings: TypeAlias = Union[items.Whitespace, items.Comment]
+
+# Valid tomlkit return types when traversing a TOMLDocument
+TOMLValidReturn: TypeAlias = Union[OutOfOrderTableProxy, items.Item]
+
+# Valid tomlkit return types from the get_attribute_from_toml_source function
+Retrieval: TypeAlias = Union[TOMLValidReturn, List[items.Item]]
+
+# Valid hierarchy types in most functions in package
 TOMLHierarchy: TypeAlias = Union[str, Hierarchy]
-TOMLSource: TypeAlias = Union[TOMLDocument, items.Table, items.AoT, OutOfOrderTableProxy]
+
+# Various types that have to do with tomlkit types that contain a body of fields,
+# tables, and stylings.
+BodyContainerItem: TypeAlias = Tuple[Optional[items.Key], items.Item]
+BodyContainerItems: TypeAlias = List[BodyContainerItem]
+BodyContainerItemDecomposed: TypeAlias = Tuple[Optional[str], items.Item]
+BodyContainer: TypeAlias = Union[
+    TOMLDocument, 
+    items.Table,
+    items.InlineTable,
+    items.Array,
+    OutOfOrderTableProxy
+]
+BodyContainerInOrder: TypeAlias = Union[TOMLDocument, items.Table, items.InlineTable, items.Array]
+
+# Tomlkit types that container key-value pairs
 TOMLFieldSource: TypeAlias = Union[
     TOMLDocument, 
     items.Table, 
@@ -25,37 +58,21 @@ TOMLFieldSource: TypeAlias = Union[
     OutOfOrderTableProxy
 ]
 
-TOMLDictLike: TypeAlias = Union[TOMLDocument, items.Table, items.InlineTable, OutOfOrderTableProxy]
-Table: TypeAlias = Union[items.Table, items.InlineTable]
+# Valid input tomlkit types for most TOML related functions in package
+TOMLSource: TypeAlias = Union[TOMLDocument, items.Table, items.AoT, OutOfOrderTableProxy]
 
-Stylings: TypeAlias = Union[items.Whitespace, items.Comment]
-ContainerItemDecomposed: TypeAlias = Tuple[Optional[str], items.Item]
+# Valid input tomlkit types for the TOMLDocumentDescriptor class
+DescriptorInput = Union[TOMLDocument, items.Table, items.AoT, items.Array]
 
-TOMLValidReturn: TypeAlias = Union[OutOfOrderTableProxy, items.Item]
-Retrieval: TypeAlias = Union[TOMLValidReturn, List[items.Item]]
-
-ContainerBodyItem: TypeAlias = Tuple[Optional[items.Key], items.Item]
-ContainerBody: TypeAlias = List[ContainerBodyItem]
-
-HasComments: TypeAlias = Union[
+# Tomlkit types that can have comments in the top-level space
+AnnotatedContainer: TypeAlias = Union[
     TOMLDocument,
     items.Table,
     items.Array,
-    items.AoT,
     OutOfOrderTableProxy
 ]
 
-DescriptorInput = Union[TOMLDocument, items.Table, items.AoT, items.Array]
-
-ContainerInOrder: TypeAlias = Union[TOMLDocument, items.Table, items.InlineTable, items.Array]
-Container: TypeAlias = Union[
-    TOMLDocument, 
-    items.Table,
-    items.InlineTable,
-    items.Array,
-    OutOfOrderTableProxy
-]
-
+# Tomlkit types that act like containers and can store other tomlkit.items.Item instances
 ContainerLike: TypeAlias = Union[
     TOMLDocument, 
     items.Table,
@@ -65,7 +82,11 @@ ContainerLike: TypeAlias = Union[
     OutOfOrderTableProxy
 ]
 
-# Descriptor types
+# Literals identifying the TOML item type for a given descriptor
+StyleItem: TypeAlias = Literal['whitespace', 'comment']
+TableItem: TypeAlias = Literal['table', 'inline-table']
+FieldItem: TypeAlias = Literal['field', 'array']
+TopLevelItem: TypeAlias = Literal['document', 'table', 'array-of-tables']
 Item: TypeAlias = Literal[
     'document',
     'field',
@@ -93,8 +114,3 @@ ParentItem: TypeAlias = Literal[
     'array',
     'array-of-tables'
 ]
-
-StyleItem: TypeAlias = Literal['whitespace', 'comment']
-TableItem: TypeAlias = Literal['table', 'inline-table']
-FieldItem: TypeAlias = Literal['field', 'array']
-TopLevelItem: TypeAlias = Literal['document', 'table', 'array-of-tables']
