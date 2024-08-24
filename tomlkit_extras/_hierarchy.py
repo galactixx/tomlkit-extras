@@ -21,14 +21,14 @@ def _hierarchy_type_error(hierarchy: Any) -> TypeError:
 
 def standardize_hierarchy(hierarchy: 'TOMLHierarchy') -> Hierarchy:
     """
-    Accepts a TOMLHierarchy instance, being an instance of string or Hierarchy,
-    and returns a Hierarchy instance.
+    Accepts a `TOMLHierarchy` instance, being an instance of string or `Hierarchy`,
+    and returns a `Hierarchy` instance.
 
     Args:
-        hierarchy (TOMLHierarchy) A TOMLHierarchy instance.
+        hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
 
     Returns:
-        Hierarchy: A Hierarchy instance.
+        `Hierarchy`: A `Hierarchy` instance.
     """
     if isinstance(hierarchy, str):
         hierarchy_final = Hierarchy.from_str_hierarchy(hierarchy=hierarchy)
@@ -105,14 +105,14 @@ class Hierarchy:
     @classmethod
     def from_str_hierarchy(cls, hierarchy: str) -> Hierarchy:
         """
-        A class method which returns a Hierarchy instance from a string instance of
+        A class method which returns a `Hierarchy` instance from a string instance of
         a TOML hierarchy.
         
         Args:
             hierarchy (str) A string instance representing a TOML hierarchy.
 
         Returns:
-            Hierarchy: A Hierarchy instance.
+            `Hierarchy`: A `Hierarchy` instance.
         """
         hirarchy_decomposed = hierarchy.split('.')
         assert len(hirarchy_decomposed) > 0
@@ -122,7 +122,7 @@ class Hierarchy:
     @classmethod
     def from_list_hierarchy(cls, hierarchy: List[str]) -> Hierarchy:
         """
-        A class method which returns a Hierarchy instance from a list instance of
+        A class method which returns a `Hierarchy` instance from a list instance of
         strings representing each individual level in a TOML hierarchy.
         
         Args:
@@ -130,7 +130,7 @@ class Hierarchy:
                 individual level in a TOML hierarchy
 
         Returns:
-            Hierarchy: A Hierarchy instance.
+            `Hierarchy`: A `Hierarchy` instance.
         """
         if not hierarchy:
             raise ValueError("There must be an existing hierarchy")

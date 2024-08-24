@@ -24,7 +24,14 @@ if TYPE_CHECKING:
     )
 
 def create_comment_descriptor(item: items.Item, line_no: Optional[int]) -> Optional[CommentDescriptor]:
-    """"""
+    """
+    A private function that creates a `CommentDescriptor` instance which
+    provides detail for a comment that is directly associated with a
+    particular field or table.
+    
+    Can return None if there is no line number corresponding to the item,
+    indicating that there is no comment.
+    """
     return (
         CommentDescriptor(comment=item.trivia.comment, line_no=line_no)
         if line_no is not None else None
@@ -34,7 +41,17 @@ def create_comment_descriptor(item: items.Item, line_no: Optional[int]) -> Optio
 def create_style_descriptor(
     styling_position: 'StylingPosition', hierarchy: Optional[Hierarchy], parent_type: ParentItem
 ) -> StyleDescriptor:
-    """"""
+    """
+    A private function that creates a `StyleDescriptor` instance, which
+    provides detail on a specific styling appearing in a tomlkit type instance.
+
+    A styling can either be a comment, represented in tomlkit as a
+    tomlkit.items.Comment instance, or a whitespace, represented as a
+    tomlkit.items.Whitespace instance.
+
+    These are comments or whitespaces that are not directly associated with
+    a field or table, but are contained within tomlkit structures like tables. 
+    """
     return StyleDescriptor(
         item_type=styling_position.item_type,
         parent_type=parent_type,
@@ -53,7 +70,11 @@ def create_field_descriptor(
     parent_type: ParentItem,
     from_aot: bool
 ) -> FieldDescriptor:
-    """"""
+    """
+    A private function that creates a `FieldDescriptor` instance, which provides
+    detail on a field, a key-value pair that cannot contain nested key-value
+    pairs.
+    """
     return FieldDescriptor(
         item_type=field_position.item_type,
         parent_type=parent_type,
@@ -71,7 +92,11 @@ def create_field_descriptor(
 def create_table_descriptor(
     hierarchy: Hierarchy, table_position: 'TablePosition', tables: Set[str], from_aot: bool
 ) -> TableDescriptor:
-    """"""
+    """
+    A private function that creates a `TableDescriptor` instance, which provides
+    detail on a table or inline table, a key-value pair that can contain nested
+    key-value pairs.
+    """
     fields = {
         field: create_field_descriptor(
             field=field,

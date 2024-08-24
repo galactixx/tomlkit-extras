@@ -483,6 +483,7 @@ def test_toml_b_descriptor() -> None:
 
     # For the *main_table.sub_tables* array of tables
     descriptor_main_sub_tables = ArrayOfTablesDescriptor(
+        item_type='array-of-tables',
         parent_type='table',
         name='sub_tables',
         hierarchy=hierarchy_sub_tables,

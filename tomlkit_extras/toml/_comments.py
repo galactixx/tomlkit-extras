@@ -38,7 +38,7 @@ def get_comments(
 ) -> Optional[List[ContainerComment]]:
     """
     Retrieves and returns all comments appearing in the top-level space of a given
-    tomklit type. A TOML source of type AnnotatedContainer must be passed in.
+    tomklit type. A TOML source of type `AnnotatedContainer` must be passed in.
     
     If no heirarchy is specified then the search will occur in the TOML source
     passed. Otherwise if a hierarchy is included, then it must be relative to
@@ -53,12 +53,12 @@ def get_comments(
     Will return None if no comments were found.
 
     Args:
-        toml_source (AnnotatedContainer): An AnnotatedContainer instance.
-        hierarchy (TOMLHierarchy | None): None or a TOMLHierarchy instance.
+        toml_source (`AnnotatedContainer`): An `AnnotatedContainer` instance.
+        hierarchy (`TOMLHierarchy` | None): None or a `TOMLHierarchy` instance.
 
     Returns:
-        List[ContainerComment] | None: None if no comments were found, or a list of
-            ContainerComment instances.
+        List[`ContainerComment`] | None: None if no comments were found, or a list of
+            `ContainerComment` instances.
     """
     if isinstance(toml_source, items.Array) or hierarchy is None:
         if isinstance(toml_source, OutOfOrderTableProxy):

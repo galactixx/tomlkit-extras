@@ -87,16 +87,16 @@ def _recursive_deletion(
 
 def delete_from_toml_source(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> None:
     """
-    Deletes the tomlkit item residing at a speicifc hierarchy within a TOMLSource
+    Deletes the tomlkit item residing at a speicifc hierarchy within a `TOMLSource`
     instance. In addition, the deletion will continue to cascade backwards as long
     as the last deletion resulted in an empty tomlkit structure.
     
-    Accepts a TOMLHierarchy instance, being an instance of string or Hierarchy,
-    and an instance of TOMLSource.
+    Accepts a `TOMLHierarchy` instance, being an instance of string or `Hierarchy`,
+    and an instance of `TOMLSource`.
 
     Args:
-        hierarchy (TOMLHierarchy): A TOMLHierarchy instance.
-        toml_source (TOMLSource): A TOMLSource instance.
+        hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
+        toml_source (`TOMLSource`): A `TOMLSource` instance.
     """
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 

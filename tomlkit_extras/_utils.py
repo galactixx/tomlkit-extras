@@ -92,7 +92,7 @@ def create_array_of_tables(tables: Union[List[items.Table], List[Dict[str, Any]]
 
 def create_toml_document(hierarchy: TOMLHierarchy, value: Any) -> TOMLDocument:
     """
-    Given a hierarchy of string or Hierarchy type, and a value being an
+    Given a hierarchy of string or `Hierarchy` type, and a value being an
     instance of any type, will create a tomlkit.TOMLDocument instance inserting
     the value at the hierarchy, specified. Thus, creating a tomlkit.TOMLDocument
     instance around the value.
@@ -101,7 +101,7 @@ def create_toml_document(hierarchy: TOMLHierarchy, value: Any) -> TOMLDocument:
     will automatically convert into a tomlkit.items.Item instance.
 
     Args:
-        hierarchy (TOMLHierarchy): A TOMLHierarchy instance.
+        hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
         value (Any): An instance of any type.
 
     Returns:
@@ -123,7 +123,7 @@ def create_toml_document(hierarchy: TOMLHierarchy, value: Any) -> TOMLDocument:
 def _partial_clear_dict_like_toml_item(toml_source: TOMLDictLike) -> None:
     """
     A private function that deletes all key-value pairs appearing in
-    a TOMLDictLike instance.
+    a `TOMLDictLike` instance.
     """
     keys = list(toml_source.keys())
     for key in keys:
@@ -155,8 +155,8 @@ def complete_clear_out_of_order_table(table: OutOfOrderTableProxy) -> None:
     data.
 
     Args:
-        table (tomlkit.container.OutOfOrderTableProxy): A tomlkit.container.OutOfOrderTableProxy
-            instance.
+        table (tomlkit.container.OutOfOrderTableProxy):
+            A tomlkit.container.OutOfOrderTableProxy instance.
     """
     _partial_clear_dict_like_toml_item(toml_source=table)
 
@@ -196,7 +196,7 @@ def complete_clear_array(array: items.Array) -> None:
 def _reorganize_array(array: items.Array) -> BodyContainerItems:
     """
     A private function which reorganizes a tomlkit.items.Array instance and
-    returns a BodyContainerItems type.
+    returns a `BodyContainerItems` type.
     """
     array_body_items: BodyContainerItems = []
 
@@ -209,14 +209,14 @@ def _reorganize_array(array: items.Array) -> BodyContainerItems:
 
 def get_container_body(toml_source: BodyContainer) -> BodyContainerItems:
     """
-    Retrieves the core elements, making up the body of a BodyContainer type, 
-    and returns a BodyContainerItems type.
+    Retrieves the core elements, making up the body of a `BodyContainer` type, 
+    and returns a `BodyContainerItems` type.
 
     Args:
-        toml_source (BodyContainer): A BodyContainer instance.
+        toml_source (`BodyContainer`): A `BodyContainer` instance.
 
     Returns:
-        BodyContainerItems: A BodyContainerItems instance.
+        `BodyContainerItems`: A `BodyContainerItems` instance.
     """
     match toml_source:
         case items.Table() | items.InlineTable():
@@ -234,14 +234,14 @@ def get_container_body(toml_source: BodyContainer) -> BodyContainerItems:
 
 def decompose_body_item(body_item: BodyContainerItem) -> BodyContainerItemDecomposed:
     """
-    Decomposes an item, from the body of a BodyContainer type, being
-    of type BodyContainerItem, and returns a BodyContainerItemDecomposed type.
+    Decomposes an item, from the body of a `BodyContainer` type, being
+    of type `BodyContainerItem`, and returns a `BodyContainerItemDecomposed` type.
 
     Args:
-        body_item (BodyContainerItem): A BodyContainerItem instance.
+        body_item (`BodyContainerItem`): A `BodyContainerItem` instance.
 
     Returns:
-        BodyContainerItemDecomposed: A BodyContainerItemDecomposed instance.
+        `BodyContainerItemDecomposed`: A `BodyContainerItemDecomposed` instance.
     """
     item_key: Optional[str] = (
         body_item[0].as_string().strip() if body_item[0] is not None else None

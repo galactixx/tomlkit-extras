@@ -69,11 +69,13 @@ def load_toml_file(
 ) -> TOMLDocument:
     """
     Accepts a string, bytes, bytearray, Path, tomlkit.TOMLDocument, or
-    Dict[str, Any] instance and converts it into a tomlkit.TOMLDocument instance.
+    Dict[str, Any] instance and converts it into a tomlkit.TOMLDocument
+    instance.
     
     Args:
         toml_source (str | bytes | bytearray | Path | TOMLDocument | Dict[str, Any]):
-            A string, bytes, bytearray, Path, tomlkit.TOMLDocument, or Dict[str, Any] instance.
+            A string, bytes, bytearray, Path, tomlkit.TOMLDocument, or Dict[str, Any]
+            instance.
     
     Returns:
         tomlkit.TOMLDocument: A tomlkit.TOMLDocument instance.    

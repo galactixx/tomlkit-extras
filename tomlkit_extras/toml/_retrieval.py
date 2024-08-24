@@ -39,8 +39,8 @@ from tomlkit_extras._typing import (
 
 def _get_table_from_aot(current_source: List[items.Item], table: str) -> List[items.Item]:
     """
-    A private function that extracts all items within a tomlkit.items.AoT instance that
-    correspond to a specific hierarchy.
+    A private function that extracts all items within a tomlkit.items.AoT instance
+    that correspond to a specific hierarchy.
     """
     next_source: List[items.Item] = []
 
@@ -57,26 +57,28 @@ def _get_table_from_aot(current_source: List[items.Item], table: str) -> List[it
 
 def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[int, int]:
     """
-    Returns both the attribute and container positions of an item located at a specific
-    hierarchy within a TOMLSource instance. The attribute and container positions are
-    relative to other items within the containing type of the item in question. The attribute
-    position refers to the position of item amongst all other key value pairs (fields, tables)
-    within the containing class. The container position is the position of the item amongst
-    all other types, including stylings (whitespace, comments), within the containing class.
+    Returns both the attribute and container positions of an item located at a
+    specific hierarchy within a `TOMLSource` instance. The attribute and container
+    positions are relative to other items within the containing type of the item
+    in question. The attribute position refers to the position of item amongst all
+    other key value pairs (fields, tables) within the containing class. The
+    container position is the position of the item amongst all other types,
+    including stylings (whitespace, comments), within the containing class.
 
-    A tuple is returned, with the first item being an integer representing the attribute
-    position, and the second item the container position.
+    A tuple is returned, with the first item being an integer representing the
+    attribute position, and the second item the container position.
     
-    Accepts a TOMLHierarchy instance, being an instance of string or Hierarchy,
-    and an instance of TOMLSource.
+    Accepts a `TOMLHierarchy` instance, being an instance of string or `Hierarchy`,
+    and an instance of `TOMLSource`.
 
     Args:
-        hierarchy (TOMLHierarchy): A TOMLHierarchy instance.
-        toml_source (TOMLSource): A TOMLSource instance.
+        hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
+        toml_source (`TOMLSource`): A `TOMLSource` instance.
 
     Returns:
-        Tuple[int, int]: A two-element tuple both elements of integer type. The first item
-            representing the attribute position, and the second item the container position.
+        Tuple[int, int]: A two-element tuple both elements of integer type. The
+            first item representing the attribute position, and the second item
+            the container position.
     """
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
@@ -135,24 +137,24 @@ def get_attribute_from_toml_source(
 ) -> Retrieval:
     """
     Retrieves and returns the tomlkit type located at a specific hierarchy within a
-    TOMLFieldSource instance. If the hierarchy is nested within a tomlkit.items.AoT
+    `TOMLFieldSource` instance. If the hierarchy is nested within a tomlkit.items.AoT
     type, then a list with multiple tomlkit types can be returned. Otherwise a
-    tomlkit.container.OutOfOrderTableProxy or a subclass of tomlkit.items.Item will be
-    returned.
+    tomlkit.container.OutOfOrderTableProxy or a subclass of tomlkit.items.Item will
+    be returned.
 
-    If the hierarchy does not exist an InvalidHierarchyError will be raised.
+    If the hierarchy does not exist an `InvalidHierarchyError` will be raised.
 
     Args:
-        hierarchy (TOMLHierarchy): A TOMLHierarchy instance.
-        toml_source (TOMLFieldSource): A TOMLFieldSource instance.
-        array (bool, optional): If set to False, when a tomlkit.items.AoT instance is to
-            be returned, a list of the tables within the array are returned, otherwise it
-            will be the AoT instance itself. Defaults to True.
-        fix_order (bool, optional): If set to True, will fix any out-of-order tables before
-            returning. Defaults to False.
+        hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
+        toml_source (`TOMLFieldSource`): A `TOMLFieldSource` instance.
+        array (bool, optional): If set to False, when a tomlkit.items.AoT instance is
+            to be returned, a list of the tables within the array are returned, otherwise
+            it will be the AoT instance itself. Defaults to True.
+        fix_order (bool, optional): If set to True, will fix any out-of-order tables
+            before returning. Defaults to False.
 
     Returns:
-        Retrieval: A Retrieval instance. Either a tomlkit.continer.OutOfOrderTableProxy,
+        `Retrieval`: A `Retrieval` instance. Either a tomlkit.continer.OutOfOrderTableProxy,
             tomlkit.items.Item or list of tomlkit.items.Item instances.
     """
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
@@ -190,19 +192,20 @@ def is_toml_instance(
     _type: Type[Any], *, hierarchy: TOMLHierarchy, toml_source: TOMLFieldSource, array: bool = True, fix_order: bool = False
 ) -> bool:
     """
-    Checks if an item located at a specified hierarchy within a TOMLFieldSource instance
+    Checks if an item located at a specified hierarchy within a `TOMLFieldSource` instance
     is of a specific type.
     
-    If the hierarchy is nested within a tomlkit.items.AoT type then multiple items will
-    correspond to the hierarchy. In this case, each item is tested for type equality.
+    If the hierarchy is nested within a tomlkit.items.AoT type then multiple items
+    will correspond to the hierarchy. In this case, each item is tested for type
+    equality.
     
     Args:
         _type (Type[Any]): The type to check.
-        hierarchy (TOMLHierarchy): A TOMLHierarchy instance.
-        toml_source (TOMLFieldSource): A TOMLFieldSource instance.
-        array (bool, optional): If set to False, when a tomlkit.items.AoT instance is to
-            be tested, each table in the array is tested for type equality. Otherwise it
-            will be the AoT instance itself that is checked. Defaults to True.
+        hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
+        toml_source (`TOMLFieldSource`): A `TOMLFieldSource` instance.
+        array (bool, optional): If set to False, when a tomlkit.items.AoT instance is
+            to be tested, each table in the array is tested for type equality. Otherwise
+            it will be the AoT instance itself that is checked. Defaults to True.
         fix_order (bool, optional): If set to True, it will fix any out-of-order tables
             before checking. Defaults to False.
 
@@ -226,7 +229,7 @@ def is_toml_instance(
 def find_parent_toml_source(hierarchy: Hierarchy, toml_source: TOMLFieldSource) -> Union[Retrieval, TOMLFieldSource]:
     """
     A private function that finds the parent of an item located at a specific
-    hierarchy within a TOMLFieldSource instance.
+    hierarchy within a `TOMLFieldSource` instance.
     """
     parent_toml: Union[Retrieval, TOMLFieldSource]
     if hierarchy.hierarchy_depth > 1:
