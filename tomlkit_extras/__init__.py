@@ -15,9 +15,9 @@ from tomlkit_extras.descriptor._descriptors import (
     TableDescriptor
 )
 from tomlkit_extras.toml._insert import (
-    attribute_insertion_into_toml_source,
-    container_insertion_into_toml_source,
-    general_insertion_into_toml_source
+    attribute_insert,
+    container_insert,
+    general_insert
 )
 from tomlkit_extras.toml._out_of_order import (
     fix_out_of_order_table,
@@ -53,9 +53,9 @@ __all__ = [
     'FieldDescriptor',
     'StyleDescriptor',
     'TableDescriptor',
-    'attribute_insertion_into_toml_source',
-    'container_insertion_into_toml_source',
-    'general_insertion_into_toml_source',
+    'attribute_insert',
+    'container_insert',
+    'general_insert',
     'fix_out_of_order_table',
     'fix_out_of_order_tables',
     'get_attribute_from_toml_source',

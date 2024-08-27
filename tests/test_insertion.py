@@ -2,9 +2,9 @@ from typing import cast
 
 from tomlkit import items, TOMLDocument
 from tomlkit_extras import (
-    attribute_insertion_into_toml_source,
-    container_insertion_into_toml_source,
-    general_insertion_into_toml_source,
+    attribute_insert,
+    container_insert,
+    general_insert,
     get_attribute_from_toml_source,
     get_positions,
     load_toml_file
@@ -25,7 +25,7 @@ def test_insertion_into_toml_a() -> None:
 
     # Insert a single field in the top-level document space
     HIERARCHY_PORT = 'port'
-    general_insertion_into_toml_source(
+    general_insert(
         hierarchy=HIERARCHY_PORT, toml_source=toml_document, insertion=443
     )
     assert toml_document[HIERARCHY_PORT] == 443
@@ -37,7 +37,7 @@ def test_insertion_into_toml_a() -> None:
     )
 
     HIERARCHY_TITLE = 'title'
-    attribute_insertion_into_toml_source(
+    attribute_insert(
         hierarchy=HIERARCHY_TITLE, toml_source=toml_document, insertion="Example TOML Document", position=1
     )
     assert toml_document[HIERARCHY_TITLE] == "Example TOML Document"
@@ -47,7 +47,7 @@ def test_insertion_into_toml_a() -> None:
 
     # Insert right after the comment "# this is a document comment"
     HIERARCHY_HOSTS = 'hosts'
-    container_insertion_into_toml_source(
+    container_insert(
         hierarchy=HIERARCHY_HOSTS, toml_source=toml_document, insertion=["alpha", "omega", "beta"], position=2
     )
     assert toml_document[HIERARCHY_HOSTS] == ["alpha", "omega", "beta"]
@@ -58,7 +58,7 @@ def test_insertion_into_toml_a() -> None:
     # Perform a general insertion into the project table, should be inserted
     # right after the "name" field
     HIERARCHY_PROJECT_VERSION = 'project.version'
-    general_insertion_into_toml_source(
+    general_insert(
         hierarchy=HIERARCHY_PROJECT_VERSION, toml_source=toml_document, insertion="0.1.0"
     )
     project_version = get_attribute_from_toml_source(
@@ -73,7 +73,7 @@ def test_insertion_into_toml_a() -> None:
     HIERARCHY_PROJECT_README = 'project.readme'
 
     # Perform an insertion of field in between the "name" and "version" fields
-    attribute_insertion_into_toml_source(
+    attribute_insert(
         hierarchy=HIERARCHY_PROJECT_README, toml_source=toml_document, insertion="README.md", position=2
     )
     project_readme = get_attribute_from_toml_source(
@@ -91,7 +91,7 @@ def test_insertion_into_toml_b() -> None:
     toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
 
     HIERARCHY_TITLE = 'title'
-    attribute_insertion_into_toml_source(
+    attribute_insert(
         hierarchy=HIERARCHY_TITLE, toml_source=toml_document, insertion="Example TOML Document", position=2
     )
     assert toml_document[HIERARCHY_TITLE] == "Example TOML Document"
@@ -101,7 +101,7 @@ def test_insertion_into_toml_b() -> None:
 
     # Insert the "hosts" field right after the first whitespace but before the first comment
     HIERARCHY_HOSTS = 'hosts'
-    container_insertion_into_toml_source(
+    container_insert(
         hierarchy=HIERARCHY_HOSTS, toml_source=toml_document, insertion=["alpha", "omega", "beta"], position=4
     )
     assert toml_document[HIERARCHY_HOSTS] == ["alpha", "omega", "beta"]
@@ -111,7 +111,7 @@ def test_insertion_into_toml_b() -> None:
 
     # Insert the "hosts" field right after the first whitespace but before the first comment
     HIERARCHY_NAME = 'name'
-    container_insertion_into_toml_source(
+    container_insert(
         hierarchy=HIERARCHY_NAME, toml_source=toml_document, insertion="Tom Preston-Werner", position=6
     )
     assert toml_document[HIERARCHY_NAME] == "Tom Preston-Werner"
@@ -121,7 +121,7 @@ def test_insertion_into_toml_b() -> None:
 
     # Insert the "hosts" field right after the first whitespace but before the first comment
     HIERARCHY_RUFF_LINT = 'tool.ruff.lint.cache'
-    container_insertion_into_toml_source(
+    container_insert(
         hierarchy=HIERARCHY_RUFF_LINT, toml_source=toml_document, insertion=True, position=2
     )
     ruff_lint_cache = get_attribute_from_toml_source(
@@ -138,7 +138,7 @@ def test_insertion_into_toml_c() -> None:
     toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
 
     HIERARCHY_PYDOCTYLE_SELECT = 'tool.ruff.lint.pydocstyle.select'
-    attribute_insertion_into_toml_source(
+    attribute_insert(
         hierarchy=HIERARCHY_PYDOCTYLE_SELECT, toml_source=toml_document, insertion=["D200"], position=1
     )
     pydocstyle_select = get_attribute_from_toml_source(
@@ -151,7 +151,7 @@ def test_insertion_into_toml_c() -> None:
     )
 
     HIERARCHY_LINT_EXCLUDE = 'tool.ruff.lint.exclude'
-    container_insertion_into_toml_source(
+    container_insert(
         hierarchy=HIERARCHY_LINT_EXCLUDE, toml_source=toml_document, insertion=["tests/", "docs/conf.py"], position=3
     )
     ruff_lint_exclude = get_attribute_from_toml_source(
