@@ -1,7 +1,9 @@
 from __future__ import annotations
 from typing import (
+    ClassVar,
     List,
     Set,
+    TYPE_CHECKING,
     Union
 )
 
@@ -11,10 +13,38 @@ from tomlkit import items, TOMLDocument
 from tomlkit_extras._typing import Item, TOMLValidReturn
 from tomlkit_extras._hierarchy import Hierarchy
 
-def find_child_tables(root_hierarchy: str, hierarchies: List[str]) -> Set[str]:
+if TYPE_CHECKING:
+    from tomlkit_extras.descriptor._types import ItemInfo
+
+class LineCounter:
+    """"""
+    line_no: ClassVar[int] = 0
+
+    @classmethod
+    def add_lines(cls, lines: int) -> None:
+        """"""
+        cls.line_no += lines
+
+    @classmethod
+    def add_line(cls) -> None:
+        """"""
+        cls.line_no += 1
+
+    @classmethod
+    def reset_line_no(cls) -> None:
+        """"""
+        cls.line_no = 0
+
+
+def item_is_table(info: 'ItemInfo') -> bool:
+    """"""
+    return info.item_type.item_type in {'table', 'inline-table'}
+
+
+def find_child_tables(root_hierarchy: str, hierarchies: Set[str]) -> Set[str]:
     """
     A private function that outputs all child hierarchies of a specific root
-    hierarchy, based on a list of string hierarchies.
+    hierarchy, based on a set of string hierarchies.
     """
     children_hierarchies: Set[str] = set()
 

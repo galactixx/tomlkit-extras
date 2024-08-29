@@ -17,7 +17,6 @@ from tomlkit_extras.descriptor._create import create_comment_descriptor
 from tomlkit_extras.descriptor._descriptors import CommentDescriptor
 from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras._typing import (
-    BodyContainerInOrder,
     BodyContainerItemDecomposed,
     DescriptorInput,
     FieldItem,
@@ -28,36 +27,6 @@ from tomlkit_extras._typing import (
     Table,
     TableItem
 )
-
-@dataclass(frozen=True)
-class BaseItem(object):
-    """"""
-    info: TOMLItemInfo
-
-
-@dataclass(frozen=True)
-class StylingInfo(BaseItem):
-    """"""
-    item: Stylings
-
-
-@dataclass(frozen=True)
-class ContainerInfo(BaseItem):
-    """"""
-    item: BodyContainerInOrder
-
-
-@dataclass(frozen=True)
-class TableInfo(BaseItem):
-    """"""
-    item: Table
-
-
-@dataclass(frozen=True)
-class FieldInfo(BaseItem):
-    """"""
-    item: items.Item
-
 
 @dataclass
 class ItemType:
@@ -124,19 +93,21 @@ class StylingPositions:
     comments: Dict[str, List[StylingPosition]]
     whitespace: Dict[str, List[StylingPosition]]
 
-    def update_stylings(self, style: StylingInfo, position: ItemPosition, line_no: int) -> None:
+    def update_stylings(
+        self, style: Stylings, info: ItemInfo, position: ItemPosition, line_no: int
+    ) -> None:
         """"""
         styling_value: str
 
-        if isinstance(style.item, items.Comment):
-            styling_value = style.item.trivia.comment
+        if isinstance(style, items.Comment):
+            styling_value = style.trivia.comment
             current_source = self.comments
         else:
-            styling_value = style.item.value
+            styling_value = style.value
             current_source = self.whitespace
 
         styling_position = StylingPosition(
-            item_type=cast(StyleItem, style.info.item_type.item_type),
+            item_type=cast(StyleItem, info.item_type.item_type),
             style=styling_value,
             line_no=line_no,
             container=position.container
@@ -158,21 +129,23 @@ class FieldPosition:
     styling: StylingPositions
 
     @classmethod
-    def from_toml_item(cls, item: FieldInfo, line_no: int, position: ItemPosition) -> FieldPosition:
+    def from_toml_item(
+        cls, item: items.Item, info: ItemInfo, line_no: int, position: ItemPosition
+    ) -> FieldPosition:
         """"""
         comment_line_no: Optional[int]
         styling = StylingPositions(comments=dict(), whitespace=dict())
-        if isinstance(item.item, items.Array):
+        if isinstance(item, items.Array):
             comment_line_no = None
         else:
-            comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=item.item)
+            comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=item)
 
-        comment = create_comment_descriptor(item=item.item, line_no=comment_line_no)
+        comment = create_comment_descriptor(item=item, line_no=comment_line_no)
         return cls(
             line_no=line_no,
-            item_type=cast(FieldItem, item.info.item_type.item_type),
+            item_type=cast(FieldItem, info.item_type.item_type),
             position=copy.copy(position),
-            value=item.item.unwrap(),
+            value=item.unwrap(),
             comment=comment,
             styling=styling
         )
@@ -184,7 +157,7 @@ class FieldPosition:
 
 
 @dataclass(frozen=True)
-class TOMLItemInfo:
+class ItemInfo:
     """"""
     item_type: ItemType
     key: str
@@ -198,15 +171,15 @@ class TOMLItemInfo:
     @classmethod
     def from_parent_type(
         cls, key: str, hierarchy: str, toml_item: DescriptorInput, parent_type: Optional[ParentItem] = None
-    ) -> TOMLItemInfo:
+    ) -> ItemInfo:
         """"""
         item_type = ItemType(item_type=get_item_type(toml_item=toml_item), parent_type=parent_type)
         return cls(item_type=item_type, key=key, hierarchy=hierarchy)
 
     @classmethod
     def from_body_item(
-        cls, hierarchy: str, container_info: TOMLItemInfo, body_item: BodyContainerItemDecomposed
-    ) -> TOMLItemInfo:
+        cls, hierarchy: str, container_info: ItemInfo, body_item: BodyContainerItemDecomposed
+    ) -> ItemInfo:
         """"""
         item_key, toml_item = body_item
         item_type = ItemType(
@@ -264,25 +237,31 @@ class TablePosition:
         return comment_position
 
     @classmethod
-    def from_table_item(cls, line_no: int, position: ItemPosition, table: TableInfo) -> TablePosition:
+    def from_table_item(
+        cls, table: Table, info: ItemInfo, position: ItemPosition, line_no: int
+    ) -> TablePosition:
         """"""
-        comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=table.item)
+        comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=table)
         styling = StylingPositions(comments=dict(), whitespace=dict())
-        comment = create_comment_descriptor(item=table.item, line_no=comment_line_no)
+        comment = create_comment_descriptor(item=table, line_no=comment_line_no)
         return cls(
             line_no=line_no,
-            item_type=cast(TableItem, table.info.item_type.item_type),
-            parent_type=table.info.item_type.parent_type,
+            item_type=cast(TableItem, info.item_type.item_type),
+            parent_type=info.item_type.parent_type,
             comment=comment,
             position=copy.copy(position),
             styling=styling,
             fields=dict()
         )
         
-    def add_field(self, item: FieldInfo, line_no: int, position: ItemPosition) -> None:
+    def add_field(
+        self, item: items.Item, info: ItemInfo, position: ItemPosition, line_no: int
+    ) -> None:
         """"""
-        field_position = FieldPosition.from_toml_item(item=item, line_no=line_no, position=position)
-        self.fields.update({item.info.key: field_position})
+        field_position = FieldPosition.from_toml_item(
+            item=item, info=info, line_no=line_no, position=position
+        )
+        self.fields.update({info.key: field_position})
 
 
 class TOMLStatistics:
