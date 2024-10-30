@@ -86,6 +86,7 @@ ContainerLike: TypeAlias = Union[
 StyleItem: TypeAlias = Literal['whitespace', 'comment']
 TableItem: TypeAlias = Literal['table', 'inline-table']
 FieldItem: TypeAlias = Literal['field', 'array']
+AoTItem: TypeAlias = Literal['array-of-tables']
 TopLevelItem: TypeAlias = Literal['document', 'table', 'array-of-tables']
 Item: TypeAlias = Literal[
     'document',

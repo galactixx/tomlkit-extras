@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import copy
 from typing import (
     cast,
@@ -31,7 +32,6 @@ from tomlkit_extras.descriptor._descriptors import (
     TableDescriptor
 )
 from tomlkit_extras.descriptor._types import (
-    ArrayOfTablesPosition,
     ItemPosition,
     ItemInfo,
     TOMLStatistics
@@ -150,7 +150,7 @@ class TOMLDocumentDescriptor:
     ) -> None:
         """"""
         array_name = cast(str, array.name)
-        array_of_tables = ArrayOfTablesPosition(
+        array_of_tables = ArrayOfTablesDescriptor(
             item_type='array-of-tables',
             parent_type=parent_type,
             name=array_name,
@@ -217,7 +217,7 @@ class TOMLDocumentDescriptor:
             )
             if isinstance(toml_item, OutOfOrderTableProxy):
                 toml_item = fix_out_of_order_table(table=toml_item)
-                toml_item_info.item_type.item_type = 'table'
+                toml_item_info.item_type = 'table'
 
             # If an inline table or array is encountered, the function
             # is run recursively since both data types can contain styling
@@ -262,7 +262,7 @@ class TOMLDocumentDescriptor:
                 self._generate_descriptor_from_array_of_tables(
                     hierarchy=toml_item_info.full_hierarchy,
                     array=toml_item,
-                    parent_type=cast(ParentItem, info.item_type.item_type),
+                    parent_type=cast(ParentItem, info.item_type),
                     position=new_position
                 )
                 new_position.update_positions()

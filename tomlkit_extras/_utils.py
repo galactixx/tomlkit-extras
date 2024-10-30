@@ -28,6 +28,33 @@ from tomlkit_extras._typing import (
     TOMLHierarchy
 )
 
+def find_comment_line_no(line_no: int, item: items.Item) -> Optional[int]:
+    """
+    Given a line number and an tomlkit.items.Item instance, will calculate
+    the line number in which the comment associated with the item lies on.
+
+    If there is no comment found then will return None.
+    
+    Args:
+        line_no (int): The line number in which the item is located.
+        item (tomlkit.items.Item): A tomlkit.items.Item instance.
+
+    Returns:
+        int | None: An integer line number where the comment is located, if
+            there is no comment then returns None.
+    """
+    comment_position: Optional[int]
+
+    if not item.trivia.comment:
+        comment_position = None
+    else:
+        ws_before_comment: str = item.trivia.indent + item.trivia.comment_ws
+        num_newlines = ws_before_comment.count('\n')
+        comment_position = line_no + num_newlines
+
+    return comment_position
+
+
 def from_dict_to_toml_document(dictionary: Dict[str, Any]) -> TOMLDocument:
     """
     Converts a dictionary into a tomlkit.TOMLDocument instance.

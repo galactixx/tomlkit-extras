@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import (
     Any,
     List,
@@ -10,14 +11,6 @@ from typing import (
 
 if TYPE_CHECKING:
     from tomlkit_extras._typing import TOMLHierarchy
-
-def _hierarchy_type_error(hierarchy: Any) -> TypeError:
-    """
-    A private function which returns a TypeError instance.
-    """
-    message_core = 'Expected an instance of string or Hierarchy'
-    return TypeError(f"{message_core}, but got {type(hierarchy).__name__}")
-
 
 def standardize_hierarchy(hierarchy: 'TOMLHierarchy') -> Hierarchy:
     """
@@ -45,7 +38,8 @@ class Hierarchy:
 
     def __eq__(self, hierarchy: Any) -> bool:
         if not isinstance(hierarchy, (str, Hierarchy)):
-            raise _hierarchy_type_error(hierarchy=hierarchy)
+            message_core = 'Expected an instance of string or Hierarchy'
+            return TypeError(f"{message_core}, but got {type(hierarchy).__name__}")
 
         hierarchy_arg = standardize_hierarchy(hierarchy=hierarchy)
         return (

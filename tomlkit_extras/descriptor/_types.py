@@ -1,97 +1,52 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
-import copy
 from typing import (
-    Any,
     cast,
     Dict,
     List,
-    Literal,
     Optional
 )
 
 from tomlkit import items
 
 from tomlkit_extras.descriptor._helpers import get_item_type
-from tomlkit_extras.descriptor._create import create_comment_descriptor
-from tomlkit_extras.descriptor._descriptors import CommentDescriptor
 from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras._typing import (
     BodyContainerItemDecomposed,
     DescriptorInput,
-    FieldItem,
     Item,
     ParentItem,
     StyleItem,
-    Stylings,
-    Table,
-    TableItem
+    Stylings
+)
+from tomlkit_extras.descriptor._descriptor import (
+    ArrayOfTablesDescriptor,
+    StyleDescriptor
 )
 
 @dataclass
-class ItemType:
+class ArrayOfTablesDescriptors:
     """"""
-    item_type: Item
-    parent_type: Optional[ParentItem]
-
-
-@dataclass(frozen=True)
-class StylingPosition:
-    """"""
-    item_type: StyleItem
-    style: str
-    line_no: int
-    container: int
-
-
-@dataclass
-class ArrayOfTables:
-    """"""
-    aots: List[ArrayOfTablesPosition]
+    aots: List[ArrayOfTablesDescriptor]
 
     array_indices: Dict[str, int]
 
-    def get_array(self, hierarchy: str) -> ArrayOfTablesPosition:
+    def get_array(self, hierarchy: str) -> ArrayOfTablesDescriptor:
         """"""
         return self.aots[self.array_indices[hierarchy]]
 
-    def update_arrays(self, hierarchy: str, array: ArrayOfTablesPosition) -> None:
+    def update_arrays(self, hierarchy: str, array: ArrayOfTablesDescriptor) -> None:
         """"""
         self.array_indices[hierarchy] += 1
         self.aots.append(array)
 
 
 @dataclass
-class ArrayOfTablesPosition:
+class StylingDescriptors:
     """"""
-    item_type: Literal['array-of-tables']
-    parent_type: Optional[ParentItem]
-    name: str
-    line_no: int
-    position: ItemPosition
-    tables: Dict[str, List[TablePosition]]
-
-    table_indices: Dict[str, int]
-
-    def get_table(self, hierarchy: str) -> TablePosition:
-        """"""
-        return self.tables[hierarchy][self.table_indices[hierarchy]]
-
-    def update_tables(self, hierarchy: str, table_position: TablePosition) -> None:
-        """"""        
-        if hierarchy not in self.tables:
-            self.tables[hierarchy] = [table_position]
-            self.table_indices[hierarchy] = 0
-        else:
-            self.tables[hierarchy].append(table_position)
-            self.table_indices[hierarchy] += 1
-
-
-@dataclass
-class StylingPositions:
-    """"""
-    comments: Dict[str, List[StylingPosition]]
-    whitespace: Dict[str, List[StylingPosition]]
+    comments: Dict[str, List[StyleDescriptor]]
+    whitespace: Dict[str, List[StyleDescriptor]]
 
     def update_stylings(
         self, style: Stylings, info: ItemInfo, position: ItemPosition, line_no: int
@@ -106,8 +61,8 @@ class StylingPositions:
             styling_value = style.value
             current_source = self.whitespace
 
-        styling_position = StylingPosition(
-            item_type=cast(StyleItem, info.item_type.item_type),
+        styling_position = StyleDescriptor(
+            item_type=cast(StyleItem, info.item_type),
             style=styling_value,
             line_no=line_no,
             container=position.container
@@ -119,76 +74,54 @@ class StylingPositions:
 
 
 @dataclass
-class FieldPosition:
-    """"""
-    item_type: FieldItem
-    line_no: int
-    position: ItemPosition
-    value: Any
-    comment: Optional[CommentDescriptor]
-    styling: StylingPositions
-
-    @classmethod
-    def from_toml_item(
-        cls, item: items.Item, info: ItemInfo, line_no: int, position: ItemPosition
-    ) -> FieldPosition:
-        """"""
-        comment_line_no: Optional[int]
-        styling = StylingPositions(comments=dict(), whitespace=dict())
-        if isinstance(item, items.Array):
-            comment_line_no = None
-        else:
-            comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=item)
-
-        comment = create_comment_descriptor(item=item, line_no=comment_line_no)
-        return cls(
-            line_no=line_no,
-            item_type=cast(FieldItem, info.item_type.item_type),
-            position=copy.copy(position),
-            value=item.unwrap(),
-            comment=comment,
-            styling=styling
-        )
-    
-    def update_comment(self, item: items.Array, line_no: int) -> None:
-        """"""
-        comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=item)
-        self.comment = create_comment_descriptor(item=item, line_no=comment_line_no)
-
-
-@dataclass(frozen=True)
 class ItemInfo:
     """"""
-    item_type: ItemType
+    item_type: Item
+    parent_type: Optional[ParentItem]
     key: str
     hierarchy: str
 
     @property
     def full_hierarchy(self) -> str:
         """"""
-        return Hierarchy.create_hierarchy(hierarchy=self.hierarchy, attribute=self.key)
+        return Hierarchy.create_hierarchy(
+            hierarchy=self.hierarchy, attribute=self.key
+        )
 
     @classmethod
     def from_parent_type(
-        cls, key: str, hierarchy: str, toml_item: DescriptorInput, parent_type: Optional[ParentItem] = None
+        cls,
+        key: str,
+        hierarchy: str,
+        toml_item: DescriptorInput,
+        parent_type: Optional[ParentItem] = None
     ) -> ItemInfo:
         """"""
-        item_type = ItemType(item_type=get_item_type(toml_item=toml_item), parent_type=parent_type)
-        return cls(item_type=item_type, key=key, hierarchy=hierarchy)
+        item_type = get_item_type(toml_item=toml_item)
+        return cls(
+            item_type=item_type,
+            parent_type=parent_type,
+            key=key,
+            hierarchy=hierarchy
+        )
 
     @classmethod
     def from_body_item(
-        cls, hierarchy: str, container_info: ItemInfo, body_item: BodyContainerItemDecomposed
+        cls,
+        hierarchy: str, 
+        container_info: ItemInfo,
+        body_item: BodyContainerItemDecomposed
     ) -> ItemInfo:
         """"""
         item_key, toml_item = body_item
-        item_type = ItemType(
-            item_type=get_item_type(toml_item=toml_item),
-            parent_type=cast(ParentItem, container_info.item_type.item_type)
-        )
-
+        item_type = get_item_type(toml_item=toml_item)
+        parent_type = cast(ParentItem, container_info.item_type)
+        key = item_key or ''
         return cls(
-            item_type=item_type, key=item_key or '', hierarchy=hierarchy
+            item_type=item_type,
+            parent_type=parent_type,
+            key=key,
+            hierarchy=hierarchy
         )
 
 
@@ -209,59 +142,6 @@ class ItemPosition:
     def update_positions(self) -> None:
         self.update_position()
         self.update_body_position()
-
-
-@dataclass
-class TablePosition:
-    """"""
-    item_type: TableItem
-    parent_type: Optional[ParentItem]
-    line_no: int
-    position: ItemPosition
-    comment: Optional[CommentDescriptor]
-    styling: StylingPositions
-    fields: Dict[str, FieldPosition]
-
-    @staticmethod
-    def find_comment_line_no(line_no: int, item: items.Item) -> Optional[int]:
-        """"""
-        comment_position: Optional[int]
-
-        if not item.trivia.comment:
-            comment_position = None
-        else:
-            ws_before_comment: str = item.trivia.indent + item.trivia.comment_ws
-            num_newlines = ws_before_comment.count('\n')
-            comment_position = line_no + num_newlines
-
-        return comment_position
-
-    @classmethod
-    def from_table_item(
-        cls, table: Table, info: ItemInfo, position: ItemPosition, line_no: int
-    ) -> TablePosition:
-        """"""
-        comment_line_no = TablePosition.find_comment_line_no(line_no=line_no, item=table)
-        styling = StylingPositions(comments=dict(), whitespace=dict())
-        comment = create_comment_descriptor(item=table, line_no=comment_line_no)
-        return cls(
-            line_no=line_no,
-            item_type=cast(TableItem, info.item_type.item_type),
-            parent_type=info.item_type.parent_type,
-            comment=comment,
-            position=copy.copy(position),
-            styling=styling,
-            fields=dict()
-        )
-        
-    def add_field(
-        self, item: items.Item, info: ItemInfo, position: ItemPosition, line_no: int
-    ) -> None:
-        """"""
-        field_position = FieldPosition.from_toml_item(
-            item=item, info=info, line_no=line_no, position=position
-        )
-        self.fields.update({info.key: field_position})
 
 
 class TOMLStatistics:
