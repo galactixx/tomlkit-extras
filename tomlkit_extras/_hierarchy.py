@@ -55,6 +55,13 @@ class Hierarchy:
     
     def __len__(self) -> int:
         return self.hierarchy_depth
+    
+    @staticmethod
+    def parent_level(hierarchy: str) -> str:
+        """
+
+        """
+        return hierarchy.split('.')[-1]
 
     @staticmethod
     def parent_hierarchy(hierarchy: str) -> str:

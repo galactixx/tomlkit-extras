@@ -22,14 +22,14 @@ from tomlkit_extras._typing import (
     TOMLHierarchy
 )
 from tomlkit_extras.descriptor._types import (
-    ArrayOfTablesDescriptors,
     ItemPosition,
-    StylingDescriptors,
     ItemInfo
 )
 from tomlkit_extras.descriptor._descriptors import (
     ArrayOfTablesDescriptor,
+    ArrayOfTablesDescriptors,
     FieldDescriptor,
+    StylingDescriptors,
     TableDescriptor
 )
 
@@ -52,9 +52,7 @@ class BaseStore(ABC):
         pass
 
     @abstractmethod
-    def get_stylings(
-        self, container_info: ItemInfo,  style_info: ItemInfo
-    ) -> StylingDescriptors:
+    def get_stylings(self, style_info: ItemInfo) -> StylingDescriptors:
         pass
 
     @abstractmethod
@@ -90,7 +88,8 @@ class DocumentStore(BaseStore):
     of the top-level of a `tomlkit.TOMLDocument` instance. Additional basic
     functionality is included to retrieve information from the store.
     """
-    def __init__(self) -> None:
+    def __init__(self, line_counter: LineCounter) -> None:
+        self._line_counter = line_counter
         self._document_fields: Dict[str, FieldDescriptor] = dict()
         self._document_stylings: StylingDescriptors = StylingDescriptors(
             comments=dict(), whitespace=dict()
@@ -136,25 +135,26 @@ class DocumentStore(BaseStore):
             position (`ItemPosition`): An `ItemPosition` with position info on the field.
         """
         self._document_fields[info.key] = FieldDescriptor._from_toml_item(
-            item=item, info=info, line_no=LineCounter.line_no, position=position
+            item=item, info=info, line_no=self._line_counter.line_no, position=position
         )
 
-    def get_stylings(self, container_info: ItemInfo, style_info: ItemInfo) -> StylingDescriptors:
+    def get_stylings(self, style_info: ItemInfo) -> StylingDescriptors:
         """
         Returns all stylings associated with a specific field. Stylings are separated
         by whether its whitespace or comments.
 
         Args:
-            container_info (ItemInfo): An `ItemInfo` instance with basic info on the field.
+            style_info (`ItemInfo`): An `ItemInfo` instance with basic info on the styling.
         
         Returns:
             `StylingDescriptors`: A `StylingDescriptors` instance containing all
                 stylings associated with a field.
         """
-        if container_info.item_type == 'document':
+        if style_info.parent_type == 'document':
             styling_positions = self._document_stylings
         else:
-            styling_positions = self._document_fields[container_info.key].styling
+            field = Hierarchy.parent_level(hierarchy=style_info.hierarchy)
+            styling_positions = self._document_fields[field].stylings
         return styling_positions
     
     def get_array(self, info: ItemInfo) -> FieldDescriptor:
@@ -177,7 +177,8 @@ class ArrayOfTablesStore(BaseTableStore):
     instance. Additional basic functionality is included to retrieve information
     from the store.
     """
-    def __init__(self) -> None:
+    def __init__(self, line_counter: LineCounter) -> None:
+        self._line_counter = line_counter
         self._array_of_tables: Dict[str, ArrayOfTablesDescriptors] = dict()
 
     @property
@@ -280,16 +281,27 @@ class ArrayOfTablesStore(BaseTableStore):
 
     def update(self, item: items.Item, info: ItemInfo, position: ItemPosition) -> None:
         """
-        
-        
-        
+        Adds a new field to the store of fields already processed. A new key-value
+        pair is added to the dictionary, where the key is the string name of the field,
+        and the value is a `FieldDescriptor` instance.
+
+        Args:
+            item (`tomlkit.items.Item`): A `tomlkit.items.Item` instance corresponding
+                to a field appearing in a TOML file.
+            info (`ItemInfo`): An `ItemInfo` instance with basic info on the field.
+            position (`ItemPosition`): An `ItemPosition` with position info on the field.
         """
         array_hierarchy = cast(str, self.get_array_hierarchy(hierarchy=info.hierarchy))
         array_of_tables = self._array_of_tables[array_hierarchy]
 
         array = array_of_tables.get_array(hierarchy=info.hierarchy)
         table = array._get_table(hierarchy=info.hierarchy)
-        table._add_field(item=item, info=info, line_no=LineCounter.line_no, position=position)
+        table._add_field(
+            item=item,
+            info=info,
+            line_no=self._line_counter.line_no,
+            position=position
+        )
 
     def add_table(
         self,
@@ -299,37 +311,49 @@ class ArrayOfTablesStore(BaseTableStore):
         position: ItemPosition
     ) -> None:
         """
+        Adds a new table to the store of tables already processed. A new key-value
+        pair is added to the dictionary, where the key is the string hierarchy of the table,
+        and the value is a `TableDescriptor` instance.
         
-        
+        Args:
+            hierarchy (str): A TOML hierarchy corresponding to a table.
+            table (`Table`): A Table instance, being either a tomlkit.items.Table or
+                tomlkit.items.InlineTable.
+            info (`ItemInfo`): An `ItemInfo` instance with basic info on the table.
+            position (`ItemPosition`): An `ItemPosition` with position info on the table.
         """
         array_hierarchy = cast(str, self.get_array_hierarchy(hierarchy=hierarchy))
         array_of_tables = self._array_of_tables[array_hierarchy]
 
-        table_position = TableDescriptor.from_table_item(
-            table=table, info=info, position=position, line_no=LineCounter.line_no
+        table_descriptor = TableDescriptor._from_table_item(
+            table=table,
+            info=info,
+            position=position,
+            line_no=self._line_counter.line_no
         )
 
         array = array_of_tables.get_array(hierarchy=hierarchy)
-        array._update_tables(hierarchy=hierarchy, table_position=table_position)
+        array._update_tables(hierarchy=hierarchy, table_descriptor=table_descriptor)
 
-    def get_stylings(self, container_info: ItemInfo, style_info: ItemInfo) -> StylingDescriptors:
+    def get_stylings(self, style_info: ItemInfo) -> StylingDescriptors:
         """
         Returns all stylings associated with a specific table. Stylings are separated
         by whether its whitespace or comments.
 
         Args:
-            container_info (`ItemInfo`): An `ItemInfo` instance with basic info on the table.
             style_info (`ItemInfo`): An `ItemInfo` instance with basic info on the styling.
         
         Returns:
             `StylingDescriptors`: A `StylingDescriptors` instance containing all
                 stylings associated with a table.
         """
-        table_descriptor: TableDescriptor = self.get_aot_table(hierarchy=style_info.hierarchy)
-        if item_is_table(info=container_info):
-            styling_descriptors = table_descriptor.styling
+        hierarchy = Hierarchy.parent_hierarchy(hierarchy=style_info.hierarchy)
+        table_descriptor: TableDescriptor = self.get_aot_table(hierarchy=hierarchy)
+        if item_is_table(info=style_info.parent_type):
+            styling_descriptors = table_descriptor.stylings
         else:
-            styling_descriptors = table_descriptor.fields[container_info.key].styling
+            field = Hierarchy.parent_level(hierarchy=style_info.hierarchy)
+            styling_descriptors = table_descriptor.fields[field].stylings
         return styling_descriptors
     
     def get_array(self, info: ItemInfo) -> FieldDescriptor:
@@ -347,19 +371,20 @@ class ArrayOfTablesStore(BaseTableStore):
 
 class TableStore(BaseTableStore):
     """
-    A sub-class of `BaseTableStore` which stores any fields or stylings
-    that are included in tables appearing in a tomlkit.TOMLDocument instance,
-    but not appearing within an array of tables. Additional basic
-    functionality is included to retrieve information from the store.
+    A sub-class of `BaseTableStore` which stores any fields or stylings that
+    are included in tables appearing in a tomlkit.TOMLDocument instance, but
+    not appearing within an array of tables. Additional basic functionality
+    is included to retrieve information from the store.
     """
-    def __init__(self) -> None:
+    def __init__(self, line_counter: LineCounter) -> None:
+        self._line_counter = line_counter
         self._tables: Dict[str, TableDescriptor] = dict()
 
     @property
     def hierarchies(self) -> Set[str]:
         """
-        Returns a set of hierarchies corresponding to all tables that do
-        not appear in any array of tables structures.
+        Returns a set of hierarchies corresponding to all tables that do not appear
+        in any array of tables structures.
         """
         return set(self._tables.keys())
 
@@ -392,11 +417,21 @@ class TableStore(BaseTableStore):
 
     def update(self, item: items.Item, info: ItemInfo, position: ItemPosition) -> None:
         """
-        
-        
+        Adds a new field to the store of fields already processed. A new key-value
+        pair is added to the dictionary, where the key is the string name of the field,
+        and the value is a `FieldDescriptor` instance.
+
+        Args:
+            item (`tomlkit.items.Item`): A `tomlkit.items.Item` instance corresponding
+                to a field appearing in a TOML file.
+            info (`ItemInfo`): An `ItemInfo` instance with basic info on the field.
+            position (`ItemPosition`): An `ItemPosition` with position info on the field.
         """
         self._tables[info.hierarchy]._add_field(
-            item=item, info=info, position=position, line_no=LineCounter.line_no
+            item=item,
+            info=info,
+            position=position,
+            line_no=self._line_counter.line_no
         )
 
     def add_table(
@@ -407,44 +442,85 @@ class TableStore(BaseTableStore):
         position: ItemPosition
     ) -> None:
         """
+        Adds a new table to the store of tables already processed. A new key-value
+        pair is added to the dictionary, where the key is the string hierarchy of the
+        table, and the value is a `TableDescriptor` instance.
         
-        
+        Args:
+            hierarchy (str): A TOML hierarchy corresponding to a table.
+            table (`Table`): A Table instance, being either a tomlkit.items.Table or
+                tomlkit.items.InlineTable.
+            info (`ItemInfo`): An `ItemInfo` instance with basic info on the table.
+            position (`ItemPosition`): An `ItemPosition` with position info on the table.
         """
-        table_position = TableDescriptor.from_table_item(
-            table=table, info=info, position=position, line_no=LineCounter.line_no
+        table_descriptor = TableDescriptor._from_table_item(
+            table=table,
+            info=info,
+            position=position,
+            line_no=self._line_counter.line_no
         )
-        self._tables.update({hierarchy: table_position})
+        self._tables.update({hierarchy: table_descriptor})
 
-    def get_stylings(self, container_info: ItemInfo, style_info: ItemInfo) -> StylingDescriptors:
-        table_position: TableDescriptor = self._tables[style_info.hierarchy]
-        if item_is_table(info=container_info):
-            styling_positions = table_position.styling
+    def get_stylings(self, style_info: ItemInfo) -> StylingDescriptors:
+        """
+        Returns all stylings associated with a specific table. Stylings are separated
+        by whether its whitespace or comments.
+
+        Args:
+            style_info (`ItemInfo`): An `ItemInfo` instance with basic info on the styling.
+        
+        Returns:
+            `StylingDescriptors`: A `StylingDescriptors` instance containing all
+                stylings associated with a table.
+        """
+        hierarchy = Hierarchy.parent_hierarchy(hierarchy=style_info.hierarchy)
+        table_descriptor: TableDescriptor = self._tables[hierarchy]
+        if item_is_table(info=style_info.parent_type):
+            styling_positions = table_descriptor.stylings
         else:
-            styling_positions = table_position.fields[container_info.key].styling
+            field = Hierarchy.parent_level(hierarchy=style_info.hierarchy)
+            styling_positions = table_descriptor.fields[field].stylings
         return styling_positions
     
     def get_array(self, info: ItemInfo) -> FieldDescriptor:
-        """"""
+        """
+        Retrievies an array field from the store, based on an `ItemInfo` instance.
+
+        Args:
+            info (`ItemInfo`): An `ItemInfo` instance with basic info on the field.
+
+        Returns:
+            `FieldDescriptor`: A `FieldDescriptor` instance.
+        """
         return self._tables[info.hierarchy].fields[info.key]
 
 
 class DescriptorStore:
     """
-    A consolidated store which manages and maintains all three major
-    stores, `DocumentStore`, `ArrayOfTablesStore`, and `TableStore`.
+    A consolidated store which manages and maintains all three major stores,
+    `DocumentStore`, `ArrayOfTablesStore`, and `TableStore`.
+
+    Attributes:
+        document (`DocumentStore`): A store for all fields and stylings appearing
+            in the top-level space of the TOML file.
+        array_of_tables (`ArrayOfTablesStore`): A store for all array of tables
+            appearing within the TOML file.
+        tables (`TableStore`): A store for all tables, not located in array of tables,
+            appearing within the TOML file.
     """
-    def __init__(self) -> None:
+    def __init__(self, line_counter: LineCounter) -> None:
+        self._line_counter = line_counter
         
         # Structures for storing any attributes occurring in top-level space
-        self.document = DocumentStore()
+        self.document = DocumentStore(line_counter=self._line_counter)
 
         # Structure for storing any array of tables objects
-        self.array_of_tables = ArrayOfTablesStore()
+        self.array_of_tables = ArrayOfTablesStore(line_counter=self._line_counter)
 
         # Structure for storing any attributes occurring within at least one table
-        self.tables = TableStore()
+        self.tables = TableStore(line_counter=self._line_counter)
 
-    def _store_choice(self, info: ItemInfo, is_aot: bool) -> BaseStore:
+    def _store_choice(self, info: ItemInfo) -> BaseStore:
         """
         Private method which desides which of the three stores to update.
         """
@@ -455,7 +531,7 @@ class DescriptorStore:
             not info.hierarchy and item_type in {'array', 'field'}
         ):
             descriptor_store = self.document
-        elif is_aot:
+        elif info.from_aot:
             descriptor_store = self.array_of_tables
         else:
             descriptor_store = self.tables
@@ -463,45 +539,39 @@ class DescriptorStore:
         return descriptor_store
 
     def update_styling(
-        self,
-        container_info: ItemInfo,
-        style: Stylings,
-        style_info: ItemInfo,
-        position: ItemPosition,
-        is_aot: bool
+        self, style: Stylings, style_info: ItemInfo, position: ItemPosition
     ) -> None:
         """
         Adds a new styling, corresponding to a string comment or whitespace within
         a TOML file, to a store.
         """
-        descriptor_store = self._store_choice(info=container_info, is_aot=is_aot)
-        styling_positions = descriptor_store.get_stylings(
-            container_info=container_info, style_info=style_info
-        )
+        descriptor_store = self._store_choice(info=style_info)
+        styling_positions = descriptor_store.get_stylings(style_info=style_info)
         styling_positions.update_stylings(
-            style=style, info=style_info, position=position, line_no=LineCounter.line_no
+            style=style,
+            info=style_info,
+            position=position,
+            line_no=self._line_counter.line_no
         )
 
     def update_field_descriptor(
-        self, item: items.Item, info: ItemInfo, position: ItemPosition, is_aot: bool
+        self, item: items.Item, info: ItemInfo, position: ItemPosition
     ) -> None:
         """
-        Adds a new field, corresponding to a non-table key-value pair within
-        a TOML file, to a store.
+        Adds a new field, corresponding to a non-table key-value pair within a TOML
+        file, to a store.
         """
-        descriptor_store = self._store_choice(info=info, is_aot=is_aot)
+        descriptor_store = self._store_choice(info=info)
         descriptor_store.update(item=item, info=info, position=position)
 
-    def update_array_comment(
-        self, array: items.Array, info: ItemInfo, is_aot: bool
-    ) -> None:
+    def update_array_comment(self, array: items.Array, info: ItemInfo) -> None:
         """
-        Updates the , corresponding to a non-table key-value pair within
-        a TOML file, to a store.
+        Adds a comment to an array field, corresponding to a non-table key-value pair
+        within a TOML file, to a store.
         """
-        descriptor_store = self._store_choice(info=info, is_aot=is_aot)
+        descriptor_store = self._store_choice(info=info)
         field_position = descriptor_store.get_array(info=info)
-        field_position._update_comment(item=array, line_no=LineCounter.line_no)
+        field_position._update_comment(item=array, line_no=self._line_counter.line_no)
 
     def update_table_descriptor(
         self,
@@ -509,18 +579,17 @@ class DescriptorStore:
         container: BodyContainerInOrder,
         container_info: ItemInfo,
         position: ItemPosition,
-        is_aot: bool
     ) -> None:
         """
-        
-        
+        Adds a new table, corresponding to a table pair within a TOML file, to a
+        store.
         """
         if (
             isinstance(container, items.InlineTable) or
             (isinstance(container, items.Table) and not container.is_super_table())
         ):
             descriptor_store: BaseTableStore
-            if is_aot:
+            if container_info.from_aot:
                 descriptor_store = self.array_of_tables
             else:
                 descriptor_store = self.tables

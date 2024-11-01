@@ -20,7 +20,6 @@ from tomlkit_extras._typing import (
     BodyContainerInOrder,
     BodyContainerItems,
     DescriptorInput,
-    ParentItem,
     StyleItem,
     TOMLHierarchy,
     TopLevelItem
@@ -50,8 +49,11 @@ class TOMLDocumentDescriptor:
             toml_source.name if isinstance(toml_source, (items.AoT, items.Table)) else None
         )
 
+        # Tracker for number of lines in TOML
+        self._line_counter = LineCounter()
+
         # Descriptor store and retriever
-        self._store = DescriptorStore()
+        self._store = DescriptorStore(line_counter=self._line_counter)
         self._retriever = DescriptorRetriever(
             store=self._store,
             top_level_type=self.top_level_type,
@@ -62,26 +64,27 @@ class TOMLDocumentDescriptor:
         self._toml_statistics = TOMLStatistics()
 
         position = ItemPosition(attribute=1, container=1)
+        if isinstance(toml_source, (items.Table, items.AoT)):
+            update_key = toml_source.name
+            assert update_key is not None, 'table must have a string name'
+        else:
+            update_key = str()
+
+        container_info = ItemInfo.from_parent_type(
+            key=update_key, hierarchy=str(), toml_item=toml_source
+        )
+
         if isinstance(toml_source, items.AoT):
             assert toml_source.name is not None, 'array of tables must have a string name'
             self._generate_descriptor_from_array_of_tables(
-                hierarchy=toml_source.name, array=toml_source, position=position
+                array=toml_source, position=position, info=container_info
             )          
         else:
-            if isinstance(toml_source, items.Table):
-                update_key = toml_source.name
-                assert update_key is not None, 'table must have a string name'
-            else:
-                update_key = str()
-
-            container_info = ItemInfo.from_parent_type(
-                key=update_key, hierarchy=str(), toml_item=toml_source
-            )
             self._generate_descriptor(
                 container=toml_source, info=container_info, position=position
             )
 
-        LineCounter.reset_line_no()
+        self._line_counter.reset_line_no()
 
     @property
     def number_of_tables(self) -> int:
@@ -142,22 +145,15 @@ class TOMLDocumentDescriptor:
         return self._retriever.get_styling(styling=styling, hierarchy=hierarchy)
 
     def _generate_descriptor_from_array_of_tables(
-        self,
-        hierarchy: str,
-        array: items.AoT,
-        position: ItemPosition,
-        parent_type: Optional[ParentItem] = None
+        self, array: items.AoT, position: ItemPosition, info: ItemInfo
     ) -> None:
         """"""
         array_name = cast(str, array.name)
+        hierarchy = info.hierarchy
         array_of_tables = ArrayOfTablesDescriptor(
-            item_type='array-of-tables',
-            parent_type=parent_type,
-            name=array_name,
-            line_no=LineCounter.line_no,
-            position=copy.copy(position), 
-            tables=dict(),
-            table_indices=dict()
+            line_no=self._line_counter.line_no,
+            info=info,
+            position=copy.copy(position)
         )
         self._store.array_of_tables.append(hierarchy=hierarchy, array_of_tables=array_of_tables)
         hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=hierarchy)
@@ -166,18 +162,21 @@ class TOMLDocumentDescriptor:
             table_position = index + 1
             self._toml_statistics.add_table(table=table)
             table_item_info = ItemInfo.from_parent_type(
-                key=array_name, hierarchy=hierarchy_parent, toml_item=table, parent_type='array-of-tables'
+                key=array_name,
+                hierarchy=hierarchy_parent,
+                toml_item=table,
+                parent_type='array-of-tables',
+                from_aot=True
             )
   
             self._generate_descriptor(
                 container=table,
                 info=table_item_info,
-                position=ItemPosition(attribute=table_position, container=table_position),
-                is_aot=True
+                position=ItemPosition(attribute=table_position, container=table_position)
             )
 
     def _generate_descriptor(
-        self, container: BodyContainerInOrder, info: ItemInfo, position: ItemPosition, is_aot: bool = False
+        self, container: BodyContainerInOrder, info: ItemInfo, position: ItemPosition
     ) -> None:
         """"""
         new_position = ItemPosition(attribute=1, container=1)
@@ -195,8 +194,7 @@ class TOMLDocumentDescriptor:
             hierarchy=new_hierarchy,
             container=container,
             container_info=info,
-            position=position,
-            is_aot=is_aot
+            position=position
         )
 
         # Since an inline table is contained only on a single line, and thus,
@@ -206,7 +204,7 @@ class TOMLDocumentDescriptor:
             isinstance(container, TOMLDocument) or
             (isinstance(container, items.Table) and not container.is_super_table())
         ):
-            LineCounter.add_line()
+            self._line_counter.add_line()
 
         # Iterate through each item appearing in the body of the table/arrays,
         # unpack each item and process accordingly
@@ -223,36 +221,32 @@ class TOMLDocumentDescriptor:
             # is run recursively since both data types can contain styling
             if isinstance(toml_item, items.Array):
                 self._store.update_field_descriptor(
-                    item=toml_item, info=toml_item_info, position=new_position, is_aot=is_aot
+                    item=toml_item, info=toml_item_info, position=new_position
                 )
                 self._generate_descriptor(
-                    container=toml_item, info=toml_item_info, position=new_position, is_aot=is_aot
+                    container=toml_item, info=toml_item_info, position=new_position
                 )
-                self._store.update_array_comment(array=toml_item, info=toml_item_info, is_aot=is_aot)
+                self._store.update_array_comment(array=toml_item, info=toml_item_info)
 
                 self._toml_statistics.add_array(item=toml_item)
-                LineCounter.add_line()
+                self._line_counter.add_line()
                 new_position.update_positions()
             elif isinstance(toml_item, items.InlineTable):
                 self._generate_descriptor(
-                    container=toml_item, info=toml_item_info, position=new_position, is_aot=is_aot
+                    container=toml_item, info=toml_item_info, position=new_position
                 )
 
                 self._toml_statistics.add_inline_table(table=toml_item)
-                LineCounter.add_line()
+                self._line_counter.add_line()
                 new_position.update_positions()
             # If one of the two styling elements are encountered, then the
             # memory address of the instance is generated as the key
             elif isinstance(toml_item, (items.Comment, items.Whitespace)):
                 number_of_newlines = toml_item.as_string().count('\n')
                 self._store.update_styling(
-                    container_info=info,
-                    style=toml_item,
-                    style_info=toml_item_info,
-                    position=new_position,
-                    is_aot=is_aot
+                    style=toml_item, style_info=toml_item_info, position=new_position
                 )
-                LineCounter.add_lines(lines=number_of_newlines)
+                self._line_counter.add_lines(lines=number_of_newlines)
 
                 self._toml_statistics.add_comment(item=toml_item)
                 new_position.update_body_position()
@@ -260,10 +254,7 @@ class TOMLDocumentDescriptor:
             elif isinstance(toml_item, items.AoT) and not self.top_level_only:
                 self._toml_statistics.add_aot()
                 self._generate_descriptor_from_array_of_tables(
-                    hierarchy=toml_item_info.full_hierarchy,
-                    array=toml_item,
-                    parent_type=cast(ParentItem, info.item_type),
-                    position=new_position
+                    array=toml_item, position=new_position, info=toml_item_info
                 )
                 new_position.update_positions()
             # If a item instance is encountered that links to a field
@@ -276,16 +267,16 @@ class TOMLDocumentDescriptor:
                 self._toml_statistics.add_table(table=toml_item)
 
                 self._generate_descriptor(
-                    container=toml_item, info=toml_item_info, position=new_position, is_aot=is_aot
+                    container=toml_item, info=toml_item_info, position=new_position
                 )
                 new_position.update_positions()
             elif not isinstance(toml_item, (items.Table, items.AoT)):
                 if not isinstance(container, items.Array):
                     self._store.update_field_descriptor(
-                        item=toml_item, info=toml_item_info, position=new_position, is_aot=is_aot
+                        item=toml_item, info=toml_item_info, position=new_position
                     )
                     if not isinstance(container, items.InlineTable):
-                        LineCounter.add_line()
+                        self._line_counter.add_line()
 
                     self._toml_statistics.add_field(item=toml_item)
                 new_position.update_positions()

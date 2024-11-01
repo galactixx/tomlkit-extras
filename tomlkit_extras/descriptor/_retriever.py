@@ -17,13 +17,12 @@ from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
 )
-from tomlkit_extras.descriptor._helpers import (
-    find_child_tables
-)
 from tomlkit_extras.descriptor._descriptors import (
     ArrayOfTablesDescriptor,
+    ArrayOfTablesDescriptors,
     FieldDescriptor,
     StyleDescriptor,
+    StylingDescriptors,
     TableDescriptor
 )
 from tomlkit_extras._exceptions import (
@@ -32,10 +31,6 @@ from tomlkit_extras._exceptions import (
     InvalidHierarchyError,
     InvalidStylingError,
     InvalidTableError
-)
-from tomlkit_extras.descriptor._types import (
-    ArrayOfTablesDescriptors,
-    StylingDescriptors
 )
 
 _WHITESPACE_PATTERN = r'^[ \n\r]*$'
@@ -67,7 +62,7 @@ class DescriptorRetriever:
                 raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
             
             table_descriptor: TableDescriptor = self._store.tables.get(hierarchy=hierarchy_as_str)
-            stylings = table_descriptor.styling
+            stylings = table_descriptor.stylings
         else:
             stylings = self._store.document._document_stylings # TODO: need to adjust
 
@@ -89,7 +84,7 @@ class DescriptorRetriever:
             self._store.tables.contains(hierarchy=self._top_level_hierarchy)
         ):
             top_level_cast = cast(str, self._top_level_hierarchy)
-            styling_descriptors = self._store.tables.get(hierarchy=top_level_cast).styling
+            styling_descriptors = self._store.tables.get(hierarchy=top_level_cast).stylings
         else:
             styling_descriptors = StylingDescriptors(comments=dict(), whitespace=dict())
 
@@ -112,10 +107,6 @@ class DescriptorRetriever:
             raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
 
         table_descriptor: TableDescriptor = self._store.tables.get(hierarchy=hierarchy_as_str)
-        child_tables = find_child_tables(
-            root_hierarchy=hierarchy_as_str, hierarchies=self._store.tables.hierarchies
-        )
-        table_descriptor._update_child_tables(tables=child_tables)
         return table_descriptor
     
     def get_field(self, hierarchy: TOMLHierarchy) -> FieldDescriptor:
@@ -167,20 +158,10 @@ class DescriptorRetriever:
                 "Hierarchy does not map to an existing array of tables"
             )
 
-        shortest_hierarchy: Optional[str] = hierarchy_obj.shortest_ancestor_hierarchy(
-            hierarchies=array_hierarchies
-        )
-        # from_aot = shortest_hierarchy is not None and shortest_hierarchy != longest_hierarchy
-
         array_of_tables: ArrayOfTablesDescriptors = self._store.array_of_tables.get(
             hierarchy=longest_hierarchy
         )
         array_descriptors: List[ArrayOfTablesDescriptor] = array_of_tables.aots
-
-        # child_tables: Set[str] = find_child_tables(
-        #     root_hierarchy=table_hierarchy, hierarchies=tables_from_array_of_table
-        # )
-
         return array_descriptors
     
     def get_table_from_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[TableDescriptor]:
@@ -202,16 +183,9 @@ class DescriptorRetriever:
 
         table_descriptors: List[TableDescriptor] = []
 
-        for array_of_table in arrays:
-            tables_from_array_of_table = set(array_of_table.tables.keys())
-            
+        for array_of_table in arrays:            
             if hierarchy_as_str in array_of_table.tables:
                 for table_descriptor in array_of_table.tables[hierarchy_as_str]:
-                    seen_table = True
-                    child_tables: Set[str] = find_child_tables(
-                        root_hierarchy=hierarchy_as_str, hierarchies=tables_from_array_of_table
-                    )
-                    table_descriptor._update_child_tables(tables=child_tables)
                     table_descriptors.append(table_descriptor)
 
         if not table_descriptors:

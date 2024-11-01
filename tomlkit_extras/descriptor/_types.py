@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import (
     cast,
-    Dict,
-    List,
     Optional
 )
 
@@ -16,62 +14,8 @@ from tomlkit_extras._typing import (
     BodyContainerItemDecomposed,
     DescriptorInput,
     Item,
-    ParentItem,
-    StyleItem,
-    Stylings
+    ParentItem
 )
-from tomlkit_extras.descriptor._descriptor import (
-    ArrayOfTablesDescriptor,
-    StyleDescriptor
-)
-
-@dataclass
-class ArrayOfTablesDescriptors:
-    """"""
-    aots: List[ArrayOfTablesDescriptor]
-
-    array_indices: Dict[str, int]
-
-    def get_array(self, hierarchy: str) -> ArrayOfTablesDescriptor:
-        """"""
-        return self.aots[self.array_indices[hierarchy]]
-
-    def update_arrays(self, hierarchy: str, array: ArrayOfTablesDescriptor) -> None:
-        """"""
-        self.array_indices[hierarchy] += 1
-        self.aots.append(array)
-
-
-@dataclass
-class StylingDescriptors:
-    """"""
-    comments: Dict[str, List[StyleDescriptor]]
-    whitespace: Dict[str, List[StyleDescriptor]]
-
-    def update_stylings(
-        self, style: Stylings, info: ItemInfo, position: ItemPosition, line_no: int
-    ) -> None:
-        """"""
-        styling_value: str
-
-        if isinstance(style, items.Comment):
-            styling_value = style.trivia.comment
-            current_source = self.comments
-        else:
-            styling_value = style.value
-            current_source = self.whitespace
-
-        styling_position = StyleDescriptor(
-            item_type=cast(StyleItem, info.item_type),
-            style=styling_value,
-            line_no=line_no,
-            container=position.container
-        )
-        if styling_value not in current_source:
-            current_source[styling_value] = [styling_position]
-        else:
-            current_source[styling_value].append(styling_position)
-
 
 @dataclass
 class ItemInfo:
@@ -80,6 +24,7 @@ class ItemInfo:
     parent_type: Optional[ParentItem]
     key: str
     hierarchy: str
+    from_aot: bool
 
     @property
     def full_hierarchy(self) -> str:
@@ -94,7 +39,8 @@ class ItemInfo:
         key: str,
         hierarchy: str,
         toml_item: DescriptorInput,
-        parent_type: Optional[ParentItem] = None
+        parent_type: Optional[ParentItem] = None,
+        from_aot: bool = False
     ) -> ItemInfo:
         """"""
         item_type = get_item_type(toml_item=toml_item)
@@ -102,7 +48,8 @@ class ItemInfo:
             item_type=item_type,
             parent_type=parent_type,
             key=key,
-            hierarchy=hierarchy
+            hierarchy=hierarchy,
+            from_aot=from_aot
         )
 
     @classmethod
@@ -121,7 +68,8 @@ class ItemInfo:
             item_type=item_type,
             parent_type=parent_type,
             key=key,
-            hierarchy=hierarchy
+            hierarchy=hierarchy,
+            from_aot=container_info.from_aot
         )
 
 

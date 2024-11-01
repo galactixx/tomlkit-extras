@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import (
-    ClassVar,
     Optional,
     Set,
     TYPE_CHECKING,
@@ -15,7 +14,6 @@ from tomlkit_extras._typing import Item, TOMLValidReturn
 from tomlkit_extras._hierarchy import Hierarchy
 
 if TYPE_CHECKING:
-    from tomlkit_extras.descriptor._types import ItemInfo
     from tomlkit_extras.descriptor._descriptors import CommentDescriptor
 
 class LineCounter:
@@ -24,22 +22,19 @@ class LineCounter:
     traversing through and mapping a TOML file within the 
     `TOMLDocumentDescriptor` class.
     """
-    line_no: ClassVar[int] = 0
+    line_no: int = 0
 
-    @classmethod
-    def add_lines(cls, lines: int) -> None:
+    def add_lines(self, lines: int) -> None:
         """Add a custom number of lines."""
-        cls.line_no += lines
+        self.line_no += lines
 
-    @classmethod
-    def add_line(cls) -> None:
+    def add_line(self) -> None:
         """Add one line."""
-        cls.line_no += 1
+        self.line_no += 1
 
-    @classmethod
-    def reset_line_no(cls) -> None:
+    def reset_line_no(self) -> None:
         """Reset the line number to 0."""
-        cls.line_no = 0
+        self.line_no = 0
 
 
 def create_comment_descriptor(item: items.Item, line_no: Optional[int]) -> Optional[CommentDescriptor]:
@@ -57,12 +52,12 @@ def create_comment_descriptor(item: items.Item, line_no: Optional[int]) -> Optio
     )
 
 
-def item_is_table(info: 'ItemInfo') -> bool:
+def item_is_table(item_type: Item) -> bool:
     """
     A private function that determines if an `Item` which corresponds to a
     tomlkit instance, is a table.
     """
-    return info.item_type in {'table', 'inline-table'}
+    return item_type in {'table', 'inline-table'}
 
 
 def find_child_tables(root_hierarchy: str, hierarchies: Set[str]) -> Set[str]:
