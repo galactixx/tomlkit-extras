@@ -76,9 +76,9 @@ def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[in
         toml_source (`TOMLSource`): A `TOMLSource` instance.
 
     Returns:
-        Tuple[int, int]: A two-element tuple both elements of integer type. The
-            first item representing the attribute position, and the second item
-            the container position.
+        Tuple[int, int]: A two-element tuple where both elements are of integer type. The
+            first item representing the attribute position, and the second item the
+            container position.
     """
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 

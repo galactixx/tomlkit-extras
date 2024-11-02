@@ -1,154 +1,279 @@
-# from tomlkit import TOMLDocument
-# from tomlkit_extras import (
-#     ArrayOfTablesDescriptor,
-#     CommentDescriptor,
-#     FieldDescriptor,
-#     Hierarchy,
-#     load_toml_file,
-#     StyleDescriptor,
-#     TableDescriptor,
-#     TOMLDocumentDescriptor
-# )
+from typing import (
+    Any,
+    Dict,
+    Optional
+)
 
-# def test_toml_a_descriptors() -> None:
-#     """"""
-#     toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
-#     document_descriptor = TOMLDocumentDescriptor(toml_source=toml_document)
+from tomlkit import TOMLDocument
+from tomlkit_extras import (
+    ArrayOfTablesDescriptor,
+    CommentDescriptor,
+    FieldDescriptor,
+    Hierarchy,
+    load_toml_file,
+    StyleDescriptor,
+    TableDescriptor,
+    TOMLDocumentDescriptor
+)
 
-#     # Basic statistics of the TOML file
-#     assert document_descriptor.number_of_aots == 3
-#     assert document_descriptor.number_of_arrays == 0
-#     assert document_descriptor.number_of_comments == 1
-#     assert document_descriptor.number_of_fields == 7
-#     assert document_descriptor.number_of_inline_tables == 0
-#     assert document_descriptor.number_of_tables == 7
+from tomlkit_extras._typing import (
+    AoTItem,
+    FieldItem, 
+    ParentItem,
+    StyleItem,
+    TableItem
+)
 
-#     # Get comment from the beginning of file
-#     styling_descriptors = document_descriptor.get_styling(styling='# this is a document comment')
-#     assert len(styling_descriptors) == 1
+def _validate_style_descriptor(
+    style_descriptor: StyleDescriptor,
+    item_type: StyleItem,
+    parent_type: ParentItem,
+    hierarchy: Optional[Hierarchy],
+    line_no: int,
+    container_position: int,
+    style: str,
+    from_aot: bool
+) -> None:
+    """"""
+    assert style_descriptor.item_type == item_type
+    assert style_descriptor.parent_type == parent_type
+    assert style_descriptor.hierarchy == hierarchy
+    assert style_descriptor.line_no == line_no
+    assert style_descriptor.container_position == container_position
+    assert style_descriptor.from_aot == from_aot
+    assert style_descriptor.style == style
+
+
+def _validate_field_descriptor(
+    field_descriptor: FieldDescriptor,
+    item_type: FieldItem,
+    parent_type: ParentItem,
+    name: str,
+    hierarchy: Optional[Hierarchy],
+    line_no: int,
+    attribute_position: int,
+    container_position: int,
+    value: Any,
+    comment: Optional[CommentDescriptor],
+    from_aot: bool
+) -> None:
+    """"""
+    assert field_descriptor.item_type == item_type
+    assert field_descriptor.parent_type == parent_type
+    assert field_descriptor.name == name
+    assert field_descriptor.hierarchy == hierarchy
+    assert field_descriptor.line_no == line_no
+    assert field_descriptor.attribute_position == attribute_position
+    assert field_descriptor.container_position == container_position
+    assert field_descriptor.comment == comment
+    assert field_descriptor.from_aot == from_aot
+    assert field_descriptor.value == value
+
+
+def _validate_table_descriptor(
+    table_descriptor: TableDescriptor,
+    item_type: TableItem,
+    parent_type: ParentItem,
+    name: str,
+    hierarchy: Optional[Hierarchy],
+    line_no: int,
+    attribute_position: int,
+    container_position: int,
+    fields: Dict[str, FieldDescriptor],
+    comment: Optional[CommentDescriptor],
+    from_aot: bool
+) -> None:
+    """"""
+    assert table_descriptor.item_type == item_type
+    assert table_descriptor.parent_type == parent_type
+    assert table_descriptor.name == name
+    assert table_descriptor.hierarchy == hierarchy
+    assert table_descriptor.line_no == line_no
+    assert table_descriptor.attribute_position == attribute_position
+    assert table_descriptor.container_position == container_position
+    assert table_descriptor.fields == fields
+    assert table_descriptor.comment == comment
+    assert table_descriptor.from_aot == from_aot
+
+
+def _validate_array_of_tables_descriptor(
+    array_descriptor: ArrayOfTablesDescriptor,
+    item_type: AoTItem,
+    parent_type: ParentItem,
+    name: str,
+    hierarchy: Optional[Hierarchy],
+    line_no: int,
+    attribute_position: int,
+    container_position: int,
+    from_aot: bool
+) -> None:
+    """"""
+    assert array_descriptor.item_type == item_type
+    assert array_descriptor.parent_type == parent_type
+    assert array_descriptor.name == name
+    assert array_descriptor.hierarchy == hierarchy
+    assert array_descriptor.line_no == line_no
+    assert array_descriptor.attribute_position == attribute_position
+    assert array_descriptor.container_position == container_position
+    assert array_descriptor.from_aot == from_aot
+
+
+def test_toml_a_descriptors() -> None:
+    """"""
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
+    document_descriptor = TOMLDocumentDescriptor(toml_source=toml_document)
+
+    # Basic statistics of the TOML file
+    assert document_descriptor.number_of_aots == 3
+    assert document_descriptor.number_of_arrays == 0
+    assert document_descriptor.number_of_comments == 1
+    assert document_descriptor.number_of_fields == 7
+    assert document_descriptor.number_of_inline_tables == 0
+    assert document_descriptor.number_of_tables == 7
+
+    # Get comment from the beginning of file
+    styling_descriptors = document_descriptor.get_styling(styling='# this is a document comment')
+    assert len(styling_descriptors) == 1
     
-#     styling_descriptor = styling_descriptors[0]
-#     assert styling_descriptor.item_type == 'comment'
-#     assert styling_descriptor.parent_type == 'document'
-#     assert styling_descriptor.style == '# this is a document comment'
-#     assert styling_descriptor.hierarchy is None
-#     assert styling_descriptor.line_no == 1
-#     assert styling_descriptor.container_position == 1
-#     assert not styling_descriptor.from_aot
+    styling_descriptor = styling_descriptors[0]
+    _validate_style_descriptor(
+        styling_descriptor,
+        'comment',
+        'document',
+        None,
+        1,
+        1,
+        '# this is a document comment',
+        False
+    )
 
-#     # Field descriptors that do not exist within an array of tables
-#     hierarchy_name = Hierarchy.from_str_hierarchy(hierarchy='project.name')
-#     descriptor_name = FieldDescriptor(
-#         item_type='field',
-#         parent_type='table',
-#         name='name',
-#         hierarchy=hierarchy_name,
-#         line_no=4,
-#         attribute_pos=1,
-#         container_pos=1,
-#         comment=None,
-#         from_aot=False,
-#         value='Example Project'
-#     )
+    # Field descriptors that do not exist within an array of tables
+    # Validate project.name field descriptor
+    hierarchy_name = Hierarchy.from_str_hierarchy(hierarchy='project.name')
+    name_descriptor = document_descriptor.get_field(hierarchy=hierarchy_name)
+    _validate_field_descriptor(
+        name_descriptor,
+        'field',
+        'table',
+        'name',
+        hierarchy_name,
+        4,
+        1,
+        1,
+        'Example Project',
+        None,
+        False
+    )
 
-#     hierarchy_desc = Hierarchy.from_str_hierarchy(hierarchy='details.description')
-#     descriptor_desc = FieldDescriptor(
-#         item_type='field',
-#         parent_type='table',
-#         name='description',
-#         hierarchy=hierarchy_desc,
-#         line_no=7,
-#         attribute_pos=1,
-#         container_pos=1,
-#         comment=None,
-#         from_aot=False,
-#         value='A sample project configuration'
-#     )
+    # Validate details.description descriptor
+    hierarchy_desc = Hierarchy.from_str_hierarchy(hierarchy='details.description')
+    desc_descriptor = document_descriptor.get_field(hierarchy=hierarchy_desc)
+    _validate_field_descriptor(
+        desc_descriptor,
+        'field',
+        'table',
+        'description',
+        hierarchy_desc,
+        7,
+        1,
+        1,
+        'A sample project configuration',
+        None,
+        False
+    )
 
-#     assert document_descriptor.get_field(hierarchy=hierarchy_name) == descriptor_name
-#     assert document_descriptor.get_field(hierarchy=hierarchy_desc) == descriptor_desc
+    # Fields from the tables within the *members* array of tables
+    hierarchy_members_name = Hierarchy.from_str_hierarchy(hierarchy='members.name')
+    members_fields = document_descriptor.get_field_from_array_of_tables(hierarchy=hierarchy_members_name)
+    assert len(members_fields) == 2
 
-#     # Fields from the tables within the *members* array of tables
-#     hierarchy_members_name = Hierarchy.from_str_hierarchy(hierarchy='members.name')
-#     descriptor_members_name_one = FieldDescriptor(
-#         item_type='field',
-#         parent_type='table',
-#         name='name',
-#         hierarchy=hierarchy_members_name,
-#         line_no=10,
-#         attribute_pos=1,
-#         container_pos=1,
-#         comment=None,
-#         from_aot=True,
-#         value='Alice'
-#     )
-#     descriptor_members_name_two = FieldDescriptor(
-#         item_type='field',
-#         parent_type='table',
-#         name='name',
-#         hierarchy=hierarchy_members_name,
-#         line_no=19,
-#         attribute_pos=1,
-#         container_pos=1,
-#         comment=None,
-#         from_aot=True,
-#         value='Bob'
-#     )
+    member_field_descriptor_one = members_fields[0]
+    member_field_descriptor_two = members_fields[1]
 
-#     assert document_descriptor.get_field_from_array_of_tables(hierarchy=hierarchy_members_name) == [
-#         descriptor_members_name_one, descriptor_members_name_two
-#     ]
+    # Validate first members field descriptor
+    _validate_field_descriptor(
+        member_field_descriptor_one,
+        'field',
+        'table',
+        'name',
+        hierarchy_members_name,
+        10,
+        1,
+        1,
+        'Alice',
+        None,
+        True
+    )
 
-#     # Tables from within the *members* array of tables
-#     hierarchy_members = Hierarchy.from_str_hierarchy(hierarchy='members')
-#     descriptor_members_table_one = TableDescriptor(
-#         item_type='table',
-#         parent_type='array-of-tables',
-#         name='members',
-#         hierarchy=hierarchy_members,
-#         line_no=9,
-#         attribute_pos=1,
-#         container_pos=1,
-#         comment=None,
-#         from_aot=True,
-#         fields={'name': descriptor_members_name_one},
-#         child_tables=None
-#     )
-#     descriptor_members_table_two = TableDescriptor(
-#         item_type='table',
-#         parent_type='array-of-tables',
-#         name='members',
-#         hierarchy=hierarchy_members,
-#         line_no=18,
-#         attribute_pos=2,
-#         container_pos=2,
-#         comment=None,
-#         from_aot=True,
-#         fields={'name': descriptor_members_name_two},
-#         child_tables=None
-#     )
+    # Validate second members field descriptor
+    _validate_field_descriptor(
+        member_field_descriptor_two,
+        'field',
+        'table',
+        'name',
+        hierarchy_members_name,
+        19,
+        1,
+        1,
+        'Bob',
+        None,
+        True
+    )
 
-#     assert document_descriptor.get_table_from_array_of_tables(hierarchy=hierarchy_members) == [
-#         descriptor_members_table_one, descriptor_members_table_two
-#     ]
+    # Tables from within the *members* array of tables
+    hierarchy_members = Hierarchy.from_str_hierarchy(hierarchy='members')
+    members_tables = document_descriptor.get_table_from_array_of_tables(hierarchy=hierarchy_members)
+    assert len(members_tables) == 2
 
-#     # For the *members* array of tables
-#     descriptor_members_array = ArrayOfTablesDescriptor(
-#         item_type='array-of-tables',
-#         parent_type='document',
-#         name='members',
-#         hierarchy=hierarchy_members,
-#         line_no=9,
-#         attribute_pos=3,
-#         container_pos=5,
-#         comment=None,
-#         from_aot=False,
-#         tables=[descriptor_members_table_one, descriptor_members_table_two]
-#     )
-    
-#     assert document_descriptor.get_array_of_tables(hierarchy=hierarchy_members) == [
-#         descriptor_members_array
-#     ]
+    member_table_descriptor_one = members_tables[0]
+    member_table_descriptor_two = members_tables[1]
+
+    # Validate first members table descriptor
+    _validate_table_descriptor(
+        member_table_descriptor_one,
+        'table',
+        'array-of-tables',
+        'members',
+        hierarchy_members,
+        9,
+        1,
+        1,
+        {'name': member_field_descriptor_one},
+        None,
+        True
+    )
+
+    # Validate second members table descriptor
+    _validate_table_descriptor(
+        member_table_descriptor_two,
+        'table',
+        'array-of-tables',
+        'members',
+        hierarchy_members,
+        18,
+        2,
+        2,
+        {'name': member_field_descriptor_two},
+        None,
+        True
+    )
+
+    # For the *members* array of tables
+    member_array_descriptors = document_descriptor.get_array_of_tables(hierarchy=hierarchy_members)
+    assert len(member_array_descriptors) == 1
+
+    member_array_descriptor = member_array_descriptors[0]
+    _validate_array_of_tables_descriptor(
+        member_array_descriptor,
+        'array-of-tables',
+        'document',
+        'members',
+        hierarchy_members,
+        9,
+        3,
+        5,
+        False
+    )
 
 
 # def test_toml_b_descriptor() -> None:

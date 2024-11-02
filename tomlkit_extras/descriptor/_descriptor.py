@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from typing import (
     cast,
     List,
@@ -149,21 +148,20 @@ class TOMLDocumentDescriptor:
     ) -> None:
         """"""
         array_name = cast(str, array.name)
-        hierarchy = info.hierarchy
+        hierarchy = Hierarchy.create_hierarchy(hierarchy=info.hierarchy, attribute=array_name)
         array_of_tables = ArrayOfTablesDescriptor(
             line_no=self._line_counter.line_no,
             info=info,
-            position=copy.copy(position)
+            position=position
         )
         self._store.array_of_tables.append(hierarchy=hierarchy, array_of_tables=array_of_tables)
-        hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=hierarchy)
 
         for index, table in enumerate(array.body):
             table_position = index + 1
             self._toml_statistics.add_table(table=table)
             table_item_info = ItemInfo.from_parent_type(
                 key=array_name,
-                hierarchy=hierarchy_parent,
+                hierarchy=info.hierarchy,
                 toml_item=table,
                 parent_type='array-of-tables',
                 from_aot=True
@@ -179,15 +177,9 @@ class TOMLDocumentDescriptor:
         self, container: BodyContainerInOrder, info: ItemInfo, position: ItemPosition
     ) -> None:
         """"""
+        # Determine the new position and hierarchy
         new_position = ItemPosition(attribute=1, container=1)
-
-        # Determine the new hierarchy
-        if isinstance(container, items.Array):
-            new_hierarchy = info.hierarchy
-        else:
-            new_hierarchy = Hierarchy.create_hierarchy(
-                hierarchy=info.hierarchy, attribute=info.key
-            )
+        new_hierarchy = info.full_hierarchy
 
         # Add a new table to the data structures
         self._store.update_table_descriptor(

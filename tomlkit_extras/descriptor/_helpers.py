@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import (
     Optional,
     Set,
@@ -16,6 +17,7 @@ from tomlkit_extras._hierarchy import Hierarchy
 if TYPE_CHECKING:
     from tomlkit_extras.descriptor._descriptors import CommentDescriptor
 
+@dataclass
 class LineCounter:
     """
     Line counter to keep track of the number of lines seen while

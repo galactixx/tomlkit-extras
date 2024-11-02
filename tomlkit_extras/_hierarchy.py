@@ -32,7 +32,7 @@ def standardize_hierarchy(hierarchy: 'TOMLHierarchy') -> Hierarchy:
 
 class Hierarchy:
     """"""
-    def __init__(self, hierarchy: Tuple[str, ...], attribute: str):
+    def __init__(self, hierarchy: Tuple[str, ...], attribute: str) -> None:
         self.hierarchy = hierarchy
         self.attribute = attribute
 
@@ -138,13 +138,13 @@ class Hierarchy:
 
         if len(hierarchy) == 1:
             attribute = hierarchy[0]
-            attribute_hierarchy = list()
+            attribute_hierarchy = tuple()
         else:
             attribute = hierarchy[-1]
-            attribute_hierarchy = hierarchy[:-1]
+            attribute_hierarchy = tuple(hierarchy[:-1])
 
         return cls(
-            attribute=attribute, hierarchy=tuple(attribute_hierarchy)
+            attribute=attribute, hierarchy=attribute_hierarchy
         )
 
     @property
@@ -261,7 +261,11 @@ class Hierarchy:
         update_decomposed: List[str] = update.split('.')
         
         attribute = update_decomposed[-1]
-        hierarchy_new = list(self.full_hierarchy)
+        if self.full_hierarchy_str:
+            hierarchy_new = list(self.full_hierarchy)
+        else:
+            hierarchy_new = list()
+
         if len(update_decomposed) > 1:
             hierarchy_new += update_decomposed[:-1]
 

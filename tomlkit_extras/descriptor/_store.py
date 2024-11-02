@@ -347,9 +347,8 @@ class ArrayOfTablesStore(BaseTableStore):
             `StylingDescriptors`: A `StylingDescriptors` instance containing all
                 stylings associated with a table.
         """
-        hierarchy = Hierarchy.parent_hierarchy(hierarchy=style_info.hierarchy)
-        table_descriptor: TableDescriptor = self.get_aot_table(hierarchy=hierarchy)
-        if item_is_table(info=style_info.parent_type):
+        table_descriptor: TableDescriptor = self.get_aot_table(hierarchy=style_info.hierarchy)
+        if item_is_table(item_type=style_info.parent_type):
             styling_descriptors = table_descriptor.stylings
         else:
             field = Hierarchy.parent_level(hierarchy=style_info.hierarchy)
@@ -473,13 +472,12 @@ class TableStore(BaseTableStore):
             `StylingDescriptors`: A `StylingDescriptors` instance containing all
                 stylings associated with a table.
         """
-        hierarchy = Hierarchy.parent_hierarchy(hierarchy=style_info.hierarchy)
-        table_descriptor: TableDescriptor = self._tables[hierarchy]
-        if item_is_table(info=style_info.parent_type):
-            styling_positions = table_descriptor.stylings
+        if item_is_table(item_type=style_info.parent_type):
+            styling_positions = self._tables[style_info.hierarchy].stylings
         else:
             field = Hierarchy.parent_level(hierarchy=style_info.hierarchy)
-            styling_positions = table_descriptor.fields[field].stylings
+            hierarchy = Hierarchy.parent_hierarchy(hierarchy=style_info.hierarchy)
+            styling_positions = self._tables[hierarchy].fields[field].stylings
         return styling_positions
     
     def get_array(self, info: ItemInfo) -> FieldDescriptor:
@@ -528,7 +526,8 @@ class DescriptorStore:
         item_type: Item = info.item_type
         if (
             item_type == 'document' or
-            not info.hierarchy and item_type in {'array', 'field'}
+            not info.hierarchy and
+            item_type in {'array', 'field', 'comment', 'whitespace'}
         ):
             descriptor_store = self.document
         elif info.from_aot:

@@ -54,7 +54,9 @@ class DescriptorRetriever:
         
         is_comment = not re.match(_WHITESPACE_PATTERN, styling)
 
-        if hierarchy is not None:
+        if hierarchy is None:
+            stylings = self._store.document._document_stylings # TODO: need to adjust
+        else:
             hierarchy_obj = standardize_hierarchy(hierarchy=hierarchy)
             hierarchy_as_str: str = str(hierarchy_obj)
 
@@ -63,8 +65,6 @@ class DescriptorRetriever:
             
             table_descriptor: TableDescriptor = self._store.tables.get(hierarchy=hierarchy_as_str)
             stylings = table_descriptor.stylings
-        else:
-            stylings = self._store.document._document_stylings # TODO: need to adjust
 
         styling_space = stylings.comments if is_comment else stylings.whitespace
         if styling not in styling_space:

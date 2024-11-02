@@ -37,7 +37,8 @@ Descriptor = TypeVar('Descriptor', bound='AbstractDescriptor')
 
 @dataclass
 class ArrayOfTablesDescriptors:
-    """"""
+    """
+    """
     aots: List[ArrayOfTablesDescriptor]
 
     array_indices: Dict[str, int]
@@ -117,7 +118,7 @@ class AbstractDescriptor(ABC):
     """
     def __init__(self, item_info: ItemInfo, position: ItemPosition) -> None:
         self._item_info = item_info
-        self._position = position
+        self._position = copy.copy(position)
 
     def copy(self) -> Descriptor:
         """Returns a shallow copy of the object."""
@@ -256,7 +257,6 @@ class FieldDescriptor(AttributeDescriptor):
             comment_line_no = find_comment_line_no(line_no=line_no, item=item)
 
         comment = create_comment_descriptor(item=item, line_no=comment_line_no)
-        position = copy.copy(position)
         value = item.unwrap()
         return cls(
             line_no=line_no,
@@ -335,7 +335,6 @@ class TableDescriptor(AttributeDescriptor):
         comment_line_no = find_comment_line_no(line_no=line_no, item=table)
         stylings = StylingDescriptors(comments=dict(), whitespace=dict())
         comment = create_comment_descriptor(item=table, line_no=comment_line_no)
-        position = copy.copy(position)
         return cls(
             line_no=line_no,
             info=info,
