@@ -7,9 +7,9 @@ from tomlkit_extras.toml._comments import (
     get_array_field_comment,
     get_comments
 )
+from tomlkit_extras.descriptor._helpers import CommentDescriptor
 from tomlkit_extras.descriptor._descriptors import (
     ArrayOfTablesDescriptor,
-    CommentDescriptor,
     FieldDescriptor,
     StyleDescriptor,
     TableDescriptor
@@ -48,8 +48,8 @@ __all__ = [
     'get_array_field_comment',
     'get_comments',
     'StructureComment',
-    'ArrayOfTablesDescriptor',
     'CommentDescriptor',
+    'ArrayOfTablesDescriptor',
     'FieldDescriptor',
     'StyleDescriptor',
     'TableDescriptor',

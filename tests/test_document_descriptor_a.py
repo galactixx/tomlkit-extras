@@ -1,0 +1,234 @@
+import pytest
+
+from tomlkit import TOMLDocument
+from tomlkit_extras import (
+    load_toml_file,
+    TOMLDocumentDescriptor
+)
+
+from tests._utils import (
+    AoTDescriptorTestCase,
+    ArrayItemsTestCase,
+    FieldDescriptorTestCase,
+    StyleDescriptorTestCase,
+    TableDescriptorTestCase
+)
+
+MEMBERS_FIELD_DESCRIPTOR_ONE = FieldDescriptorTestCase(
+    'field',
+    'table',
+    'name',
+    'members.name',
+    10,
+    1,
+    1,
+    'Alice',
+    None,
+    True
+)
+
+MEMBERS_FIELD_DESCRIPTOR_TWO = FieldDescriptorTestCase(
+    'field',
+    'table',
+    'name',
+    'members.name',
+    19,
+    1,
+    1,
+    'Bob',
+    None,
+    True
+)
+
+MEMBERS_TABLE_DESCRIPTOR_ONE = TableDescriptorTestCase(
+    'table',
+    'array-of-tables',
+    'members',
+    'members',
+    9,
+    1,
+    1,
+    None,
+    True,
+    [
+        MEMBERS_FIELD_DESCRIPTOR_ONE
+    ]
+)
+
+MEMBERS_TABLE_DESCRIPTOR_TWO = TableDescriptorTestCase(
+    'table',
+    'array-of-tables',
+    'members',
+    'members',
+    18,
+    2,
+    2,
+    None,
+    True,
+    [
+        MEMBERS_FIELD_DESCRIPTOR_TWO
+    ]
+)
+
+@pytest.fixture(scope='session')
+def toml_a_document() -> TOMLDocumentDescriptor:
+    """"""
+    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
+    document_descriptor = TOMLDocumentDescriptor(toml_source=toml_document)
+    return document_descriptor
+
+
+def test_toml_a_statistics(toml_a_document: TOMLDocumentDescriptor) -> None:
+    """"""
+    assert toml_a_document.number_of_aots == 3
+    assert toml_a_document.number_of_arrays == 0
+    assert toml_a_document.number_of_comments == 1
+    assert toml_a_document.number_of_fields == 7
+    assert toml_a_document.number_of_inline_tables == 0
+    assert toml_a_document.number_of_tables == 7
+
+
+@pytest.mark.parametrize(
+    'descriptor',
+    [
+        StyleDescriptorTestCase(
+            'comment',
+            'document',
+            None,
+            1,
+            1,
+            '# this is a document comment',
+            False
+        )
+    ]
+)
+def test_toml_a_style_descriptors(
+    descriptor: StyleDescriptorTestCase, toml_a_document: TOMLDocumentDescriptor
+) -> None:
+    """"""
+    styling_descriptors = toml_a_document.get_styling(styling=descriptor.style)
+    assert len(styling_descriptors) == 1
+
+    descriptor.validate_descriptor(descriptor=styling_descriptors[0])
+
+
+@pytest.mark.parametrize(
+    'descriptor',
+    [
+        FieldDescriptorTestCase(
+            'field',
+            'table',
+            'name',
+            'project.name',
+            4,
+            1,
+            1,
+            'Example Project',
+            None,
+            False
+        ),
+        FieldDescriptorTestCase(
+            'field',
+            'table',
+            'description',
+            'details.description',
+            7,
+            1,
+            1,
+            'A sample project configuration',
+            None,
+            False
+        )
+    ]
+)
+def test_toml_a_field_descriptors(
+    descriptor: FieldDescriptorTestCase, toml_a_document: TOMLDocumentDescriptor
+) -> None:
+    """"""
+    field_descriptor = toml_a_document.get_field(hierarchy=descriptor.hierarchy)
+    descriptor.validate_descriptor(descriptor=field_descriptor)
+
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        ArrayItemsTestCase(
+            hierarchy='members.name',
+            test_cases=[
+                MEMBERS_FIELD_DESCRIPTOR_ONE,
+                MEMBERS_FIELD_DESCRIPTOR_TWO
+            ]
+        )
+    ]
+)
+def test_toml_a_array_field_descriptors(
+    test_case: ArrayItemsTestCase, toml_a_document: TOMLDocumentDescriptor
+) -> None:
+    """"""
+    descriptors = toml_a_document.get_field_from_array_of_tables(
+        hierarchy=test_case.hierarchy
+    )
+    assert len(descriptors) == len(test_case.test_cases)
+
+    for idx, field in enumerate(test_case.test_cases):
+        field.validate_descriptor(descriptor=descriptors[idx])
+
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        ArrayItemsTestCase(
+            hierarchy='members',
+            test_cases=[
+                MEMBERS_TABLE_DESCRIPTOR_ONE,
+                MEMBERS_TABLE_DESCRIPTOR_TWO
+            ]
+        )
+    ]
+)
+def test_toml_a_array_table_descriptors(
+    test_case: ArrayItemsTestCase, toml_a_document: TOMLDocumentDescriptor
+) -> None:
+    """"""
+    descriptors = toml_a_document.get_table_from_array_of_tables(
+        hierarchy=test_case.hierarchy
+    )
+    assert len(descriptors) == len(test_case.test_cases)
+
+    for idx, table in enumerate(test_case.test_cases):
+        table.validate_descriptor(descriptor=descriptors[idx])
+
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        ArrayItemsTestCase(
+            hierarchy='members',
+            test_cases=[
+                AoTDescriptorTestCase(
+                    'array-of-tables',
+                    'document',
+                    'members',
+                    'members',
+                    9,
+                    3,
+                    5,
+                    False,
+                    [
+                        MEMBERS_TABLE_DESCRIPTOR_ONE,
+                        MEMBERS_TABLE_DESCRIPTOR_TWO
+                    ]
+                )
+            ]
+        )
+    ]
+)
+def test_toml_a_array_table_descriptors(
+    test_case: ArrayItemsTestCase, toml_a_document: TOMLDocumentDescriptor
+) -> None:
+    """"""
+    descriptors = toml_a_document.get_array_of_tables(hierarchy=test_case.hierarchy)
+    assert len(descriptors) == len(test_case.test_cases)
+
+    for idx, table in enumerate(test_case.test_cases):
+        table.validate_descriptor(descriptor=descriptors[idx])

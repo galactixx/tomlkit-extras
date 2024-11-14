@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import (
     Optional,
     Set,
-    TYPE_CHECKING,
     Union
 )
 
@@ -14,8 +13,19 @@ from tomlkit import items, TOMLDocument
 from tomlkit_extras._typing import Item, TOMLValidReturn
 from tomlkit_extras._hierarchy import Hierarchy
 
-if TYPE_CHECKING:
-    from tomlkit_extras.descriptor._descriptors import CommentDescriptor
+@dataclass(frozen=True)
+class CommentDescriptor:
+    """
+    A dataclass which provides detail for a comment that is directly
+    associated with a particular field or table.
+
+    Attributes:
+        comment (str): A string representing the comment.
+        line_no (int): An integer line number where the comment is located.
+    """
+    comment: str
+    line_no: int
+
 
 @dataclass
 class LineCounter:

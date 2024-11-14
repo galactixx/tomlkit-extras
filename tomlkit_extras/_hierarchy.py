@@ -12,7 +12,7 @@ from typing import (
 if TYPE_CHECKING:
     from tomlkit_extras._typing import TOMLHierarchy
 
-def standardize_hierarchy(hierarchy: 'TOMLHierarchy') -> Hierarchy:
+def standardize_hierarchy(hierarchy: TOMLHierarchy) -> Hierarchy:
     """
     Accepts a `TOMLHierarchy` instance, being an instance of string or `Hierarchy`,
     and returns a `Hierarchy` instance.
@@ -237,7 +237,9 @@ class Hierarchy:
             ancestor_hierarchies=ancestor_hierarchies, hierarchies=hierarchies
         )
 
-    def _ancestor_hierarchy_match(self, ancestor_hierarchies: List[str], hierarchies: Set[str]) -> Optional[str]:
+    def _ancestor_hierarchy_match(
+        self, ancestor_hierarchies: List[str], hierarchies: Set[str]
+    ) -> Optional[str]:
         """
         A private method that returns the first ancestor hierarchy appearing in a
         set of other string hierarchies.
@@ -258,19 +260,20 @@ class Hierarchy:
         Args:
             update (str): A string instance to append to the existing hierarchy.
         """
-        update_decomposed: List[str] = update.split('.')
-        
-        attribute = update_decomposed[-1]
-        if self.full_hierarchy_str:
-            hierarchy_new = list(self.full_hierarchy)
-        else:
-            hierarchy_new = list()
+        if update:
+            update_decomposed: List[str] = update.split('.')
+            
+            attribute = update_decomposed[-1]
+            if self.full_hierarchy_str:
+                hierarchy_new = list(self.full_hierarchy)
+            else:
+                hierarchy_new = list()
 
-        if len(update_decomposed) > 1:
-            hierarchy_new += update_decomposed[:-1]
+            if len(update_decomposed) > 1:
+                hierarchy_new += update_decomposed[:-1]
 
-        self.hierarchy = tuple(hierarchy_new)
-        self.attribute = attribute
+            self.hierarchy = tuple(hierarchy_new)
+            self.attribute = attribute
 
     def is_child_hierarchy(self, hierarchy: str) -> bool:
         """

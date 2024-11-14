@@ -17,7 +17,10 @@ from tomlkit import items
 
 from tomlkit_extras._utils import find_comment_line_no
 from tomlkit_extras._hierarchy import Hierarchy
-from tomlkit_extras.descriptor._helpers import create_comment_descriptor
+from tomlkit_extras.descriptor._helpers import (
+    CommentDescriptor,
+    create_comment_descriptor
+)
 from tomlkit_extras.descriptor._types import (
     ItemInfo,
     ItemPosition
@@ -40,7 +43,6 @@ class ArrayOfTablesDescriptors:
     """
     """
     aots: List[ArrayOfTablesDescriptor]
-
     array_indices: Dict[str, int]
 
     def get_array(self, hierarchy: str) -> ArrayOfTablesDescriptor:
@@ -55,7 +57,8 @@ class ArrayOfTablesDescriptors:
 
 @dataclass
 class StylingDescriptors:
-    """"""
+    """
+    """
     comments: Dict[str, List[StyleDescriptor]]
     whitespace: Dict[str, List[StyleDescriptor]]
 
@@ -82,20 +85,6 @@ class StylingDescriptors:
             current_source[styling_value] = [styling_position]
         else:
             current_source[styling_value].append(styling_position)
-
-
-@dataclass(frozen=True)
-class CommentDescriptor:
-    """
-    A dataclass which provides detail for a comment that is directly
-    associated with a particular field or table.
-
-    Attributes:
-        comment (str): A string representing the comment.
-        line_no (int): An integer line number where the comment is located.
-    """
-    comment: str
-    line_no: int
 
 
 class AbstractDescriptor(ABC):
@@ -143,7 +132,7 @@ class AbstractDescriptor(ABC):
 
     @property
     def hierarchy(self) -> Hierarchy:
-        """Returns the hierarchy of the TOML structure."""
+        """Returns the hierarchy of the TOML structure as a `Hierarchy` object."""
         hierarchy = Hierarchy.from_str_hierarchy(self._item_info.hierarchy)
         hierarchy.add_to_hierarchy(update=self._item_info.key)
         return hierarchy
@@ -198,12 +187,12 @@ class FieldDescriptor(AttributeDescriptor):
     contain nested key-value pairs.
 
     Inherits properties from `AttributeDescriptor`:
-    - parent_type
-    - name
-    - hierarchy
-    - attribute_position
-    - container_position
-    - from_aot
+    - `parent_type`
+    - `name`
+    - `hierarchy`
+    - `attribute_position`
+    - `container_position`
+    - `from_aot`
 
     Attributes:
         item_type (`FieldItem`): A `FieldItem` instance, corresponding to a
@@ -279,12 +268,12 @@ class TableDescriptor(AttributeDescriptor):
     pair that can contain nested key-value pairs.
 
     Inherits properties from `AttributeDescriptor`:
-    - parent_type
-    - name
-    - hierarchy
-    - attribute_position
-    - container_position
-    - from_aot
+    - `parent_type`
+    - `name`
+    - `hierarchy`
+    - `attribute_position`
+    - `container_position`
+    - `from_aot`
 
     Attributes:
         item_type (`TableItem`): A `TableItem` instance, corresponding to a
@@ -296,6 +285,7 @@ class TableDescriptor(AttributeDescriptor):
             key-value pairs each being a field contained in the table. The
             keys are strings representing names of fields (not tables) and
             the corresponding values are `FieldDescriptor` instances.
+        num_fields (int): The number of fields contained in table.
         comment (`CommentDescriptor` | None): A `CommentDescriptor` instance,
             correspondng to the comment associated with the structure. Can
             be None if there is no comment.
@@ -321,6 +311,11 @@ class TableDescriptor(AttributeDescriptor):
     def fields(self) -> Dict[str, FieldDescriptor]:
         """"""
         return self._fields
+    
+    @property
+    def num_fields(self) -> int:
+        """"""
+        return len(self._fields)
 
     @property
     def item_type(self) -> TableItem:
@@ -359,22 +354,23 @@ class StyleDescriptor(AbstractDescriptor):
     tomlkit type instance.
 
     A styling can either be a comment, represented in tomlkit as a
-    tomlkit.items.Comment instance, or a whitespace, represented as a
-    tomlkit.items.Whitespace instance.
+    `tomlkit.items.Comment` instance, or a whitespace, represented as a
+    `tomlkit.items.Whitespace` instance.
 
     These are comments or whitespaces that are not directly associated with
     a field or table, but are contained within tomlkit structures like tables. 
 
     Inherits properties from `AbstractDescriptor`:
-    - parent_type
-    - hierarchy
-    - container_position
-    - from_aot
+    - `parent_type`
+    - `container_position`
+    - `from_aot`
 
     Attributes:
         item_type (`StyleItem`): A `StyleItem` instance, corresponding to a
             string literal representing the type of the styling, being
             either 'whitespace' or 'comment'.
+        hierarchy (`Hierarchy` | None): A `Hierarchy` instance representing the full
+            hierarchy of the structure, or None if it is a top-level styling.
         style (str): The string value of the style.
         line_no (int): An integer line number marking the beginning of the
             styling.
@@ -391,6 +387,14 @@ class StyleDescriptor(AbstractDescriptor):
         self.line_no = line_no
 
     @property
+    def hierarchy(self) -> Optional[Hierarchy]:
+        """"""
+        if not self._item_info.hierarchy:
+            return None
+        else:
+            return super().hierarchy
+
+    @property
     def item_type(self) -> StyleItem:
         """"""
         return cast(StyleItem, self._item_info.item_type)
@@ -402,12 +406,12 @@ class ArrayOfTablesDescriptor(AttributeDescriptor):
     tables.
 
     Inherits properties from `AttributeDescriptor`:
-    - parent_type
-    - name
-    - hierarchy
-    - attribute_position
-    - container_position
-    - from_aot
+    - `parent_type`
+    - `name`
+    - `hierarchy`
+    - `attribute_position`
+    - `container_position`
+    - `from_aot`
 
     Attributes:
         item_type (`AoTItem`): A `AoTItem` instance, corresponding to a
@@ -439,6 +443,20 @@ class ArrayOfTablesDescriptor(AttributeDescriptor):
     def tables(self) -> Dict[str, List[TableDescriptor]]:
         """"""
         return self._tables
+    
+    def num_tables(self, hierarchy: Optional[str] = None) -> int:
+        """"""
+        if hierarchy is None:
+            num_tables = 0
+            for tables in self._tables.values():
+                num_tables += len(tables)
+            return num_tables
+        else:
+            tables = self.tables.get(hierarchy, None)
+            if tables is not None:
+                return len(tables)
+            else:
+                return 0
 
     def _get_table(self, hierarchy: str) -> TableDescriptor:
         """"""
