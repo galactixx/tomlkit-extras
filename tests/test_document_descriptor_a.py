@@ -14,62 +14,6 @@ from tests._utils import (
     TableDescriptorTestCase
 )
 
-MEMBERS_FIELD_DESCRIPTOR_ONE = FieldDescriptorTestCase(
-    'field',
-    'table',
-    'name',
-    'members.name',
-    10,
-    1,
-    1,
-    'Alice',
-    None,
-    True
-)
-
-MEMBERS_FIELD_DESCRIPTOR_TWO = FieldDescriptorTestCase(
-    'field',
-    'table',
-    'name',
-    'members.name',
-    19,
-    1,
-    1,
-    'Bob',
-    None,
-    True
-)
-
-MEMBERS_TABLE_DESCRIPTOR_ONE = TableDescriptorTestCase(
-    'table',
-    'array-of-tables',
-    'members',
-    'members',
-    9,
-    1,
-    1,
-    None,
-    True,
-    [
-        MEMBERS_FIELD_DESCRIPTOR_ONE
-    ]
-)
-
-MEMBERS_TABLE_DESCRIPTOR_TWO = TableDescriptorTestCase(
-    'table',
-    'array-of-tables',
-    'members',
-    'members',
-    18,
-    2,
-    2,
-    None,
-    True,
-    [
-        MEMBERS_FIELD_DESCRIPTOR_TWO
-    ]
-)
-
 @pytest.fixture(scope='session')
 def toml_a_document() -> TOMLDocumentDescriptor:
     """"""
@@ -89,7 +33,7 @@ def test_toml_a_statistics(toml_a_document: TOMLDocumentDescriptor) -> None:
 
 
 @pytest.mark.parametrize(
-    'descriptor',
+    'test_case',
     [
         StyleDescriptorTestCase(
             'comment',
@@ -103,17 +47,19 @@ def test_toml_a_statistics(toml_a_document: TOMLDocumentDescriptor) -> None:
     ]
 )
 def test_toml_a_style_descriptors(
-    descriptor: StyleDescriptorTestCase, toml_a_document: TOMLDocumentDescriptor
+    test_case: StyleDescriptorTestCase, toml_a_document: TOMLDocumentDescriptor
 ) -> None:
     """"""
-    styling_descriptors = toml_a_document.get_styling(styling=descriptor.style)
+    styling_descriptors = toml_a_document.get_styling(
+        styling=test_case.style, hierarchy=test_case.hierarchy
+    )
     assert len(styling_descriptors) == 1
 
-    descriptor.validate_descriptor(descriptor=styling_descriptors[0])
+    test_case.validate_descriptor(descriptor=styling_descriptors[0])
 
 
 @pytest.mark.parametrize(
-    'descriptor',
+    'test_case',
     [
         FieldDescriptorTestCase(
             'field',
@@ -142,11 +88,11 @@ def test_toml_a_style_descriptors(
     ]
 )
 def test_toml_a_field_descriptors(
-    descriptor: FieldDescriptorTestCase, toml_a_document: TOMLDocumentDescriptor
+    test_case: FieldDescriptorTestCase, toml_a_document: TOMLDocumentDescriptor
 ) -> None:
     """"""
-    field_descriptor = toml_a_document.get_field(hierarchy=descriptor.hierarchy)
-    descriptor.validate_descriptor(descriptor=field_descriptor)
+    field_descriptor = toml_a_document.get_field(hierarchy=test_case.hierarchy)
+    test_case.validate_descriptor(descriptor=field_descriptor)
 
 
 @pytest.mark.parametrize(
@@ -155,8 +101,30 @@ def test_toml_a_field_descriptors(
         ArrayItemsTestCase(
             hierarchy='members.name',
             test_cases=[
-                MEMBERS_FIELD_DESCRIPTOR_ONE,
-                MEMBERS_FIELD_DESCRIPTOR_TWO
+                FieldDescriptorTestCase(
+                    'field',
+                    'table',
+                    'name',
+                    'members.name',
+                    10,
+                    1,
+                    1,
+                    'Alice',
+                    None,
+                    True
+                ),
+                FieldDescriptorTestCase(
+                    'field',
+                    'table',
+                    'name',
+                    'members.name',
+                    19,
+                    1,
+                    1,
+                    'Bob',
+                    None,
+                    True
+                )
             ]
         )
     ]
@@ -180,8 +148,30 @@ def test_toml_a_array_field_descriptors(
         ArrayItemsTestCase(
             hierarchy='members',
             test_cases=[
-                MEMBERS_TABLE_DESCRIPTOR_ONE,
-                MEMBERS_TABLE_DESCRIPTOR_TWO
+                TableDescriptorTestCase(
+                    'table',
+                    'array-of-tables',
+                    'members',
+                    'members',
+                    9,
+                    1,
+                    1,
+                    None,
+                    True,
+                    1
+                ),
+                TableDescriptorTestCase(
+                    'table',
+                    'array-of-tables',
+                    'members',
+                    'members',
+                    18,
+                    2,
+                    2,
+                    None,
+                    True,
+                    1
+                )
             ]
         )
     ]
@@ -214,16 +204,13 @@ def test_toml_a_array_table_descriptors(
                     3,
                     5,
                     False,
-                    [
-                        MEMBERS_TABLE_DESCRIPTOR_ONE,
-                        MEMBERS_TABLE_DESCRIPTOR_TWO
-                    ]
+                    2
                 )
             ]
         )
     ]
 )
-def test_toml_a_array_table_descriptors(
+def test_toml_a_array_descriptors(
     test_case: ArrayItemsTestCase, toml_a_document: TOMLDocumentDescriptor
 ) -> None:
     """"""

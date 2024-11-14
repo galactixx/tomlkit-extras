@@ -116,9 +116,8 @@ class TableDescriptorTestCase(AbstractTestCase):
     comment: Optional[CommentDescriptor]
     from_aot: bool
 
-    # Field test cases that will be iterated through and validated
-    # separately
-    fields: List[FieldDescriptorTestCase]
+    # Number of fields expected to be contained in array
+    fields: int
 
     def validate_descriptor(self, descriptor: TableDescriptor) -> None:
         """"""
@@ -134,17 +133,10 @@ class TableDescriptorTestCase(AbstractTestCase):
         assert descriptor.container_position == self.container_position
         assert descriptor.comment == self.comment
         assert descriptor.from_aot == self.from_aot
-
-        # Iterate thorugh every field in contained in list of fields expected
-        # to be contained within the table
-        for field in self.fields:
-            field_descriptor = descriptor.fields.get(field.name, None)
-            assert field_descriptor is not None
-            field.validate_descriptor(descriptor=field_descriptor)
         
         # Ensure the number of fields match (in case there are extra fields
         # in extracted descriptor)
-        assert len(self.fields) == descriptor.num_fields
+        assert self.fields == descriptor.num_fields
 
 
 @dataclass
@@ -159,9 +151,8 @@ class AoTDescriptorTestCase(AbstractTestCase):
     container_position: int
     from_aot: bool
 
-    # Table test cases that will be iterated through and validated
-    # separately
-    tables: List[TableDescriptorTestCase]
+    # Number of tables expected to be contained in array
+    tables: int
 
     def validate_descriptor(self, descriptor: ArrayOfTablesDescriptor) -> None:
         """"""
@@ -177,13 +168,6 @@ class AoTDescriptorTestCase(AbstractTestCase):
         assert descriptor.container_position == self.container_position
         assert descriptor.from_aot == self.from_aot
 
-        # Iterate thorugh every table in contained in list of tables expected
-        # to be contained within the array of tables
-        for idx, table in enumerate(self.tables):
-            table_descriptors = descriptor.tables.get(table.hierarchy, None)
-            assert table_descriptors is not None
-            table.validate_descriptor(descriptor=table_descriptors[idx])
-        
         # Ensure the number of tables match (in case there are extra tables
         # in extracted descriptor)
-        assert len(self.tables) == descriptor.num_tables()
+        assert self.tables == descriptor.num_tables()

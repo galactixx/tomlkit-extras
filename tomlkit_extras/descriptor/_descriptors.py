@@ -445,7 +445,20 @@ class ArrayOfTablesDescriptor(AttributeDescriptor):
         return self._tables
     
     def num_tables(self, hierarchy: Optional[str] = None) -> int:
-        """"""
+        """
+        Retrieves the number of tables within the array that is associated
+        with a specific hierarchy.
+
+        If no hierarchy is provided, then defaults to None. In this case,
+        all tables will be counted and result returned.
+
+        Args:
+            hierarchy (str | None): A string representation of a TOML hierarchy.
+                Defaults to None.
+        
+        Returns:
+            int: An integer representing the number of tables.
+        """
         if hierarchy is None:
             num_tables = 0
             for tables in self._tables.values():
