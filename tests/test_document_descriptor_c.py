@@ -1,24 +1,12 @@
 import pytest
 
-from tomlkit import TOMLDocument
-from tomlkit_extras import (
-    load_toml_file,
-    TOMLDocumentDescriptor
-)
+from tomlkit_extras import TOMLDocumentDescriptor
 
-from tests._utils import (
+from tests.utils import (
     FieldDescriptorTestCase,
     StyleDescriptorTestCase,
     TableDescriptorTestCase
 )
-
-@pytest.fixture(scope='session')
-def toml_c_document() -> TOMLDocumentDescriptor:
-    """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
-    document_descriptor = TOMLDocumentDescriptor(toml_source=toml_document)
-    return document_descriptor
-
 
 def test_toml_c_statistics(toml_c_document: TOMLDocumentDescriptor) -> None:
     """"""
