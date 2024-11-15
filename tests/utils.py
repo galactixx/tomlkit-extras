@@ -26,14 +26,14 @@ from tomlkit_extras._typing import (
     TableItem
 )
 
-@dataclass
+@dataclass(frozen=True)
 class ArrayItemsTestCase:
     """"""
     hierarchy: str
     test_cases: List[AbstractTestCase]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AbstractTestCase(ABC):
     """"""
     def standardize_hierarchy(self, hierarchy: Optional[str]) -> Optional[Hierarchy]:
@@ -49,7 +49,7 @@ class AbstractTestCase(ABC):
         raise NotImplementedError("This method must be overridden by subclasses")
 
 
-@dataclass
+@dataclass(frozen=True)
 class StyleDescriptorTestCase(AbstractTestCase):
     """"""
     item_type: StyleItem
@@ -73,7 +73,7 @@ class StyleDescriptorTestCase(AbstractTestCase):
         assert descriptor.style == self.style
 
 
-@dataclass
+@dataclass(frozen=True)
 class FieldDescriptorTestCase(AbstractTestCase):
     """"""
     item_type: FieldItem
@@ -103,7 +103,7 @@ class FieldDescriptorTestCase(AbstractTestCase):
         assert descriptor.value == self.value
 
 
-@dataclass
+@dataclass(frozen=True)
 class TableDescriptorTestCase(AbstractTestCase):
     """"""
     item_type: TableItem
@@ -139,7 +139,7 @@ class TableDescriptorTestCase(AbstractTestCase):
         assert self.fields == descriptor.num_fields
 
 
-@dataclass
+@dataclass(frozen=True)
 class AoTDescriptorTestCase(AbstractTestCase):
     """"""
     item_type: AoTItem

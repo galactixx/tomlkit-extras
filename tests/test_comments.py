@@ -8,10 +8,9 @@ from typing import (
 import pytest
 from tomlkit import items, TOMLDocument
 from tomlkit_extras import (
-    get_attribute_from_toml_source,
-    get_array_field_comment,
     get_comments,
-    load_toml_file
+    get_array_field_comment,
+    get_attribute_from_toml_source
 )
 
 from tomlkit_extras._typing import ContainerComment
@@ -26,14 +25,14 @@ def load_c_dev_field_array(load_toml_c: TOMLDocument) -> items.Array:
     return dev_dependencies_array
 
 
-@dataclass
+@dataclass(frozen=True)
 class CommentsTestCase:
     """"""
     hierarchy: str
     comments: Optional[List[ContainerComment]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ArrayCommentTestCase:
     """"""
     item: str
@@ -91,14 +90,16 @@ def test_comments_toml_b(test_case: CommentsTestCase, load_toml_b: TOMLDocument)
     'test_case',
     [
         CommentsTestCase(
-            hierarchy=None, comments=[(1, 1, '# this is a document comment')]
+            hierarchy=None,
+            comments=[(1, 1, '# this is a document comment')]
         ),
         CommentsTestCase(
             hierarchy='tool.ruff.lint',
             comments=[(1, 3, '# this is the first comment for lint table')]
         ),
         CommentsTestCase(
-            hierarchy='tool.ruff', comments=[(1, 2, '# this is a tool.ruff comment')]
+            hierarchy='tool.ruff',
+            comments=[(1, 2, '# this is a tool.ruff comment')]
         ),
         CommentsTestCase(
             hierarchy='tool.rye', comments=None

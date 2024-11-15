@@ -1,164 +1,171 @@
-from typing import cast
+from dataclasses import dataclass
+import copy
+from typing import (
+    Any,
+    Literal
+)
 
-from tomlkit import items, TOMLDocument
+import pytest
+from tomlkit import TOMLDocument
 from tomlkit_extras import (
     attribute_insert,
     container_insert,
     general_insert,
     get_attribute_from_toml_source,
-    get_positions,
-    load_toml_file
+    get_positions
 )
 
-def _inserted_position_test(
-    attribute_pos: int, container_pos: int, hierarchy: str, toml_document: TOMLDocument
+@dataclass(frozen=True)
+class InsertionTestCase:
+    """"""
+    insertion: Literal['general', 'attribute', 'container']
+    hierarchy: str
+    value: Any
+    attribute: int
+    container: int
+
+
+def validate_insertion(
+    test_case: InsertionTestCase, toml_document: TOMLDocument
 ) -> None:
     """"""
-    attribute_pos, container_pos = get_positions(hierarchy=hierarchy, toml_source=toml_document)
+    # Generate the common insertion arguments
+    insertion_args = {
+        'hierarchy': test_case.hierarchy,
+        'toml_source': toml_document,
+        'insertion': test_case.value
+    }
+
+    # Based on insertion type, perform a specific insertion
+    if test_case.insertion == 'general':
+        general_insert(**insertion_args)
+    elif test_case.insertion == 'attribute':
+        attribute_insert(**insertion_args, position=test_case.attribute)
+    else:
+        container_insert(**insertion_args, position=test_case.container)
+
+    # After insertion, retrieve value that was inserted and verify
+    # that the value was indeed inserted
+    inserted_attribute = get_attribute_from_toml_source(
+        hierarchy=test_case.hierarchy, toml_source=toml_document
+    )
+    assert inserted_attribute == test_case.value
+    
+    # Retrieve and validate the positions of the value inserted
+    attribute_pos, container_pos = get_positions(
+        hierarchy=test_case.hierarchy, toml_source=toml_document
+    )
     assert attribute_pos == attribute_pos
     assert container_pos == container_pos
 
 
-def test_insertion_into_toml_a() -> None:
+@pytest.fixture(scope='module')
+def load_toml_a_insert(load_toml_a: TOMLDocument) -> TOMLDocument:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
-
-    # Insert a single field in the top-level document space
-    HIERARCHY_PORT = 'port'
-    general_insert(
-        hierarchy=HIERARCHY_PORT, toml_source=toml_document, insertion=443
-    )
-    assert toml_document[HIERARCHY_PORT] == 443
-
-    # The expectation is that the field should be in an attribute position of 1, since there are no
-    # other fields in the top-level document space. And should be in a container position of 2
-    _inserted_position_test(
-        attribute_pos=1, container_pos=2, hierarchy=HIERARCHY_PORT, toml_document=toml_document
-    )
-
-    HIERARCHY_TITLE = 'title'
-    attribute_insert(
-        hierarchy=HIERARCHY_TITLE, toml_source=toml_document, insertion="Example TOML Document", position=1
-    )
-    assert toml_document[HIERARCHY_TITLE] == "Example TOML Document"
-    _inserted_position_test(
-        attribute_pos=1, container_pos=1, hierarchy=HIERARCHY_TITLE, toml_document=toml_document
-    )
-
-    # Insert right after the comment "# this is a document comment"
-    HIERARCHY_HOSTS = 'hosts'
-    container_insert(
-        hierarchy=HIERARCHY_HOSTS, toml_source=toml_document, insertion=["alpha", "omega", "beta"], position=2
-    )
-    assert toml_document[HIERARCHY_HOSTS] == ["alpha", "omega", "beta"]
-    _inserted_position_test(
-        attribute_pos=2, container_pos=2, hierarchy=HIERARCHY_HOSTS, toml_document=toml_document
-    )
-
-    # Perform a general insertion into the project table, should be inserted
-    # right after the "name" field
-    HIERARCHY_PROJECT_VERSION = 'project.version'
-    general_insert(
-        hierarchy=HIERARCHY_PROJECT_VERSION, toml_source=toml_document, insertion="0.1.0"
-    )
-    project_version = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_PROJECT_VERSION, toml_source=toml_document
-    )
-    assert isinstance(project_version, items.String)
-    assert project_version.unwrap() == '0.1.0'
-    _inserted_position_test(
-        attribute_pos=2, container_pos=2, hierarchy=HIERARCHY_PROJECT_VERSION, toml_document=toml_document
-    )
-
-    HIERARCHY_PROJECT_README = 'project.readme'
-
-    # Perform an insertion of field in between the "name" and "version" fields
-    attribute_insert(
-        hierarchy=HIERARCHY_PROJECT_README, toml_source=toml_document, insertion="README.md", position=2
-    )
-    project_readme = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_PROJECT_README, toml_source=toml_document
-    )
-    assert isinstance(project_readme, items.String)
-    assert project_readme.unwrap() == 'README.md'
-    _inserted_position_test(
-        attribute_pos=2, container_pos=2, hierarchy=HIERARCHY_PROJECT_README, toml_document=toml_document
-    )
+    return copy.deepcopy(load_toml_a)
 
 
-def test_insertion_into_toml_b() -> None:
+@pytest.fixture(scope='module')
+def load_toml_b_insert(load_toml_b: TOMLDocument) -> TOMLDocument:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
-
-    HIERARCHY_TITLE = 'title'
-    attribute_insert(
-        hierarchy=HIERARCHY_TITLE, toml_source=toml_document, insertion="Example TOML Document", position=2
-    )
-    assert toml_document[HIERARCHY_TITLE] == "Example TOML Document"
-    _inserted_position_test(
-        attribute_pos=2, container_pos=2, hierarchy=HIERARCHY_TITLE, toml_document=toml_document
-    )
-
-    # Insert the "hosts" field right after the first whitespace but before the first comment
-    HIERARCHY_HOSTS = 'hosts'
-    container_insert(
-        hierarchy=HIERARCHY_HOSTS, toml_source=toml_document, insertion=["alpha", "omega", "beta"], position=4
-    )
-    assert toml_document[HIERARCHY_HOSTS] == ["alpha", "omega", "beta"]
-    _inserted_position_test(
-        attribute_pos=3, container_pos=4, hierarchy=HIERARCHY_HOSTS, toml_document=toml_document
-    )
-
-    # Insert the "hosts" field right after the first whitespace but before the first comment
-    HIERARCHY_NAME = 'name'
-    container_insert(
-        hierarchy=HIERARCHY_NAME, toml_source=toml_document, insertion="Tom Preston-Werner", position=6
-    )
-    assert toml_document[HIERARCHY_NAME] == "Tom Preston-Werner"
-    _inserted_position_test(
-        attribute_pos=4, container_pos=6, hierarchy=HIERARCHY_NAME, toml_document=toml_document
-    )
-
-    # Insert the "hosts" field right after the first whitespace but before the first comment
-    HIERARCHY_RUFF_LINT = 'tool.ruff.lint.cache'
-    container_insert(
-        hierarchy=HIERARCHY_RUFF_LINT, toml_source=toml_document, insertion=True, position=2
-    )
-    ruff_lint_cache = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_RUFF_LINT, toml_source=toml_document
-    )
-    assert not isinstance(ruff_lint_cache, list) and cast(bool, ruff_lint_cache) == True
-    _inserted_position_test(
-        attribute_pos=1, container_pos=2, hierarchy=HIERARCHY_RUFF_LINT, toml_document=toml_document
-    )
+    return copy.deepcopy(load_toml_b)
 
 
-def test_insertion_into_toml_c() -> None:
+@pytest.fixture(scope='module')
+def load_toml_c_insert(load_toml_c: TOMLDocument) -> TOMLDocument:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
+    return copy.deepcopy(load_toml_c)
 
-    HIERARCHY_PYDOCTYLE_SELECT = 'tool.ruff.lint.pydocstyle.select'
-    attribute_insert(
-        hierarchy=HIERARCHY_PYDOCTYLE_SELECT, toml_source=toml_document, insertion=["D200"], position=1
-    )
-    pydocstyle_select = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_PYDOCTYLE_SELECT, toml_source=toml_document
-    )
-    assert isinstance(pydocstyle_select, items.Array)
-    assert pydocstyle_select.unwrap() == ["D200"]
-    _inserted_position_test(
-        attribute_pos=1, container_pos=1, hierarchy=HIERARCHY_PYDOCTYLE_SELECT, toml_document=toml_document
-    )
 
-    HIERARCHY_LINT_EXCLUDE = 'tool.ruff.lint.exclude'
-    container_insert(
-        hierarchy=HIERARCHY_LINT_EXCLUDE, toml_source=toml_document, insertion=["tests/", "docs/conf.py"], position=3
-    )
-    ruff_lint_exclude = get_attribute_from_toml_source(
-        hierarchy=HIERARCHY_LINT_EXCLUDE, toml_source=toml_document
-    )
-    assert isinstance(ruff_lint_exclude, items.Array)
-    assert ruff_lint_exclude.unwrap() == ["tests/", "docs/conf.py"]
-    _inserted_position_test(
-        attribute_pos=2, container_pos=3, hierarchy=HIERARCHY_LINT_EXCLUDE, toml_document=toml_document
-    )
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        InsertionTestCase('general', 'port', 443, 1, 2),
+        InsertionTestCase('general', 'project.version', '0.1.0', 2, 2),
+        InsertionTestCase(
+            'attribute',
+            'title',
+            'Example TOML Document',
+            1,
+            1
+        ),
+        InsertionTestCase(
+            'attribute',
+            'project.readme',
+            'README.md',
+            2,
+            2
+        ),
+        InsertionTestCase(
+            'container',
+            'hosts',
+            ["alpha", "omega", "beta"],
+            2,
+            2
+        )
+    ]
+)
+def test_insertion_toml_a(
+    test_case: InsertionTestCase, load_toml_a_insert: TOMLDocument
+) -> None:
+    """"""
+    validate_insertion(test_case=test_case, toml_document=load_toml_a_insert)
+
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        InsertionTestCase('attribute', 'title', 'Example TOML Document', 2, 2),
+        InsertionTestCase(
+            'container',
+            'hosts',
+            ["alpha", "omega", "beta"],
+            3,
+            4
+        ),
+        InsertionTestCase(
+            'container',
+            'name',
+            'Tom Preston-Werner',
+            4,
+            6
+        ),
+        InsertionTestCase(
+            'container',
+            'tool.ruff.lint.cache',
+            True,
+            1,
+            2
+        )
+    ]
+)
+def test_insertion_toml_b(
+    test_case: InsertionTestCase, load_toml_b_insert: TOMLDocument
+) -> None:
+    """"""
+    validate_insertion(test_case=test_case, toml_document=load_toml_b_insert)
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        InsertionTestCase(
+            'attribute',
+            'tool.ruff.lint.pydocstyle.select',
+            ["D200"],
+            1,
+            1
+        ),
+        InsertionTestCase(
+            'container',
+            'tool.ruff.lint.exclude',
+            ["tests/", "docs/conf.py"],
+            2,
+            3
+        )
+    ]
+)
+def test_insertion_toml_c(
+    test_case: InsertionTestCase, load_toml_c_insert: TOMLDocument
+) -> None:
+    """"""
+    validate_insertion(test_case=test_case, toml_document=load_toml_c_insert)
