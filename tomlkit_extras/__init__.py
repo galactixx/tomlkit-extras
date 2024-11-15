@@ -3,6 +3,7 @@ from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras.toml._delete import delete_from_toml_source
 from tomlkit_extras.descriptor._descriptor import TOMLDocumentDescriptor
 from tomlkit_extras.toml._update import update_toml_source
+from tomlkit_extras._utils import detect_out_of_order_tables
 from tomlkit_extras.toml._comments import (
     get_array_field_comment,
     get_comments
@@ -45,6 +46,7 @@ __all__ = [
     'delete_from_toml_source',
     'TOMLDocumentDescriptor',
     'update_toml_source',
+    'detect_out_of_order_tables',
     'get_array_field_comment',
     'get_comments',
     'StructureComment',

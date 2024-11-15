@@ -1,9 +1,16 @@
 import copy
-from typing import Union
+from dataclasses import dataclass
+from typing import (
+    List,
+    Optional,
+    Tuple
+)
 
+import pytest
 from tomlkit import items, TOMLDocument
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit_extras import (
+    detect_out_of_order_tables,
     fix_out_of_order_table,
     fix_out_of_order_tables,
     get_attribute_from_toml_source,
@@ -11,28 +18,46 @@ from tomlkit_extras import (
     load_toml_file
 )
 
-VALID_TYPES = (TOMLDocument, items.Table, items.AoT, OutOfOrderTableProxy)
+from tomlkit_extras._typing import ContainerComment
 
-def _detect_any_out_of_order_tables(
-    toml_source: Union[TOMLDocument, items.Table, items.AoT, OutOfOrderTableProxy]
-) -> bool:
+@pytest.fixture(scope='function')
+def toml_c_document() -> TOMLDocument:
     """"""
-    if isinstance(toml_source, (TOMLDocument, items.Table)):
-        return any(
-            _detect_any_out_of_order_tables(toml_source=document_value)
-            for _, document_value in toml_source.items() if isinstance(document_value, VALID_TYPES)
-        )
-    elif isinstance(toml_source, items.AoT):
-        return any(
-            _detect_any_out_of_order_tables(toml_source=aot_table)
-            for aot_table in toml_source
-        )
-    else:
-        return True
+    return load_toml_file(toml_source='./tests/examples/toml_c.toml')
 
 
-def _out_of_order_fix_test_and_return(hierarchy: str, toml_document: TOMLDocument) -> items.Table:
+@pytest.fixture(scope='function')
+def toml_d_document() -> TOMLDocument:
     """"""
+    return load_toml_file(toml_source='./tests/examples/toml_d.toml')
+
+
+@pytest.fixture(scope='function')
+def toml_e_document() -> TOMLDocument:
+    """"""
+    return load_toml_file(toml_source='./tests/examples/toml_e.toml')
+
+
+@dataclass(frozen=True)
+class OutOfOrderTestCase:
+    """"""
+    hierarchy: Optional[str]
+    tables: List[Tuple[str, List[ContainerComment]]]
+
+    def validate_comments_access(self, fixed_table: items.Table) -> None:
+        """
+        # Iterate through each table in test case to ensure comments can be accessed.
+        """
+        # Iterate through each table in test case to ensure comments can be accessed
+        for hierarchy, table in self.tables:
+            table_comments = get_comments(toml_source=fixed_table, hierarchy=hierarchy)
+            assert table == table_comments
+
+
+def validate_out_of_order_table(hierarchy: str, toml_document: TOMLDocument) -> items.Table:
+    """
+    Fix the out-of-order table and ensure true values/structure has not changed.
+    """
     out_of_order_table = get_attribute_from_toml_source(
         hierarchy=hierarchy, toml_source=toml_document
     )
@@ -46,89 +71,100 @@ def _out_of_order_fix_test_and_return(hierarchy: str, toml_document: TOMLDocumen
     return fixed_order_table
 
 
-def test_out_of_order_toml_c() -> None:
-    """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
-
-    # Fix the out-of-order table and ensure true values/structure has not changed
-    fixed_order_table = _out_of_order_fix_test_and_return(
-        hierarchy='tool.ruff', toml_document=toml_document
-    )
-
-    # Now that the values have been checked, ensure that the comments for each table
-    # are as expected, and have remained unchanged/altered
-    tool_ruff_table_comments = get_comments(toml_source=fixed_order_table)
-    assert tool_ruff_table_comments == [(1, 2, '# this is a tool.ruff comment')]
-
-    # Check for the nested tool.ruff.lint table as well
-    tool_ruff_lint_table_comments = get_comments(toml_source=fixed_order_table, hierarchy='lint')
-    assert tool_ruff_lint_table_comments == [(1, 3, '# this is the first comment for lint table')]
-
+def validate_out_of_order_tables(toml_document: TOMLDocument) -> None:
+    """# Fix the out-order-table from the TOML document in place."""
     # Fix the out-order-table from the TOML document in place
     toml_document_original = copy.deepcopy(toml_document)
     fix_out_of_order_tables(toml_source=toml_document)
 
     assert toml_document_original == toml_document
-    assert not _detect_any_out_of_order_tables(toml_source=toml_document)
+    assert not detect_out_of_order_tables(toml_source=toml_document)
 
 
-def test_out_of_order_toml_d() -> None:
+def test_fix_all_out_of_order_toml_c(toml_c_document: TOMLDocument) -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_d.toml')
-
-    # Fix the out-of-order table and ensure true values/structure has not changed
-    fixed_order_table = _out_of_order_fix_test_and_return(
-        hierarchy='servers', toml_document=toml_document
-    )
-
-    # Now that the values have been checked, ensure that the comments for each table
-    # are as expected, and have remained unchanged/altered
-    servers_alpha_comments = get_comments(toml_source=fixed_order_table, hierarchy='alpha')
-    assert servers_alpha_comments == [(1, 3, '# Out-of-order table')]
-
-    servers_beta_comments = get_comments(toml_source=fixed_order_table, hierarchy='beta')
-    assert servers_beta_comments == [(1, 1, '# Another out-of-order table')]
-
-    # Fix the out-order-table from the TOML document in place
-    toml_document_original = copy.deepcopy(toml_document)
-    fix_out_of_order_tables(toml_source=toml_document)
-
-    assert toml_document_original == toml_document
-    assert not _detect_any_out_of_order_tables(toml_source=toml_document)
+    validate_out_of_order_tables(toml_document=toml_c_document)
 
 
-def test_out_of_order_toml_e() -> None:
+def test_fix_all_out_of_order_toml_d(toml_d_document: TOMLDocument) -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_e.toml')
+    validate_out_of_order_tables(toml_document=toml_d_document)
 
-    # Fix the out-of-order tables and ensure true values/structure has not changed
-    project_fixed_order_table = _out_of_order_fix_test_and_return(
-        hierarchy='project', toml_document=toml_document
+
+def test_fix_all_out_of_order_toml_e(toml_e_document: TOMLDocument) -> None:
+    """"""
+    validate_out_of_order_tables(toml_document=toml_e_document)
+
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        OutOfOrderTestCase(
+            hierarchy='tool.ruff',
+            tables=[
+                (None, [(1, 2, '# this is a tool.ruff comment')]),
+                ('lint', [(1, 3, '# this is the first comment for lint table')])
+            ]
+        )
+    ]
+)
+def test_fix_out_of_order_toml_c(
+    test_case: OutOfOrderTestCase, toml_c_document: TOMLDocument
+) -> None:
+    """"""
+    fixed_order_table = validate_out_of_order_table(
+        hierarchy=test_case.hierarchy, toml_document=toml_c_document
     )
-    servers_fixed_order_table = _out_of_order_fix_test_and_return(
-        hierarchy='servers', toml_document=toml_document
+    test_case.validate_comments_access(fixed_table=fixed_order_table)
+
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        OutOfOrderTestCase(
+            hierarchy='servers',
+            tables=[
+                ('alpha', [(1, 3, '# Out-of-order table')]),
+                ('beta', [(1, 1, '# Another out-of-order table')])
+            ]
+        )
+    ]
+)
+def test_fix_out_of_order_toml_d(
+    test_case: OutOfOrderTestCase, toml_d_document: TOMLDocument
+) -> None:
+    """"""
+    fixed_order_table = validate_out_of_order_table(
+        hierarchy=test_case.hierarchy, toml_document=toml_d_document
     )
+    test_case.validate_comments_access(fixed_table=fixed_order_table)
 
-    # Now that the values have been checked, ensure that the comments for each table
-    # are as expected, and have remained unchanged/altered
-    project_details_comments = get_comments(toml_source=project_fixed_order_table, hierarchy='details')
-    assert project_details_comments == [(1, 1, '# Awkwardly nested table (sub-section before main section)')]
 
-    project_authors_comments = get_comments(toml_source=project_fixed_order_table, hierarchy='details.authors')
-    assert project_authors_comments == [(1, 1, '# Nested table here is disjointed')]
-
-    servers_comments = get_comments(toml_source=servers_fixed_order_table)
-    assert servers_comments == [(1, 1, '# This table is nested under servers, but details are spread out')]
-
-    servers_beta_comments = get_comments(toml_source=servers_fixed_order_table, hierarchy='beta')
-    assert servers_beta_comments == [(1, 3, '# This nesting is awkward')]
-
-    servers_beta_comments = get_comments(toml_source=servers_fixed_order_table, hierarchy='alpha.metadata')
-    assert servers_beta_comments == [(1, 4, '# Too far from papa')]
-
-    # Fix the out-order-table from the TOML document in place
-    toml_document_original = copy.deepcopy(toml_document)
-    fix_out_of_order_tables(toml_source=toml_document)
-
-    assert toml_document_original == toml_document
-    assert not _detect_any_out_of_order_tables(toml_source=toml_document)
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        OutOfOrderTestCase(
+            hierarchy='project',
+            tables=[
+                ('details', [(1, 1, '# Awkwardly nested table (sub-section before main section)')]),
+                ('details.authors', [(1, 1, '# Nested table here is disjointed')])
+            ]
+        ),
+        OutOfOrderTestCase(
+            hierarchy='servers',
+            tables=[
+                (None, [(1, 1, '# This table is nested under servers, but details are spread out')]),
+                ('beta', [(1, 3, '# This nesting is awkward')]),
+                ('alpha.metadata', [(1, 4, '# Too far from papa')])
+            ]
+        )
+    ]
+)
+def test_fix_out_of_order_toml_e(
+    test_case: OutOfOrderTestCase, toml_e_document: TOMLDocument
+) -> None:
+    """"""
+    fixed_order_table = validate_out_of_order_table(
+        hierarchy=test_case.hierarchy, toml_document=toml_e_document
+    )
+    test_case.validate_comments_access(fixed_table=fixed_order_table)

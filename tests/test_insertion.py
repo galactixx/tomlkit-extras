@@ -81,7 +81,13 @@ def load_toml_c_insert(load_toml_c: TOMLDocument) -> TOMLDocument:
     'test_case',
     [
         InsertionTestCase('general', 'port', 443, 1, 2),
-        InsertionTestCase('general', 'project.version', '0.1.0', 2, 2),
+        InsertionTestCase(
+            'general',
+            'project.version',
+            '0.1.0',
+            2,
+            2
+        ),
         InsertionTestCase(
             'attribute',
             'title',
@@ -115,7 +121,13 @@ def test_insertion_toml_a(
 @pytest.mark.parametrize(
     'test_case',
     [
-        InsertionTestCase('attribute', 'title', 'Example TOML Document', 2, 2),
+        InsertionTestCase(
+            'attribute',
+            'title',
+            'Example TOML Document',
+            2, 
+            2
+        ),
         InsertionTestCase(
             'container',
             'hosts',
@@ -144,6 +156,7 @@ def test_insertion_toml_b(
 ) -> None:
     """"""
     validate_insertion(test_case=test_case, toml_document=load_toml_b_insert)
+
 
 @pytest.mark.parametrize(
     'test_case',
