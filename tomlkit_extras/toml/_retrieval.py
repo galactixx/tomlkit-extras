@@ -117,7 +117,7 @@ def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[in
 def get_attribute_from_toml_source(
     hierarchy: TOMLHierarchy,
     toml_source: TOMLFieldSource,
-    array: bool = True,
+    array: bool = False,
     fix_order: Literal[True] = True
 ) -> Union[items.Item, List[items.Item]]:
     ...
@@ -127,7 +127,7 @@ def get_attribute_from_toml_source(
 def get_attribute_from_toml_source(
     hierarchy: TOMLHierarchy,
     toml_source: TOMLFieldSource,
-    array: bool = True,
+    array: bool = False,
     fix_order: Literal[False] = False
 ) -> Retrieval:
     ...
@@ -137,7 +137,7 @@ def get_attribute_from_toml_source(
 def get_attribute_from_toml_source(
     hierarchy: TOMLHierarchy,
     toml_source: TOMLFieldSource,
-    array: bool = True,
+    array: bool = False,
     fix_order: bool = True
 ) -> object:
     ...
@@ -146,7 +146,7 @@ def get_attribute_from_toml_source(
 def get_attribute_from_toml_source(
     hierarchy: TOMLHierarchy,
     toml_source: TOMLFieldSource,
-    array: bool = True,
+    array: bool = False,
     fix_order: bool = False
 ) -> Retrieval:
     """
@@ -208,7 +208,7 @@ def is_toml_instance(
     *,
     hierarchy: TOMLHierarchy,
     toml_source: TOMLFieldSource,
-    array: bool = True,
+    array: bool = False,
     fix_order: bool = False
 ) -> bool:
     """
@@ -226,7 +226,7 @@ def is_toml_instance(
         array (bool, optional): If set to False, when a tomlkit.items.AoT instance
             is to be tested, each table in the array is tested for type equality.
             Otherwise it will be the AoT instance itself that is checked. Defaults
-            to True.
+            to False.
         fix_order (bool, optional): If set to True, it will fix any out-of-order
             tables before checking. Defaults to False.
 

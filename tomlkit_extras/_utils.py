@@ -33,7 +33,12 @@ _VALID_TYPES = (TOMLDocument, items.Table, items.AoT, OutOfOrderTableProxy)
 
 def detect_out_of_order_tables(toml_source: TOMLSource) -> bool:
     """
+    Given a `TOMLSource` instance, will traverse through the structure
+    and determine if there are any out-of-order tables represented by
+    instances of `tomlkit.container.OutOfOrderTableProxy`.
     
+    Returns a boolean that is True if there are out-of-order tables and
+    False if not. 
 
     Args:
         toml_source (`TOMLSource`): A `TOMLSource` instance.
