@@ -2,8 +2,10 @@ import copy
 from dataclasses import dataclass
 from typing import (
     List,
+    Literal,
     Optional,
-    Tuple
+    Tuple,
+    TypeAlias
 )
 
 import pytest
@@ -19,6 +21,8 @@ from tomlkit_extras import (
 )
 
 from tomlkit_extras._typing import ContainerComment
+
+Fixture: TypeAlias = Literal['toml_c_document', 'toml_d_document', 'toml_e_document']
 
 @pytest.fixture(scope='function')
 def toml_c_document() -> TOMLDocument:
@@ -41,39 +45,18 @@ def toml_e_document() -> TOMLDocument:
 @dataclass(frozen=True)
 class OutOfOrderTestCase:
     """"""
+    fixture: Fixture
     hierarchy: Optional[str]
     tables: List[Tuple[str, List[ContainerComment]]]
 
-    def validate_comments_access(self, fixed_table: items.Table) -> None:
-        """
-        # Iterate through each table in test case to ensure comments can be accessed.
-        """
-        # Iterate through each table in test case to ensure comments can be accessed
-        for hierarchy, table in self.tables:
-            table_comments = get_comments(toml_source=fixed_table, hierarchy=hierarchy)
-            assert table == table_comments
 
-
-def validate_out_of_order_table(hierarchy: str, toml_document: TOMLDocument) -> items.Table:
-    """
-    Fix the out-of-order table and ensure true values/structure has not changed.
-    """
-    out_of_order_table = get_attribute_from_toml_source(
-        hierarchy=hierarchy, toml_source=toml_document
-    )
-    assert isinstance(out_of_order_table, OutOfOrderTableProxy)
-
-    # Fix the out-of-order table and ensure true values/structure has not changed
-    fixed_order_table = fix_out_of_order_table(table=out_of_order_table)
-    assert isinstance(fixed_order_table, items.Table)
-    assert fixed_order_table == out_of_order_table
-
-    return fixed_order_table
-
-
-def validate_out_of_order_tables(toml_document: TOMLDocument) -> None:
+@pytest.mark.parametrize(
+    'fixture', ['toml_c_document', 'toml_d_document', 'toml_e_document']
+)
+def test_fix_all_out_of_order_tables(fixture: Fixture, request: pytest.FixtureRequest) -> None:
     """# Fix the out-order-table from the TOML document in place."""
     # Fix the out-order-table from the TOML document in place
+    toml_document = request.getfixturevalue(fixture)
     toml_document_original = copy.deepcopy(toml_document)
     fix_out_of_order_tables(toml_source=toml_document)
 
@@ -81,78 +64,37 @@ def validate_out_of_order_tables(toml_document: TOMLDocument) -> None:
     assert not detect_out_of_order_tables(toml_source=toml_document)
 
 
-def test_fix_all_out_of_order_toml_c(toml_c_document: TOMLDocument) -> None:
-    """"""
-    validate_out_of_order_tables(toml_document=toml_c_document)
-
-
-def test_fix_all_out_of_order_toml_d(toml_d_document: TOMLDocument) -> None:
-    """"""
-    validate_out_of_order_tables(toml_document=toml_d_document)
-
-
-def test_fix_all_out_of_order_toml_e(toml_e_document: TOMLDocument) -> None:
-    """"""
-    validate_out_of_order_tables(toml_document=toml_e_document)
-
-
 @pytest.mark.parametrize(
     'test_case',
     [
         OutOfOrderTestCase(
-            hierarchy='tool.ruff',
-            tables=[
+            'toml_c_document',
+            'tool.ruff',
+            [
                 (None, [(1, 2, '# this is a tool.ruff comment')]),
                 ('lint', [(1, 3, '# this is the first comment for lint table')])
             ]
-        )
-    ]
-)
-def test_fix_out_of_order_toml_c(
-    test_case: OutOfOrderTestCase, toml_c_document: TOMLDocument
-) -> None:
-    """"""
-    fixed_order_table = validate_out_of_order_table(
-        hierarchy=test_case.hierarchy, toml_document=toml_c_document
-    )
-    test_case.validate_comments_access(fixed_table=fixed_order_table)
-
-
-@pytest.mark.parametrize(
-    'test_case',
-    [
+        ),
         OutOfOrderTestCase(
-            hierarchy='servers',
-            tables=[
+            'toml_d_document',
+            'servers',
+            [
                 ('alpha', [(1, 3, '# Out-of-order table')]),
                 ('beta', [(1, 1, '# Another out-of-order table')])
             ]
-        )
-    ]
-)
-def test_fix_out_of_order_toml_d(
-    test_case: OutOfOrderTestCase, toml_d_document: TOMLDocument
-) -> None:
-    """"""
-    fixed_order_table = validate_out_of_order_table(
-        hierarchy=test_case.hierarchy, toml_document=toml_d_document
-    )
-    test_case.validate_comments_access(fixed_table=fixed_order_table)
-
-
-@pytest.mark.parametrize(
-    'test_case',
-    [
+        ),
         OutOfOrderTestCase(
-            hierarchy='project',
-            tables=[
+            'toml_e_document',
+            'project',
+            [
                 ('details', [(1, 1, '# Awkwardly nested table (sub-section before main section)')]),
                 ('details.authors', [(1, 1, '# Nested table here is disjointed')])
             ]
         ),
         OutOfOrderTestCase(
-            hierarchy='servers',
-            tables=[
+            'toml_e_document',
+            'servers',
+            [
                 (None, [(1, 1, '# This table is nested under servers, but details are spread out')]),
                 ('beta', [(1, 3, '# This nesting is awkward')]),
                 ('alpha.metadata', [(1, 4, '# Too far from papa')])
@@ -160,11 +102,22 @@ def test_fix_out_of_order_toml_d(
         )
     ]
 )
-def test_fix_out_of_order_toml_e(
-    test_case: OutOfOrderTestCase, toml_e_document: TOMLDocument
+def test_fix_out_of_order_table(
+    test_case: OutOfOrderTestCase, request: pytest.FixtureRequest
 ) -> None:
     """"""
-    fixed_order_table = validate_out_of_order_table(
-        hierarchy=test_case.hierarchy, toml_document=toml_e_document
+    toml_document = request.getfixturevalue(test_case.fixture)
+    out_of_order_table = get_attribute_from_toml_source(
+        hierarchy=test_case.hierarchy, toml_source=toml_document
     )
-    test_case.validate_comments_access(fixed_table=fixed_order_table)
+    assert isinstance(out_of_order_table, OutOfOrderTableProxy)
+
+    # Fix the out-of-order table and ensure true values/structure has not changed
+    fixed_table = fix_out_of_order_table(table=out_of_order_table)
+    assert isinstance(fixed_table, items.Table)
+    assert fixed_table == out_of_order_table
+
+    # Iterate through each table in test case to ensure comments can be accessed
+    for hierarchy, table in test_case.tables:
+        table_comments = get_comments(toml_source=fixed_table, hierarchy=hierarchy)
+        assert table == table_comments

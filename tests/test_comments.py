@@ -14,6 +14,7 @@ from tomlkit_extras import (
 )
 
 from tomlkit_extras._typing import ContainerComment
+from tests.typing import FixtureSession
 
 @pytest.fixture(scope='module')
 def load_c_dev_field_array(load_toml_c: TOMLDocument) -> items.Array:
@@ -28,6 +29,7 @@ def load_c_dev_field_array(load_toml_c: TOMLDocument) -> items.Array:
 @dataclass(frozen=True)
 class CommentsTestCase:
     """"""
+    fixture: FixtureSession
     hierarchy: str
     comments: Optional[List[ContainerComment]]
 
@@ -43,72 +45,47 @@ class ArrayCommentTestCase:
     'test_case',
     [
         CommentsTestCase(
-            hierarchy=None, comments=[(1, 1, '# this is a document comment')]
+            'load_toml_a', None, [(1, 1, '# this is a document comment')]
+        ),
+        CommentsTestCase('load_toml_a', 'project', None),
+        CommentsTestCase('load_toml_a', 'details', None),
+        CommentsTestCase('load_toml_a', 'members', None),
+        CommentsTestCase(
+            'load_toml_b', None, [(1, 4, '# this is a document comment')]
         ),
         CommentsTestCase(
-            hierarchy='project', comments=None
-        ),
-        CommentsTestCase(
-            hierarchy='details', comments=None
-        ),
-        CommentsTestCase(
-            hierarchy='members', comments=None
-        )
-    ]
-)
-def test_comments_toml_a(test_case: CommentsTestCase, load_toml_a: TOMLDocument) -> None:
-    """"""
-    comments = get_comments(toml_source=load_toml_a, hierarchy=test_case.hierarchy)
-    assert test_case.comments == comments
-
-
-@pytest.mark.parametrize(
-    'test_case',
-    [
-        CommentsTestCase(
-            hierarchy=None, comments=[(1, 4, '# this is a document comment')]
-        ),
-        CommentsTestCase(
-            hierarchy='tool.ruff.lint',
-            comments=[
+            'load_toml_b',
+            'tool.ruff.lint',
+            [
                 (1, 1, '# this is the first comment for lint table'),
                 (1, 2, '# this is the second comment for lint table')
             ]
         ),
+        CommentsTestCase('load_toml_b', 'main_table', None),
         CommentsTestCase(
-            hierarchy='main_table', comments=None
-        )
+            'load_toml_c',
+            None,
+            [(1, 1, '# this is a document comment')]
+        ),
+        CommentsTestCase(
+            'load_toml_c',
+            'tool.ruff.lint',
+            [(1, 3, '# this is the first comment for lint table')]
+        ),
+        CommentsTestCase(
+            'load_toml_c',
+            'tool.ruff',
+            [(1, 2, '# this is a tool.ruff comment')]
+        ),
+        CommentsTestCase('load_toml_c', 'tool.rye', None)
     ]
 )
-def test_comments_toml_b(test_case: CommentsTestCase, load_toml_b: TOMLDocument) -> None:
+def test_comments_from_toml_document(
+    test_case: CommentsTestCase, request: pytest.FixtureRequest
+) -> None:
     """"""
-    comments = get_comments(toml_source=load_toml_b, hierarchy=test_case.hierarchy)
-    assert test_case.comments == comments
-
-
-@pytest.mark.parametrize(
-    'test_case',
-    [
-        CommentsTestCase(
-            hierarchy=None,
-            comments=[(1, 1, '# this is a document comment')]
-        ),
-        CommentsTestCase(
-            hierarchy='tool.ruff.lint',
-            comments=[(1, 3, '# this is the first comment for lint table')]
-        ),
-        CommentsTestCase(
-            hierarchy='tool.ruff',
-            comments=[(1, 2, '# this is a tool.ruff comment')]
-        ),
-        CommentsTestCase(
-            hierarchy='tool.rye', comments=None
-        )
-    ]
-)
-def test_comments_toml_c(test_case: CommentsTestCase, load_toml_c: TOMLDocument) -> None:
-    """"""
-    comments = get_comments(toml_source=load_toml_c, hierarchy=test_case.hierarchy)
+    toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
+    comments = get_comments(toml_source=toml_document, hierarchy=test_case.hierarchy)
     assert test_case.comments == comments
 
 

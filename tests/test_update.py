@@ -1,113 +1,133 @@
-from typing import Any
-import copy
+from dataclasses import dataclass
+from typing import (
+    Any,
+    Dict,
+    Optional
+)
 
 import pytest
 import tomlkit
-from tomlkit import TOMLDocument
+from tomlkit import items, TOMLDocument
 from tomlkit_extras import (
     get_attribute_from_toml_source,
     InvalidHierarchyError,
-    load_toml_file,
     update_toml_source
 )
 
-def _update_and_assertion_test(
-    hierarchy: str, update: Any, toml_document: TOMLDocument
+from tests.typing import FixtureModule
+
+def create_inline_table(update: Dict[str, Any]) -> items.InlineTable:
+    """"""
+    inline_table: items.InlineTable = tomlkit.inline_table()
+    inline_table.update(update)
+    return inline_table
+
+
+@dataclass(frozen=True)
+class UpdateTestCase:
+    """"""
+    fixture: FixtureModule
+    hierarchy: str
+    update: Any
+    full: bool = True
+    _value: Optional[Any] = None
+
+    @property
+    def hierarchy_value(self) -> Any:
+        """"""
+        if self._value is None:
+            return self.update
+        else:
+            return self._value
+
+
+@dataclass(frozen=True)
+class InvalidUpdateTestCase:
+    """"""
+    fixture: FixtureModule
+    hierarchy: str
+    update: Any
+    error: str
+
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        UpdateTestCase(
+            'load_toml_a_module', 'project.name', 'Example Project New'
+        ),
+        UpdateTestCase(
+            'load_toml_a_module',
+            'members',
+            {'name': "Jack"},
+            False,
+            [
+                {'name': 'Alice', 'roles': [{'role': 'Developer'}, {'role': 'Designer'}]},
+                {'name': 'Bob', 'roles': [{'role': 'Manager'}]},
+                {'name': 'Jack'}
+            ]
+        ),
+        UpdateTestCase(
+            'load_toml_b_module', 'project', 'Example Project New'
+        ),
+        UpdateTestCase(
+            'load_toml_b_module',
+            'tool.ruff.lint.pydocstyle',
+            create_inline_table(update={'select': ["D102"]})
+        ),
+        UpdateTestCase(
+            'load_toml_b_module',
+            'tool.ruff.lint.pydocstyle',
+            create_inline_table(update={'convention': ["numpy"]}),
+            False,
+            {'select': ["D102"], 'convention': ["numpy"]}
+        ),
+        UpdateTestCase('load_toml_c_module', 'tool.ruff.line-length', 90),
+        UpdateTestCase('load_toml_c_module', 'tool.rye.managed', False)
+    ]
+)
+def test_update_toml_document(
+    test_case: UpdateTestCase, request: pytest.FixtureRequest
 ) -> None:
     """"""
+    toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
     update_toml_source(
-        hierarchy=hierarchy, toml_source=toml_document, update=update
+        hierarchy=test_case.hierarchy,
+        toml_source=toml_document,
+        update=test_case.update,
+        full=test_case.full
     )
-    assert get_attribute_from_toml_source(
-        hierarchy=hierarchy, toml_source=toml_document
-    ) == update
+    toml_structure = get_attribute_from_toml_source(
+        hierarchy=test_case.hierarchy, toml_source=toml_document
+    )
+    assert toml_structure == test_case.hierarchy_value
 
 
-def test_update_toml_a() -> None:
-    """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
-
-    # Update the project.name hierarchy
-    _update_and_assertion_test(
-        hierarchy='project.name', update='Example Project New', toml_document=toml_document
-    )
-
-    # Update the members hierarchy
-    update_toml_source(
-        hierarchy='members', toml_source=toml_document, update={'name': "Jack"}, full=False
-    )
-    members = get_attribute_from_toml_source(
-        hierarchy='members', toml_source=toml_document
-    )
-    assert isinstance(members, list)
-    assert members == [
-        {'name': 'Alice', 'roles': [{'role': 'Developer'}, {'role': 'Designer'}]},
-        {'name': 'Bob', 'roles': [{'role': 'Manager'}]},
-        {'name': 'Jack'}
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        InvalidUpdateTestCase(
+            'load_toml_a_module',
+            'members.roles',
+            {'role': "Analyst"},
+            'Hierarchy maps to multiple items within an array of tables, not a feature of this function'
+        ),
+        InvalidUpdateTestCase(
+            'load_toml_c_module',
+            'tool.poetry',
+            {'name': "tomlkit-extras"},
+            'Hierarchy specified does not exist in TOMLDocument instance'
+        )
     ]
-
-    # Try to update the members.roles hierarchy, which will result in an error
+)
+def test_update_toml_document_errors(
+    test_case: InvalidUpdateTestCase, request: pytest.FixtureRequest
+) -> None:
+    """"""
+    toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
     with pytest.raises(InvalidHierarchyError) as exc_info:
         update_toml_source(
-            hierarchy='members.roles', toml_source=toml_document, update={'role': "Analyst"}
+            hierarchy=test_case.hierarchy, toml_source=toml_document, update=test_case.update
         )
-    assert str(exc_info.value) == (
-        'Hierarchy maps to multiple items within an array of tables, not a feature of this function'
-    )
 
-
-def test_update_toml_b() -> None:
-    """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
-
-    # Update the project hierarchy
-    _update_and_assertion_test(
-        hierarchy='project', update='Example Project New', toml_document=toml_document
-    )
-
-    # Update the tool.ruff.lint.pydocstyle hierarchy
-    inline_table = tomlkit.inline_table()
-    inline_table.update({'select': ["D102"]})
-    update_toml_source(
-        hierarchy='tool.ruff.lint.pydocstyle', toml_source=toml_document, update=inline_table
-    )
-    lint_pydocstyle = get_attribute_from_toml_source(
-        hierarchy='tool.ruff.lint.pydocstyle', toml_source=toml_document
-    )
-    assert not isinstance(lint_pydocstyle, list)
-    assert lint_pydocstyle.unwrap() == inline_table.unwrap()
-
-    inline_table_new = copy.deepcopy(inline_table)
-    inline_table_new.update({'convention': ["numpy"]})
-    update_toml_source(
-        hierarchy='tool.ruff.lint.pydocstyle', toml_source=toml_document, update=inline_table_new, full=False
-    )
-    lint_pydocstyle_updated = get_attribute_from_toml_source(
-        hierarchy='tool.ruff.lint.pydocstyle', toml_source=toml_document
-    )
-    assert not isinstance(lint_pydocstyle_updated, list)
-    assert lint_pydocstyle_updated.unwrap() == inline_table_new.unwrap()
-
-
-def test_update_toml_c() -> None:
-    """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
-
-    # Update the tool.ruff.line-length hierarchy
-    _update_and_assertion_test(
-        hierarchy='tool.ruff.line-length', update=90, toml_document=toml_document
-    )
-
-    # Update the tool.rye.managed hierarchy
-    _update_and_assertion_test(
-        hierarchy='tool.rye.managed', update=False, toml_document=toml_document
-    )
-
-    # Try to update a hierarchy that does not exist
-    with pytest.raises(InvalidHierarchyError) as exc_info:
-        update_toml_source(
-            hierarchy='tool.poetry', toml_source=toml_document, update={'name': "tomlkit-extras"}
-        )
-    assert str(exc_info.value) == (
-        'Hierarchy specified does not exist in TOMLDocument instance'
-    )
+    assert str(exc_info.value) == test_case.error

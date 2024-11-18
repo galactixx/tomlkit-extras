@@ -1,5 +1,6 @@
-import pytest
+import copy
 
+import pytest
 from tomlkit import TOMLDocument
 from tomlkit_extras import (
     load_toml_file,
@@ -22,6 +23,24 @@ def load_toml_b() -> TOMLDocument:
 def load_toml_c() -> TOMLDocument:
     """"""
     return load_toml_file(toml_source='./tests/examples/toml_c.toml')
+
+
+@pytest.fixture(scope='module')
+def load_toml_a_module(load_toml_a: TOMLDocument) -> TOMLDocument:
+    """"""
+    return copy.deepcopy(load_toml_a)
+
+
+@pytest.fixture(scope='module')
+def load_toml_b_module(load_toml_b: TOMLDocument) -> TOMLDocument:
+    """"""
+    return copy.deepcopy(load_toml_b)
+
+
+@pytest.fixture(scope='module')
+def load_toml_c_module(load_toml_c: TOMLDocument) -> TOMLDocument:
+    """"""
+    return copy.deepcopy(load_toml_c)
 
 
 @pytest.fixture(scope='session')

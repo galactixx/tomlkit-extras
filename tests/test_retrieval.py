@@ -12,34 +12,30 @@ from tomlkit_extras import (
     is_toml_instance
 )
 
+from tests.typing import FixtureSession
+
 @dataclass(frozen=True)
-class RetreivalTestCase:
+class RetrievalTestCase:
     """"""
+    fixture: FixtureSession
     hierarchy: str
     value: Any
     value_type: Type[Any]
 
 
-def validate_retrieval(test_case: RetreivalTestCase, document: TOMLDocument) -> None:
-    """"""
-    toml_structure = get_attribute_from_toml_source(
-        hierarchy=test_case.hierarchy, toml_source=document
-    )
-    assert toml_structure == test_case.value
-    assert is_toml_instance(
-        test_case.value_type, hierarchy=test_case.hierarchy, toml_source=document
-    )
-
-
 @pytest.mark.parametrize(
     'test_case',
     [
-        RetreivalTestCase('project.name', 'Example Project', str),
-        RetreivalTestCase(
-            'details.description', 'A sample project configuration', str
+        RetrievalTestCase('load_toml_a', 'project.name', 'Example Project', str),
+        RetrievalTestCase(
+            'load_toml_a',
+            'details.description',
+            'A sample project configuration',
+            str
         ),
-        RetreivalTestCase('members.name', ['Alice', 'Bob'], str),
-        RetreivalTestCase(
+        RetrievalTestCase('load_toml_a', 'members.name', ['Alice', 'Bob'], str),
+        RetrievalTestCase(
+            'load_toml_a',
             'members',
             [
                 {
@@ -53,7 +49,8 @@ def validate_retrieval(test_case: RetreivalTestCase, document: TOMLDocument) -> 
             ],
             items.Table
         ),
-        RetreivalTestCase(
+        RetrievalTestCase(
+            'load_toml_a',
             'members.roles',
             [
                 [{'role': 'Developer'}, {'role': 'Designer'}],
@@ -61,37 +58,33 @@ def validate_retrieval(test_case: RetreivalTestCase, document: TOMLDocument) -> 
             ],
             items.AoT
         ),
-        RetreivalTestCase(
-            'members.roles.role', ['Developer', 'Designer', 'Manager'], str
-        )
-    ]
-)
-def test_retrieval_from_toml_a(
-    test_case: RetreivalTestCase, load_toml_a: TOMLDocument
-) -> None:
-    """"""
-    validate_retrieval(test_case=test_case, document=load_toml_a)
-
-
-@pytest.mark.parametrize(
-    'test_case',
-    [
-        RetreivalTestCase('project', 'Example Project', str),
-        RetreivalTestCase('tool.ruff.line-length', 88, int),
-        RetreivalTestCase(
-            'tool.ruff.lint.pydocstyle.convention', 'numpy', str
+        RetrievalTestCase(
+            'load_toml_a',
+            'members.roles.role',
+            ['Developer', 'Designer', 'Manager'],
+            str
         ),
-        RetreivalTestCase('main_table.name', 'Main Table', str),
-        RetreivalTestCase(
+        RetrievalTestCase('load_toml_b', 'project', 'Example Project', str),
+        RetrievalTestCase('load_toml_b', 'tool.ruff.line-length', 88, int),
+        RetrievalTestCase(
+            'load_toml_b', 'tool.ruff.lint.pydocstyle.convention', 'numpy', str
+        ),
+        RetrievalTestCase('load_toml_b', 'main_table.name', 'Main Table', str),
+        RetrievalTestCase(
+            'load_toml_b',
             'main_table.description',
             'This is the main table containing an array of nested tables.',
             str
         ),
-        RetreivalTestCase(
-            'main_table.sub_tables.name', ["Sub Table 1", "Sub Table 2"], str
+        RetrievalTestCase(
+            'load_toml_b',
+            'main_table.sub_tables.name',
+            ["Sub Table 1", "Sub Table 2"],
+            str
         ),
-        RetreivalTestCase('main_table.sub_tables.value', [10, 20], int),
-        RetreivalTestCase(
+        RetrievalTestCase('load_toml_b', 'main_table.sub_tables.value', [10, 20], int),
+        RetrievalTestCase(
+            'load_toml_b',
             'main_table.sub_tables',
             [
                 {'name': 'Sub Table 1', 'value': 10},
@@ -99,7 +92,8 @@ def test_retrieval_from_toml_a(
             ],
             items.Table
         ),
-        RetreivalTestCase(
+        RetrievalTestCase(
+            'load_toml_b',
             'tool.ruff',
             {
                 'line-length': 88,
@@ -107,36 +101,32 @@ def test_retrieval_from_toml_a(
             },
             items.Table
         ),
-        RetreivalTestCase(
-            'tool.ruff.lint.pydocstyle', {'convention': 'numpy'}, items.InlineTable
-        )
-    ]
-)
-def test_retrieval_from_toml_b(
-    test_case: RetreivalTestCase, load_toml_b: TOMLDocument
-) -> None:
-    """"""
-    validate_retrieval(test_case=test_case, document=load_toml_b)
-
-
-@pytest.mark.parametrize(
-    'test_case',
-    [
-        RetreivalTestCase('project', 'Example Project', str),
-        RetreivalTestCase(
-            'tool.ruff.lint.pydocstyle.convention', 'numpy', str
+        RetrievalTestCase(
+            'load_toml_b',
+            'tool.ruff.lint.pydocstyle',
+            {'convention': 'numpy'},
+            items.InlineTable
         ),
-        RetreivalTestCase('tool.ruff.line-length', 88, int),
-        RetreivalTestCase('tool.rye.managed', True, bool),
-        RetreivalTestCase(
+        RetrievalTestCase('load_toml_c', 'project', 'Example Project', str),
+        RetrievalTestCase(
+            'load_toml_c', 'tool.ruff.lint.pydocstyle.convention', 'numpy', str
+        ),
+        RetrievalTestCase('load_toml_c', 'tool.ruff.line-length', 88, int),
+        RetrievalTestCase('load_toml_c', 'tool.rye.managed', True, bool),
+        RetrievalTestCase(
+            'load_toml_c',
             'tool.rye.dev-dependencies',
             ['ruff>=0.4.4', 'mypy>=0.812', 'sphinx>=3.5', 'setuptools>=56.0'],
             str   
         ),
-        RetreivalTestCase(
-            'tool.ruff.lint.pydocstyle', {'convention': 'numpy'}, items.InlineTable
+        RetrievalTestCase(
+            'load_toml_c',
+            'tool.ruff.lint.pydocstyle',
+            {'convention': 'numpy'},
+            items.InlineTable
         ),
-        RetreivalTestCase(
+        RetrievalTestCase(
+            'load_toml_c',
             'tool.ruff',
             {
                 'line-length': 88,
@@ -146,8 +136,15 @@ def test_retrieval_from_toml_b(
         )
     ]
 )
-def test_retrieval_from_toml_c(
-    test_case: RetreivalTestCase, load_toml_c: TOMLDocument
+def test_retrieval_from_toml_document(
+    test_case: RetrievalTestCase, request: pytest.FixtureRequest
 ) -> None:
     """"""
-    validate_retrieval(test_case=test_case, document=load_toml_c)
+    toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
+    toml_structure = get_attribute_from_toml_source(
+        hierarchy=test_case.hierarchy, toml_source=toml_document
+    )
+    assert toml_structure == test_case.value
+    assert is_toml_instance(
+        test_case.value_type, hierarchy=test_case.hierarchy, toml_source=toml_document
+    )

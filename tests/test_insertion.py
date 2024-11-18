@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import copy
 from typing import (
     Any,
     Literal
@@ -15,9 +14,12 @@ from tomlkit_extras import (
     get_positions
 )
 
+from tests.typing import FixtureModule
+
 @dataclass(frozen=True)
 class InsertionTestCase:
     """"""
+    fixture: FixtureModule
     insertion: Literal['general', 'attribute', 'container']
     hierarchy: str
     value: Any
@@ -25,10 +27,98 @@ class InsertionTestCase:
     container: int
 
 
-def validate_insertion(
-    test_case: InsertionTestCase, toml_document: TOMLDocument
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        InsertionTestCase('load_toml_a_module', 'general', 'port', 443, 1, 2),
+        InsertionTestCase(
+            'load_toml_a_module',
+            'general',
+            'project.version',
+            '0.1.0',
+            2,
+            2
+        ),
+        InsertionTestCase(
+            'load_toml_a_module',
+            'attribute',
+            'title',
+            'Example TOML Document',
+            1,
+            1
+        ),
+        InsertionTestCase(
+            'load_toml_a_module',
+            'attribute',
+            'project.readme',
+            'README.md',
+            2,
+            2
+        ),
+        InsertionTestCase(
+            'load_toml_a_module',
+            'container',
+            'hosts',
+            ["alpha", "omega", "beta"],
+            2,
+            2
+        ),
+        InsertionTestCase(
+            'load_toml_b_module',
+            'attribute',
+            'title',
+            'Example TOML Document',
+            2, 
+            2
+        ),
+        InsertionTestCase(
+            'load_toml_b_module',
+            'container',
+            'hosts',
+            ["alpha", "omega", "beta"],
+            3,
+            4
+        ),
+        InsertionTestCase(
+            'load_toml_b_module',
+            'container',
+            'name',
+            'Tom Preston-Werner',
+            4,
+            6
+        ),
+        InsertionTestCase(
+            'load_toml_b_module',
+            'container',
+            'tool.ruff.lint.cache',
+            True,
+            1,
+            2
+        ),
+        InsertionTestCase(
+            'load_toml_c_module',
+            'attribute',
+            'tool.ruff.lint.pydocstyle.select',
+            ["D200"],
+            1,
+            1
+        ),
+        InsertionTestCase(
+            'load_toml_c_module',
+            'container',
+            'tool.ruff.lint.exclude',
+            ["tests/", "docs/conf.py"],
+            2,
+            3
+        )
+    ]
+)
+def test_insertion_into_toml_document(
+    test_case: InsertionTestCase, request: pytest.FixtureRequest
 ) -> None:
     """"""
+    toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
+
     # Generate the common insertion arguments
     insertion_args = {
         'hierarchy': test_case.hierarchy,
@@ -57,128 +147,3 @@ def validate_insertion(
     )
     assert attribute_pos == attribute_pos
     assert container_pos == container_pos
-
-
-@pytest.fixture(scope='module')
-def load_toml_a_insert(load_toml_a: TOMLDocument) -> TOMLDocument:
-    """"""
-    return copy.deepcopy(load_toml_a)
-
-
-@pytest.fixture(scope='module')
-def load_toml_b_insert(load_toml_b: TOMLDocument) -> TOMLDocument:
-    """"""
-    return copy.deepcopy(load_toml_b)
-
-
-@pytest.fixture(scope='module')
-def load_toml_c_insert(load_toml_c: TOMLDocument) -> TOMLDocument:
-    """"""
-    return copy.deepcopy(load_toml_c)
-
-
-@pytest.mark.parametrize(
-    'test_case',
-    [
-        InsertionTestCase('general', 'port', 443, 1, 2),
-        InsertionTestCase(
-            'general',
-            'project.version',
-            '0.1.0',
-            2,
-            2
-        ),
-        InsertionTestCase(
-            'attribute',
-            'title',
-            'Example TOML Document',
-            1,
-            1
-        ),
-        InsertionTestCase(
-            'attribute',
-            'project.readme',
-            'README.md',
-            2,
-            2
-        ),
-        InsertionTestCase(
-            'container',
-            'hosts',
-            ["alpha", "omega", "beta"],
-            2,
-            2
-        )
-    ]
-)
-def test_insertion_toml_a(
-    test_case: InsertionTestCase, load_toml_a_insert: TOMLDocument
-) -> None:
-    """"""
-    validate_insertion(test_case=test_case, toml_document=load_toml_a_insert)
-
-
-@pytest.mark.parametrize(
-    'test_case',
-    [
-        InsertionTestCase(
-            'attribute',
-            'title',
-            'Example TOML Document',
-            2, 
-            2
-        ),
-        InsertionTestCase(
-            'container',
-            'hosts',
-            ["alpha", "omega", "beta"],
-            3,
-            4
-        ),
-        InsertionTestCase(
-            'container',
-            'name',
-            'Tom Preston-Werner',
-            4,
-            6
-        ),
-        InsertionTestCase(
-            'container',
-            'tool.ruff.lint.cache',
-            True,
-            1,
-            2
-        )
-    ]
-)
-def test_insertion_toml_b(
-    test_case: InsertionTestCase, load_toml_b_insert: TOMLDocument
-) -> None:
-    """"""
-    validate_insertion(test_case=test_case, toml_document=load_toml_b_insert)
-
-
-@pytest.mark.parametrize(
-    'test_case',
-    [
-        InsertionTestCase(
-            'attribute',
-            'tool.ruff.lint.pydocstyle.select',
-            ["D200"],
-            1,
-            1
-        ),
-        InsertionTestCase(
-            'container',
-            'tool.ruff.lint.exclude',
-            ["tests/", "docs/conf.py"],
-            2,
-            3
-        )
-    ]
-)
-def test_insertion_toml_c(
-    test_case: InsertionTestCase, load_toml_c_insert: TOMLDocument
-) -> None:
-    """"""
-    validate_insertion(test_case=test_case, toml_document=load_toml_c_insert)

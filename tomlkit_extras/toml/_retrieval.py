@@ -152,16 +152,16 @@ def get_attribute_from_toml_source(
     """
     Retrieves and returns the tomlkit type located at a specific hierarchy
     within a `TOMLFieldSource` instance. If the hierarchy is nested within
-    a tomlkit.items.AoT type, then a list with multiple tomlkit types can be
-    returned. Otherwise a tomlkit.container.OutOfOrderTableProxy or a
-    subclass of tomlkit.items.Item will be returned.
+    a `tomlkit.items.AoT` type, then a list with multiple tomlkit types can be
+    returned. Otherwise a `tomlkit.container.OutOfOrderTableProxy` or a
+    subclass of `tomlkit.items.Item` will be returned.
 
     If the hierarchy does not exist an `InvalidHierarchyError` will be raised.
 
     Args:
         hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
         toml_source (`TOMLFieldSource`): A `TOMLFieldSource` instance.
-        array (bool, optional): If set to False, when a tomlkit.items.AoT
+        array (bool, optional): If set to False, when a `tomlkit.items.AoT`
             instance is to be returned, a list of the tables within the array
             are returned, otherwise it will be the AoT instance itself. Defaults
             to True.
@@ -169,8 +169,8 @@ def get_attribute_from_toml_source(
             tables before returning. Defaults to False.
 
     Returns:
-        `Retrieval`: A `Retrieval` instance. Either a tomlkit.continer.OutOfOrderTableProxy,
-            tomlkit.items.Item or list of tomlkit.items.Item instances.
+        `Retrieval`: A `Retrieval` instance. Either a `tomlkit.continer.OutOfOrderTableProxy`,
+            `tomlkit.items.Item` or list of `tomlkit.items.Item` instances.
     """
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
