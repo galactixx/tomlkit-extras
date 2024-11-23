@@ -14,7 +14,7 @@ from tomlkit_extras import (
     update_toml_source
 )
 
-from tests.typing import FixtureModule
+from tests.typing import FixtureFunction
 
 def create_inline_table(update: Dict[str, Any]) -> items.InlineTable:
     """"""
@@ -26,7 +26,7 @@ def create_inline_table(update: Dict[str, Any]) -> items.InlineTable:
 @dataclass(frozen=True)
 class UpdateTestCase:
     """"""
-    fixture: FixtureModule
+    fixture: FixtureFunction
     hierarchy: str
     update: Any
     full: bool = True
@@ -44,7 +44,7 @@ class UpdateTestCase:
 @dataclass(frozen=True)
 class InvalidUpdateTestCase:
     """"""
-    fixture: FixtureModule
+    fixture: FixtureFunction
     hierarchy: str
     update: Any
     error: str
@@ -54,10 +54,10 @@ class InvalidUpdateTestCase:
     'test_case',
     [
         UpdateTestCase(
-            'load_toml_a_module', 'project.name', 'Example Project New'
+            'load_toml_a', 'project.name', 'Example Project New'
         ),
         UpdateTestCase(
-            'load_toml_a_module',
+            'load_toml_a',
             'members',
             {'name': "Jack"},
             False,
@@ -68,22 +68,15 @@ class InvalidUpdateTestCase:
             ]
         ),
         UpdateTestCase(
-            'load_toml_b_module', 'project', 'Example Project New'
+            'load_toml_b', 'project', 'Example Project New'
         ),
         UpdateTestCase(
-            'load_toml_b_module',
+            'load_toml_b',
             'tool.ruff.lint.pydocstyle',
-            create_inline_table(update={'select': ["D102"]})
+            create_inline_table(update={'select': ["D102"], 'convention': ["numpy"]})
         ),
-        UpdateTestCase(
-            'load_toml_b_module',
-            'tool.ruff.lint.pydocstyle',
-            create_inline_table(update={'convention': ["numpy"]}),
-            False,
-            {'select': ["D102"], 'convention': ["numpy"]}
-        ),
-        UpdateTestCase('load_toml_c_module', 'tool.ruff.line-length', 90),
-        UpdateTestCase('load_toml_c_module', 'tool.rye.managed', False)
+        UpdateTestCase('load_toml_c', 'tool.ruff.line-length', 90),
+        UpdateTestCase('load_toml_c', 'tool.rye.managed', False)
     ]
 )
 def test_update_toml_document(
@@ -107,13 +100,13 @@ def test_update_toml_document(
     'test_case',
     [
         InvalidUpdateTestCase(
-            'load_toml_a_module',
+            'load_toml_a',
             'members.roles',
             {'role': "Analyst"},
             'Hierarchy maps to multiple items within an array of tables, not a feature of this function'
         ),
         InvalidUpdateTestCase(
-            'load_toml_c_module',
+            'load_toml_c',
             'tool.poetry',
             {'name': "tomlkit-extras"},
             'Hierarchy specified does not exist in TOMLDocument instance'

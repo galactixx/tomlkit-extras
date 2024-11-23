@@ -1,19 +1,20 @@
+from dataclasses import dataclass
 from typing import (
     Any,
     Dict,
     List,
-    Tuple
+    Optional
 )
 
+import pytest
 import tomlkit
-from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items, TOMLDocument
-from tomlkit_extras import (
-    get_attribute_from_toml_source,
-    load_toml_file
-)
 
-from tomlkit_extras._typing import BodyContainerItem
+from tomlkit_extras._typing import (
+    BodyContainer,
+    BodyContainerItem,
+    BodyContainerItems
+)
 from tomlkit_extras._utils import (
     complete_clear_toml_document,
     create_array_of_tables,
@@ -23,252 +24,263 @@ from tomlkit_extras._utils import (
     get_container_body,
     _partial_clear_dict_like_toml_item
 )
+from tests.typing import FixtureFunction
 
-def _number_of_top_level_attributes(toml_document: TOMLDocument) -> int:
+@dataclass(frozen=True)
+class BaseClearTestCase:
     """"""
-    num_attributes = 0
-    for _, _ in toml_document.items():
-        num_attributes += 1
-
-    return num_attributes
+    fixture: FixtureFunction
+    num_attributes: int
 
 
-def _document_partial_clear_assertion(num_attributes: int, toml_document: TOMLDocument) -> None:
+@dataclass(frozen=True)
+class ClearDocumentTestCase(BaseClearTestCase):
     """"""
-    assert _number_of_top_level_attributes(toml_document=toml_document) == num_attributes
-    _partial_clear_dict_like_toml_item(toml_source=toml_document)
-    assert _number_of_top_level_attributes(toml_document=toml_document) == 0
+    pass
 
 
-def _document_complete_clear_assertion(num_attributes: int, toml_document: TOMLDocument) -> None:
+@dataclass(frozen=True)
+class PartialClearDocumentTestCase(BaseClearTestCase):
     """"""
-    assert _number_of_top_level_attributes(toml_document=toml_document) == num_attributes
-    complete_clear_toml_document(toml_document=toml_document)
-    assert _number_of_top_level_attributes(toml_document=toml_document) == 0
-
-    assert toml_document._map == {}
-    assert toml_document._body == []
-    assert toml_document._parsed == False
-    assert toml_document._table_keys == []
+    pass
 
 
-def _validate_body_items(container_body: List[Tuple[Any, Any]]) -> bool:
+@dataclass(frozen=True)
+class CreateArrayOTablesTestCase:
     """"""
-    return all(
-        (item_key is None or isinstance(item_key, items.Key)) and isinstance(item, items.Item)
-        for (item_key, item) in container_body
-    )
+    arrays: List[Any]
+    num_aots: int
 
 
-def _validate_body_item(body_item: BodyContainerItem) -> bool:
+@dataclass(frozen=True)
+class CreateDocumentTestCase:
     """"""
-    item_key, toml_item = decompose_body_item(body_item=body_item)
-    return (item_key is None or isinstance(item_key, str)) and isinstance(toml_item, items.Item)
+    hierarchy: str
+    table: Dict[str, Any]
 
 
-def _table_from_dict(to_table: Dict[str, Any]) -> items.Table:
+@dataclass(frozen=True)
+class DecomposeBodyItemTestCase:
+    """"""
+    key: Optional[items.Key]
+    item: items.Item
+
+    @property
+    def body_item(self) -> BodyContainerItem:
+        """"""
+        return (self.key, self.item)
+
+
+@dataclass(frozen=True)
+class GetContainerBodyTestCase:
+    """"""
+    structure: BodyContainer
+    container_body: BodyContainerItems
+
+
+def table_from_dict(to_table: Dict[str, Any]) -> items.Table:
     """"""
     table: items.Table = tomlkit.table()
     table.update(to_table)
     return table
 
 
-def test_convert_to_tomlkit_item() -> None:
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        ClearDocumentTestCase('load_toml_b', 3),
+        ClearDocumentTestCase('load_toml_d', 4)
+    ]
+)
+def test_complete_clear_toml_document(
+    test_case: ClearDocumentTestCase, request: pytest.FixtureRequest
+) -> None:
     """"""
-    pass
+    toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
+
+    assert len(toml_document.values()) == test_case.num_attributes
+    complete_clear_toml_document(toml_document=toml_document)
+    assert len(toml_document.values()) == 0
+
+    # Ensure that each private attribute is empty
+    assert toml_document._map == {}
+    assert toml_document._body == []
+    assert toml_document._parsed == False
+    assert toml_document._table_keys == []
 
 
-def test_complete_clear_toml_document() -> None:
+_RAW_TABLE_DICTS: List[Dict[str, Any]] = [
+    {'name': 'Sub Table 1', 'value': 10},
+    {'name': 'Sub Table 2', 'value': 20}
+]
+
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        CreateArrayOTablesTestCase(arrays=_RAW_TABLE_DICTS, num_aots=2),
+        CreateArrayOTablesTestCase(
+            arrays=[table_from_dict(to_table=table) for table in _RAW_TABLE_DICTS],
+            num_aots=2
+        ),
+        CreateArrayOTablesTestCase(
+            arrays=[table_from_dict(to_table=_RAW_TABLE_DICTS[0]), _RAW_TABLE_DICTS[1]],
+            num_aots=2
+        )
+    ]
+)
+def test_create_array_of_tables(test_case: CreateArrayOTablesTestCase) -> None:
     """"""
-    toml_document_b: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
-    _document_complete_clear_assertion(num_attributes=3, toml_document=toml_document_b)
-
-    toml_document_d: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_d.toml')
-    _document_complete_clear_assertion(num_attributes=4, toml_document=toml_document_d)
-
-
-def test_create_array_of_tables() -> None:
-    """"""
-    RAW_TABLE_DICTS = [{'name': 'Sub Table 1', 'value': 10}, {'name': 'Sub Table 2', 'value': 20}]
-
-    # Create an array of tables from a list of dictionaries
-    aot_from_dictionaries = create_array_of_tables(tables=RAW_TABLE_DICTS)
+    aot_from_dictionaries = create_array_of_tables(tables=test_case.arrays)
     assert isinstance(aot_from_dictionaries, items.AoT)
-    assert len(aot_from_dictionaries) == 2
-
-    # Create an array of tables from a list of Table instances
-    raw_table_dicts_to_tables = [_table_from_dict(to_table=table) for table in RAW_TABLE_DICTS]
-    aot_from_table_instances = create_array_of_tables(tables=raw_table_dicts_to_tables)
-    assert isinstance(aot_from_table_instances, items.AoT)
-    assert len(aot_from_table_instances) == 2
-
-    # Create an array of tables from a list of dictionaries and Table instances
-    aot_from_combined = create_array_of_tables(tables=[
-        raw_table_dicts_to_tables[0], RAW_TABLE_DICTS[1]
-    ])
-    assert isinstance(aot_from_combined, items.AoT)
-    assert len(aot_from_combined) == 2    
+    assert len(aot_from_dictionaries) == test_case.num_aots
 
 
-def test_create_toml_document() -> None:
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        CreateDocumentTestCase(
+            'projects',
+            {'project': {'update': {'name': 'Example Project'}}}
+        ),
+        CreateDocumentTestCase(
+            'details',
+            {'detail': {'update': {'description': 'A sample project configuration'}}}
+        ),
+        CreateDocumentTestCase(
+            'update.members',
+            {'roles': [{'role': 'Developer'}, {'role': 'Designer'}]}
+        )
+    ]
+)
+def test_create_toml_document(test_case: CreateDocumentTestCase) -> None:
     """"""
-    toml_document: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
-
-    # Retrieve a couple items from the document to serve as inputs
-    # to the create_toml_document function
-
-    # Test on the project table
-    project = get_attribute_from_toml_source(hierarchy='project', toml_source=toml_document)
-    assert isinstance(project, items.Table)
-
-    project_toml_document = create_toml_document(hierarchy='project.update', value=project)
+    project_toml_document = create_toml_document(
+        hierarchy=test_case.hierarchy, value=test_case.table
+    )
     assert isinstance(project_toml_document, TOMLDocument)
-    assert project_toml_document.unwrap() == {'project': {'update': {'name': 'Example Project'}}}
 
-    # Test on the details table
-    details = get_attribute_from_toml_source(hierarchy='details', toml_source=toml_document)
-    assert isinstance(details, items.Table)
-
-    details_toml_document = create_toml_document(hierarchy='details.new.update', value=details)
-    assert isinstance(details_toml_document, TOMLDocument)
-    assert details_toml_document.unwrap() == {
-        'details': {'new': {'update': {'description': 'A sample project configuration'}}}
-    }
-
-    # Test on the members array of tables
-    members = get_attribute_from_toml_source(hierarchy='members.roles', toml_source=toml_document)
-    assert isinstance(members, list)
-    assert isinstance(members[0], items.AoT)
-
-    members_toml_document = create_toml_document(hierarchy='members.roles.update', value=members[0])
-    assert isinstance(members_toml_document, TOMLDocument)
-    assert members_toml_document.unwrap() == {
-        "members": {'roles': {'update': [{'role': 'Developer'}, {'role': 'Designer'}]}}
-    }
+    document_unwrapped = project_toml_document.unwrap()
+    for level in test_case.hierarchy.split('.'):
+        document_unwrapped = document_unwrapped[level]
+    
+    assert document_unwrapped == test_case.table
 
 
-def test_decompose_body_item() -> None:
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        DecomposeBodyItemTestCase(
+            tomlkit.key('example_key'), tomlkit.string('example_value')
+        ),
+        DecomposeBodyItemTestCase(
+            tomlkit.key('example.key.here'), tomlkit.integer(42)
+        ),
+        DecomposeBodyItemTestCase(None, tomlkit.float_(3.14))
+    ]
+)
+def test_decompose_body_item(test_case: DecomposeBodyItemTestCase) -> None:
     """"""
-    toml_document_a: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
-    document_body = get_container_body(toml_source=toml_document_a)
-    assert all(
-        _validate_body_item(body_item=body_item) for body_item in document_body
-    )
-
-    # Test the function on the body of the tool.ruff.lint table
-    toml_document_b: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
-    tool_ruff_lint = get_attribute_from_toml_source(hierarchy='tool.ruff.lint', toml_source=toml_document_b)
-    assert isinstance(tool_ruff_lint, items.Table)
-    table_body = get_container_body(toml_source=tool_ruff_lint)
-    assert all(
-        _validate_body_item(body_item=body_item) for body_item in table_body
+    item_key, toml_item = decompose_body_item(body_item=test_case.body_item)
+    assert (
+        (
+            (isinstance(item_key, str) and test_case.key is not None) or
+            (item_key is None and test_case.key is None)
+        )
+        and isinstance(toml_item, items.Item)
     )
 
 
-def test_from_dict_to_toml_document() -> None:
-    """"""
-    # The below assertions are just ensuring that the structure and values
-    # of the converted dictionary are the same. Of course this convereted dictionary
-    # is missing comments and the inline table in this case will be converted to a table.
-    toml_document_c: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
-    DICT_CONVERT_C = {
-        'project': 'Example Project',
-        'tool': {
-            'ruff': {
-                'line-length': 88,
-                'lint': {
-                    'pydocstyle': {'convention': 'numpy'}
+@pytest.mark.parametrize(
+    'dictionary',
+    [
+        {
+            'project': 'Example Project',
+            'tool': {
+                'ruff': {
+                    'line-length': 88,
+                    'lint': {
+                        'pydocstyle': {'convention': 'numpy'}
+                    }
                 }
-            },
-            'rye': {
-                'managed': True,
-                'dev-dependencies': [
-                    "ruff>=0.4.4",
-                    "mypy>=0.812",
-                    "sphinx>=3.5",
-                    "setuptools>=56.0"
+            } ,
+            'main_table': {
+                'name': 'Main Table',
+                'description': 'This is the main table containing an array of nested tables.',
+                'sub_tables': [
+                    {'name': 'Sub Table 1', 'value': 10},
+                    {'name': 'Sub Table 2', 'value': 20}
                 ]
             }
-        }
-    }
-    toml_convert_document_c =  from_dict_to_toml_document(dictionary=DICT_CONVERT_C)
-    assert isinstance(toml_convert_document_c, TOMLDocument)
-    assert toml_convert_document_c == toml_document_c
-
-    toml_document_b: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
-    DICT_CONVERT_B = {
-        'project': 'Example Project',
-        'tool': {
-            'ruff': {
-                'line-length': 88,
-                'lint': {
-                    'pydocstyle': {'convention': 'numpy'}
+        },
+        {
+            'project': 'Example Project',
+            'tool': {
+                'ruff': {
+                    'line-length': 88,
+                    'lint': {
+                        'pydocstyle': {'convention': 'numpy'}
+                    }
+                },
+                'rye': {
+                    'managed': True,
+                    'dev-dependencies': [
+                        "ruff>=0.4.4",
+                        "mypy>=0.812",
+                        "sphinx>=3.5",
+                        "setuptools>=56.0"
+                    ]
                 }
             }
-        } ,
-        'main_table': {
-            'name': 'Main Table',
-            'description': 'This is the main table containing an array of nested tables.',
-            'sub_tables': [
-                {'name': 'Sub Table 1', 'value': 10},
-                {'name': 'Sub Table 2', 'value': 20}
-            ]
         }
-    }
-    toml_convert_document_b = from_dict_to_toml_document(dictionary=DICT_CONVERT_B)
-    assert isinstance(toml_convert_document_b, TOMLDocument)
-    assert toml_convert_document_b == toml_document_b
-
-
-def test_get_container_body() -> None:
+    ]
+)
+def test_from_dict_to_toml_document(dictionary: Dict[str, Any]) -> None:
     """"""
-    toml_document_b: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
-
-    # Retrieve the container from a TOMLDocument instance
-    document_container = get_container_body(toml_source=toml_document_b)
-    assert isinstance(toml_document_b, TOMLDocument)
-    assert _validate_body_items(container_body=document_container)
-
-    # Retrieve the container from a Table instance
-    table_ruff = get_attribute_from_toml_source(hierarchy='tool.ruff', toml_source=toml_document_b)
-    assert isinstance(table_ruff, items.Table)
-    table_container = get_container_body(toml_source=table_ruff)
-    assert _validate_body_items(container_body=table_container)
-
-    # Retrieve the container from a InlineTable instance
-    table_pydocstyle = get_attribute_from_toml_source(
-        hierarchy='tool.ruff.lint.pydocstyle', toml_source=toml_document_b
-    )
-    assert isinstance(table_pydocstyle, items.InlineTable)
-    inline_table_container = get_container_body(toml_source=table_pydocstyle)
-    assert _validate_body_items(container_body=inline_table_container)
-
-    toml_document_c: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_c.toml')
-
-    # Retrieve the container from an Array instance
-    array_dev_dependencies = get_attribute_from_toml_source(
-        hierarchy='tool.rye.dev-dependencies', toml_source=toml_document_c
-    )
-    assert isinstance(array_dev_dependencies, items.Array)
-    array_container = get_container_body(toml_source=array_dev_dependencies)
-    assert _validate_body_items(container_body=array_container)
-
-    # Retrieve the container from an OutOfOrderTableProxy instance
-    out_of_order_proxy_ruff = get_attribute_from_toml_source(
-        hierarchy='tool.ruff', toml_source=toml_document_c
-    )
-    assert isinstance(out_of_order_proxy_ruff, OutOfOrderTableProxy)
-    out_of_order_proxy_container = get_container_body(toml_source=out_of_order_proxy_ruff)
-    assert _validate_body_items(container_body=out_of_order_proxy_container)
+    toml_converted_document = from_dict_to_toml_document(dictionary=dictionary)
+    assert isinstance(toml_converted_document, TOMLDocument)
+    assert toml_converted_document.unwrap() == dictionary
 
 
-def test_partial_clear_dict_like_toml_item() -> None:
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        GetContainerBodyTestCase(
+            from_dict_to_toml_document({'project': 'Example Project', 'profile': 'Tom'}),
+            [
+                (tomlkit.key('project'), tomlkit.string('Example Project')),
+                (tomlkit.key('profile'), tomlkit.string('Tom'))
+            ]
+        ),
+        GetContainerBodyTestCase(
+            table_from_dict({'server': '192.168.1.1', 'port': 5432}),
+            [
+                (tomlkit.key('server'), tomlkit.string('192.168.1.1')),
+                (tomlkit.key('port'), tomlkit.integer(5432))
+            ]
+        )
+    ]
+)
+def test_get_container_body(test_case: GetContainerBodyTestCase) -> None:
     """"""
-    toml_document_a: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_a.toml')
-    _document_partial_clear_assertion(num_attributes=3, toml_document=toml_document_a)
+    container_body = get_container_body(toml_source=test_case.structure)
+    assert test_case.container_body == container_body
 
-    toml_document_b: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_b.toml')
-    _document_partial_clear_assertion(num_attributes=3, toml_document=toml_document_b)
 
-    toml_document_d: TOMLDocument = load_toml_file(toml_source='./tests/examples/toml_d.toml')
-    _document_partial_clear_assertion(num_attributes=4, toml_document=toml_document_d)
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        PartialClearDocumentTestCase('load_toml_a', 3),
+        PartialClearDocumentTestCase('load_toml_b', 3),
+        PartialClearDocumentTestCase('load_toml_d', 4)
+    ]
+)
+def test_partial_clear_dict_like_toml_item(
+    test_case: PartialClearDocumentTestCase, request: pytest.FixtureRequest
+) -> None:
+    """"""
+    toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
+
+    assert len(toml_document.values()) == test_case.num_attributes
+    _partial_clear_dict_like_toml_item(toml_source=toml_document)
+    assert len(toml_document.values()) == 0

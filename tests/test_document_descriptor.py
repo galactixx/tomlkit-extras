@@ -194,9 +194,9 @@ class DescriptorStatisticsTestCase:
 @pytest.mark.parametrize(
     'test_case',
     [
-        DescriptorStatisticsTestCase('toml_a_document', 3, 0, 1, 7, 0, 7),
-        DescriptorStatisticsTestCase('toml_b_document', 1, 0, 4, 9, 1, 5),
-        DescriptorStatisticsTestCase('toml_c_document', 0, 1, 6, 4, 1, 3)
+        DescriptorStatisticsTestCase('toml_a_descriptor', 3, 0, 1, 7, 0, 7),
+        DescriptorStatisticsTestCase('toml_b_descriptor', 1, 0, 4, 9, 1, 5),
+        DescriptorStatisticsTestCase('toml_c_descriptor', 0, 1, 6, 4, 1, 3)
     ]
 )
 def test_toml_statistics(
@@ -218,7 +218,7 @@ def test_toml_statistics(
     'test_case',
     [
         StyleDescriptorTestCase(
-            'toml_a_document',
+            'toml_a_descriptor',
             'comment',
             'document',
             None,
@@ -228,7 +228,7 @@ def test_toml_statistics(
             False
         ),
         StyleDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'comment',
             'document',
             None,
@@ -238,7 +238,7 @@ def test_toml_statistics(
             False
         ),
         StyleDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'comment',
             'table',
             'tool.ruff.lint',
@@ -248,7 +248,7 @@ def test_toml_statistics(
             False
         ),
         StyleDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'comment',
             'table',
             'tool.ruff.lint',
@@ -258,7 +258,7 @@ def test_toml_statistics(
             False
         ),
         StyleDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'comment',
             'document',
             None,
@@ -268,7 +268,7 @@ def test_toml_statistics(
             False
         ),
         StyleDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'comment',
             'table',
             'tool.ruff.lint',
@@ -278,7 +278,7 @@ def test_toml_statistics(
             False
         ),
         StyleDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'comment',
             'table',
             'tool.ruff',
@@ -306,7 +306,7 @@ def test_toml_style_descriptor(
     'test_case',
     [
         FieldDescriptorTestCase(
-            'toml_a_document',
+            'toml_a_descriptor',
             'field',
             'table',
             'name',
@@ -319,7 +319,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_a_document',
+            'toml_a_descriptor',
             'field',
             'table',
             'description',
@@ -332,7 +332,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'field',
             'table',
             'line-length',
@@ -345,7 +345,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'field',
             'inline-table',
             'convention',
@@ -358,7 +358,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'field',
             'table',
             'name',
@@ -371,7 +371,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'field',
             'table',
             'description',
@@ -384,7 +384,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'field',
             'document',
             'project',
@@ -397,7 +397,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'field',
             'document',
             'project',
@@ -410,7 +410,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'field',
             'inline-table',
             'convention',
@@ -423,7 +423,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'field',
             'table',
             'line-length',
@@ -436,7 +436,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'field',
             'table',
             'managed',
@@ -449,7 +449,7 @@ def test_toml_style_descriptor(
             False
         ),
         FieldDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'array',
             'table',
             'dev-dependencies',
@@ -481,7 +481,7 @@ def test_toml_field_descriptor(
     'test_case',
     [
         TableDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'table',
             'super-table',
             'ruff',
@@ -496,7 +496,7 @@ def test_toml_field_descriptor(
             1
         ),
         TableDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'inline-table',
             'table',
             'pydocstyle',
@@ -509,7 +509,7 @@ def test_toml_field_descriptor(
             1
         ),
         TableDescriptorTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'table',
             'document',
             'main_table',
@@ -522,7 +522,7 @@ def test_toml_field_descriptor(
             2
         ),
         TableDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'inline-table',
             'table',
             'pydocstyle',
@@ -535,7 +535,7 @@ def test_toml_field_descriptor(
             1
         ),
         TableDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'table',
             'super-table',
             'ruff',
@@ -548,7 +548,7 @@ def test_toml_field_descriptor(
             1
         ),
         TableDescriptorTestCase(
-            'toml_c_document',
+            'toml_c_descriptor',
             'table',
             'super-table',
             'rye',
@@ -575,7 +575,7 @@ def test_toml_table_descriptor(
     'test_case',
     [
         ArrayItemsTestCase(
-            'toml_a_document',
+            'toml_a_descriptor',
             'members.name',
             [
                 FieldDescriptorTestCase(
@@ -607,7 +607,7 @@ def test_toml_table_descriptor(
             ]
         ),
         ArrayItemsTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'main_table.sub_tables.name',
             [
                 FieldDescriptorTestCase(
@@ -639,7 +639,7 @@ def test_toml_table_descriptor(
             ]
         ),
         ArrayItemsTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'main_table.sub_tables.value',
             [
                 FieldDescriptorTestCase(
@@ -690,7 +690,7 @@ def test_toml_array_field_descriptor(
     'test_case',
     [
         ArrayItemsTestCase(
-            'toml_a_document',
+            'toml_a_descriptor',
             'members',
             [
                 TableDescriptorTestCase(
@@ -722,7 +722,7 @@ def test_toml_array_field_descriptor(
             ]
         ),
         ArrayItemsTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'main_table.sub_tables',
             [
                 TableDescriptorTestCase(
@@ -773,7 +773,7 @@ def test_toml_array_table_descriptor(
     'test_case',
     [
         ArrayItemsTestCase(
-            'toml_a_document',
+            'toml_a_descriptor',
             'members',
             [
                 AoTDescriptorTestCase(
@@ -791,7 +791,7 @@ def test_toml_array_table_descriptor(
             ]
         ),
         ArrayItemsTestCase(
-            'toml_b_document',
+            'toml_b_descriptor',
             'main_table.sub_tables',
             [
                 AoTDescriptorTestCase(

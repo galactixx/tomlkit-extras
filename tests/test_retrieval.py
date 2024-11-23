@@ -12,12 +12,12 @@ from tomlkit_extras import (
     is_toml_instance
 )
 
-from tests.typing import FixtureSession
+from tests.typing import FixtureFunction
 
 @dataclass(frozen=True)
 class RetrievalTestCase:
     """"""
-    fixture: FixtureSession
+    fixture: FixtureFunction
     hierarchy: str
     value: Any
     value_type: Type[Any]

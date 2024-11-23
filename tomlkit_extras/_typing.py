@@ -1,4 +1,7 @@
+from pathlib import Path
 from typing import (
+    Any,
+    Dict,
     List,
     Literal,
     Optional,
@@ -11,6 +14,10 @@ from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items, TOMLDocument
 
 from tomlkit_extras._hierarchy import Hierarchy
+
+TOMLSourceFile: TypeAlias = Union[
+    str, bytes, bytearray, Path, TOMLDocument, Dict[str, Any]
+]
 
 # The return type of get_comments function, returning a tuple where the first item
 # is the container number in which the comment is located (only relevant if more than one item was returned).

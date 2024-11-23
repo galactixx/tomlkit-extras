@@ -31,7 +31,7 @@ from tomlkit_extras._typing import (
 
 _VALID_TYPES = (TOMLDocument, items.Table, items.AoT, OutOfOrderTableProxy)
 
-def detect_out_of_order_tables(toml_source: TOMLSource) -> bool:
+def contains_out_of_order_tables(toml_source: TOMLSource) -> bool:
     """
     Given a `TOMLSource` instance, will traverse through the structure
     and determine if there are any out-of-order tables represented by
@@ -50,7 +50,7 @@ def detect_out_of_order_tables(toml_source: TOMLSource) -> bool:
     # Recursively iterate through dictionary-like tomlkit structures
     if isinstance(toml_source, (TOMLDocument, items.Table)):
         return any(
-            detect_out_of_order_tables(toml_source=document_value)
+            contains_out_of_order_tables(toml_source=document_value)
             for _, document_value in toml_source.items()
 
             # Only recursively traverse through sub-structures if they
@@ -62,7 +62,7 @@ def detect_out_of_order_tables(toml_source: TOMLSource) -> bool:
     # no need for a conditional statement
     elif isinstance(toml_source, items.AoT):
         return any(
-            detect_out_of_order_tables(toml_source=aot_table)
+            contains_out_of_order_tables(toml_source=aot_table)
             for aot_table in toml_source
         )
     # Otherwise the structure is an out-of-order table
@@ -139,14 +139,14 @@ def convert_to_tomlkit_item(value: Any) -> items.Item:
     return value_as_toml_item
 
 
-def create_array_of_tables(tables: Union[List[items.Table], List[Dict[str, Any]]]) -> items.AoT:
+def create_array_of_tables(tables: List[Union[items.Table, Dict[str, Any]]]) -> items.AoT:
     """
     Converts a list of `tomlkit.items.Table` instances or list of dictionaries,
     each with keys as strings and values being of any type, into a
     `tomlkit.items.AoT` instance.
 
     Args:
-        tables (List[`tomlkit.items.Table`] | List[Dict[str, Any]]): A list of
+        tables (List[`tomlkit.items.Table` | Dict[str, Any]): A list of
             `tomlkit.items.Table` instances or list of dictionaries, each with
             keys as strings and values being of any type
 
@@ -157,6 +157,56 @@ def create_array_of_tables(tables: Union[List[items.Table], List[Dict[str, Any]]
     for table in tables:
         array_of_tables.append(table)
     return array_of_tables
+
+
+def create_table(fields: Dict[str, Any]) -> items.Table:
+    """
+    Given a dictionary, will return an `items.Table` instance where the
+    fields are are the key-value pairs.
+
+    Args:
+        fields (Dict[str, Any]): A general dictionary where the keys are
+            strings and values can be of any type.
+
+    Returns:
+        `items.Table`: Returns an `items.Table` instance.
+    """
+    table: items.Table = tomlkit.table()
+    table.update(fields)
+    return table
+
+
+def create_inline_table(fields: Dict[str, Any]) -> items.InlineTable:
+    """
+    Given a dictionary, will return an `items.InlineTable` instance where the
+    fields are are the key-value pairs.
+
+    Args:
+        fields (Dict[str, Any]): A general dictionary where the keys are
+            strings and values can be of any type.
+
+    Returns:
+        `items.InlineTable`: Returns an `items.InlineTable` instance.
+    """
+    inline_table: items.InlineTable = tomlkit.inline_table()
+    inline_table.update(fields)
+    return inline_table
+
+
+def create_array(entries: List[Any]) -> items.Array:
+    """
+    Given a list, will return an `items.Array` instance where the items are
+    the entries from the input list.
+
+    Args:
+        entries (List[Any]): A general list where the items can be of any type.
+
+    Returns:
+        `items.Array`: Returns an `items.Array` instance.
+    """
+    array: items.Array = tomlkit.array()
+    array.extend(entries)
+    return array
 
 
 def create_toml_document(hierarchy: TOMLHierarchy, value: Any) -> TOMLDocument:
@@ -265,7 +315,8 @@ def complete_clear_array(array: items.Array) -> None:
 def _reorganize_array(array: items.Array) -> BodyContainerItems:
     """
     A private function which reorganizes a `tomlkit.items.Array` instance and
-    returns a `BodyContainerItems` type.
+    returns a `BodyContainerItems` type. This function effectively applies a
+    standardization on the body of an array.
     """
     array_body_items: BodyContainerItems = []
 

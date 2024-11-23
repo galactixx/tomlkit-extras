@@ -14,9 +14,9 @@ from tomlkit_extras import (
 )
 
 from tomlkit_extras._typing import ContainerComment
-from tests.typing import FixtureSession
+from tests.typing import FixtureFunction
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def load_c_dev_field_array(load_toml_c: TOMLDocument) -> items.Array:
     """"""
     dev_dependencies_array = get_attribute_from_toml_source(
@@ -29,7 +29,7 @@ def load_c_dev_field_array(load_toml_c: TOMLDocument) -> items.Array:
 @dataclass(frozen=True)
 class CommentsTestCase:
     """"""
-    fixture: FixtureSession
+    fixture: FixtureFunction
     hierarchy: str
     comments: Optional[List[ContainerComment]]
 

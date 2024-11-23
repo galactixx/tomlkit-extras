@@ -14,12 +14,12 @@ from tomlkit_extras import (
     get_positions
 )
 
-from tests.typing import FixtureModule
+from tests.typing import FixtureFunction
 
 @dataclass(frozen=True)
 class InsertionTestCase:
     """"""
-    fixture: FixtureModule
+    fixture: FixtureFunction
     insertion: Literal['general', 'attribute', 'container']
     hierarchy: str
     value: Any
@@ -30,9 +30,9 @@ class InsertionTestCase:
 @pytest.mark.parametrize(
     'test_case',
     [
-        InsertionTestCase('load_toml_a_module', 'general', 'port', 443, 1, 2),
+        InsertionTestCase('load_toml_a', 'general', 'port', 443, 1, 2),
         InsertionTestCase(
-            'load_toml_a_module',
+            'load_toml_a',
             'general',
             'project.version',
             '0.1.0',
@@ -40,7 +40,7 @@ class InsertionTestCase:
             2
         ),
         InsertionTestCase(
-            'load_toml_a_module',
+            'load_toml_a',
             'attribute',
             'title',
             'Example TOML Document',
@@ -48,7 +48,7 @@ class InsertionTestCase:
             1
         ),
         InsertionTestCase(
-            'load_toml_a_module',
+            'load_toml_a',
             'attribute',
             'project.readme',
             'README.md',
@@ -56,7 +56,7 @@ class InsertionTestCase:
             2
         ),
         InsertionTestCase(
-            'load_toml_a_module',
+            'load_toml_a',
             'container',
             'hosts',
             ["alpha", "omega", "beta"],
@@ -64,7 +64,7 @@ class InsertionTestCase:
             2
         ),
         InsertionTestCase(
-            'load_toml_b_module',
+            'load_toml_b',
             'attribute',
             'title',
             'Example TOML Document',
@@ -72,7 +72,7 @@ class InsertionTestCase:
             2
         ),
         InsertionTestCase(
-            'load_toml_b_module',
+            'load_toml_b',
             'container',
             'hosts',
             ["alpha", "omega", "beta"],
@@ -80,7 +80,7 @@ class InsertionTestCase:
             4
         ),
         InsertionTestCase(
-            'load_toml_b_module',
+            'load_toml_b',
             'container',
             'name',
             'Tom Preston-Werner',
@@ -88,7 +88,7 @@ class InsertionTestCase:
             6
         ),
         InsertionTestCase(
-            'load_toml_b_module',
+            'load_toml_b',
             'container',
             'tool.ruff.lint.cache',
             True,
@@ -96,7 +96,7 @@ class InsertionTestCase:
             2
         ),
         InsertionTestCase(
-            'load_toml_c_module',
+            'load_toml_c',
             'attribute',
             'tool.ruff.lint.pydocstyle.select',
             ["D200"],
@@ -104,7 +104,7 @@ class InsertionTestCase:
             1
         ),
         InsertionTestCase(
-            'load_toml_c_module',
+            'load_toml_c',
             'container',
             'tool.ruff.lint.exclude',
             ["tests/", "docs/conf.py"],

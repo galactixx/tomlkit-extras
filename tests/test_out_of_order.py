@@ -2,73 +2,53 @@ import copy
 from dataclasses import dataclass
 from typing import (
     List,
-    Literal,
     Optional,
-    Tuple,
-    TypeAlias
+    Tuple
 )
 
 import pytest
 from tomlkit import items, TOMLDocument
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit_extras import (
-    detect_out_of_order_tables,
+    contains_out_of_order_tables,
     fix_out_of_order_table,
     fix_out_of_order_tables,
     get_attribute_from_toml_source,
-    get_comments,
-    load_toml_file
+    get_comments
 )
 
 from tomlkit_extras._typing import ContainerComment
-
-Fixture: TypeAlias = Literal['toml_c_document', 'toml_d_document', 'toml_e_document']
-
-@pytest.fixture(scope='function')
-def toml_c_document() -> TOMLDocument:
-    """"""
-    return load_toml_file(toml_source='./tests/examples/toml_c.toml')
-
-
-@pytest.fixture(scope='function')
-def toml_d_document() -> TOMLDocument:
-    """"""
-    return load_toml_file(toml_source='./tests/examples/toml_d.toml')
-
-
-@pytest.fixture(scope='function')
-def toml_e_document() -> TOMLDocument:
-    """"""
-    return load_toml_file(toml_source='./tests/examples/toml_e.toml')
-
+from tests.typing import FixtureFunction
 
 @dataclass(frozen=True)
 class OutOfOrderTestCase:
     """"""
-    fixture: Fixture
+    fixture: FixtureFunction
     hierarchy: Optional[str]
     tables: List[Tuple[str, List[ContainerComment]]]
 
 
 @pytest.mark.parametrize(
-    'fixture', ['toml_c_document', 'toml_d_document', 'toml_e_document']
+    'fixture', ['load_toml_c', 'load_toml_d', 'load_toml_e']
 )
-def test_fix_all_out_of_order_tables(fixture: Fixture, request: pytest.FixtureRequest) -> None:
-    """# Fix the out-order-table from the TOML document in place."""
+def test_fix_all_out_of_order_tables(
+    fixture: FixtureFunction, request: pytest.FixtureRequest
+) -> None:
+    """Fix the out-order-table from the TOML document in place."""
     # Fix the out-order-table from the TOML document in place
-    toml_document = request.getfixturevalue(fixture)
+    toml_document: TOMLDocument = request.getfixturevalue(fixture)
     toml_document_original = copy.deepcopy(toml_document)
     fix_out_of_order_tables(toml_source=toml_document)
 
     assert toml_document_original == toml_document
-    assert not detect_out_of_order_tables(toml_source=toml_document)
+    assert not contains_out_of_order_tables(toml_source=toml_document)
 
 
 @pytest.mark.parametrize(
     'test_case',
     [
         OutOfOrderTestCase(
-            'toml_c_document',
+            'load_toml_c',
             'tool.ruff',
             [
                 (None, [(1, 2, '# this is a tool.ruff comment')]),
@@ -76,7 +56,7 @@ def test_fix_all_out_of_order_tables(fixture: Fixture, request: pytest.FixtureRe
             ]
         ),
         OutOfOrderTestCase(
-            'toml_d_document',
+            'load_toml_d',
             'servers',
             [
                 ('alpha', [(1, 3, '# Out-of-order table')]),
@@ -84,7 +64,7 @@ def test_fix_all_out_of_order_tables(fixture: Fixture, request: pytest.FixtureRe
             ]
         ),
         OutOfOrderTestCase(
-            'toml_e_document',
+            'load_toml_e',
             'project',
             [
                 ('details', [(1, 1, '# Awkwardly nested table (sub-section before main section)')]),
@@ -92,7 +72,7 @@ def test_fix_all_out_of_order_tables(fixture: Fixture, request: pytest.FixtureRe
             ]
         ),
         OutOfOrderTestCase(
-            'toml_e_document',
+            'load_toml_e',
             'servers',
             [
                 (None, [(1, 1, '# This table is nested under servers, but details are spread out')]),
@@ -106,7 +86,7 @@ def test_fix_out_of_order_table(
     test_case: OutOfOrderTestCase, request: pytest.FixtureRequest
 ) -> None:
     """"""
-    toml_document = request.getfixturevalue(test_case.fixture)
+    toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
     out_of_order_table = get_attribute_from_toml_source(
         hierarchy=test_case.hierarchy, toml_source=toml_document
     )

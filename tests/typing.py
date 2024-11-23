@@ -3,16 +3,14 @@ from typing import (
     TypeAlias
 )
 
-FixtureModule: TypeAlias = Literal[
-    'load_toml_a_module',
-    'load_toml_b_module',
-    'load_toml_c_module'
-]
-
-FixtureSession: TypeAlias = Literal[
-    'load_toml_a', 'load_toml_b', 'load_toml_c'
+FixtureFunction: TypeAlias = Literal[
+    'load_toml_a',
+    'load_toml_b',
+    'load_toml_c',
+    'load_toml_d',
+    'load_toml_e'
 ]
 
 FixtureDescriptor: TypeAlias = Literal[
-    'toml_a_document', 'toml_b_document', 'toml_c_document'
+    'toml_a_descriptor', 'toml_b_descriptor', 'toml_c_descriptor'
 ]

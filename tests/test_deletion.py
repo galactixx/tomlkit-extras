@@ -8,34 +8,34 @@ from tomlkit_extras import (
     InvalidHierarchyError
 )
 
-from tests.typing import FixtureModule
+from tests.typing import FixtureFunction
 
 @dataclass(frozen=True)
 class DeletionTestCase:
     """"""
-    fixture: FixtureModule
+    fixture: FixtureFunction
     hierarchy: str
 
 
 @pytest.mark.parametrize(
     'test_case',
     [
-        DeletionTestCase('load_toml_a_module', 'project.name'),
-        DeletionTestCase('load_toml_a_module', 'details.description'),
-        DeletionTestCase('load_toml_a_module', 'members.roles.role'),
-        DeletionTestCase('load_toml_a_module', 'members.name'),
-        DeletionTestCase('load_toml_b_module', 'project'),
-        DeletionTestCase('load_toml_b_module', 'tool.ruff.lint.pydocstyle.convention'),
-        DeletionTestCase('load_toml_b_module', 'main_table.description'),
+        DeletionTestCase('load_toml_a', 'project.name'),
+        DeletionTestCase('load_toml_a', 'details.description'),
+        DeletionTestCase('load_toml_a', 'members.roles.role'),
+        DeletionTestCase('load_toml_a', 'members.name'),
+        DeletionTestCase('load_toml_b', 'project'),
+        DeletionTestCase('load_toml_b', 'tool.ruff.lint.pydocstyle.convention'),
+        DeletionTestCase('load_toml_b', 'main_table.description'),
         DeletionTestCase(
-            'load_toml_b_module', 'main_table.sub_tables.value'
+            'load_toml_b', 'main_table.sub_tables.value'
         ),
-        DeletionTestCase('load_toml_b_module', 'main_table.sub_tables.name'),
-        DeletionTestCase('load_toml_b_module', 'tool.ruff'),
-        DeletionTestCase('load_toml_b_module', 'main_table.name'),
-        DeletionTestCase('load_toml_c_module', 'tool.ruff'),
-        DeletionTestCase('load_toml_c_module', 'tool.rye'),
-        DeletionTestCase('load_toml_c_module', 'project')
+        DeletionTestCase('load_toml_b', 'main_table.sub_tables.name'),
+        DeletionTestCase('load_toml_b', 'tool.ruff'),
+        DeletionTestCase('load_toml_b', 'main_table.name'),
+        DeletionTestCase('load_toml_c', 'tool.ruff'),
+        DeletionTestCase('load_toml_c', 'tool.rye'),
+        DeletionTestCase('load_toml_c', 'project')
     ]
 )
 def test_deletion_from_toml_document(
@@ -58,8 +58,8 @@ def test_deletion_from_toml_document(
 @pytest.mark.parametrize(
     'test_case',
     [
-        DeletionTestCase('load_toml_c_module', 'tool.poetry'),
-        DeletionTestCase('load_toml_c_module', 'tool.ruff')
+        DeletionTestCase('load_toml_c', 'tool.poetry.name'),
+        DeletionTestCase('load_toml_c', 'tool.ruff.lint.select')
     ]
 )
 def test_invalid_deletion(

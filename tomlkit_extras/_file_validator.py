@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
 from typing import (
-    Any,
-    Dict,
     Optional,
     Union
 )
@@ -17,6 +15,7 @@ from pathvalidate import (
     ValidationError
 )
 
+from tomlkit_extras._typing import TOMLSourceFile
 from tomlkit_extras._utils import from_dict_to_toml_document
 from tomlkit_extras._exceptions import (
     TOMLConversionError,
@@ -26,7 +25,7 @@ from tomlkit_extras._exceptions import (
 def _read_toml(toml_content: str) -> TOMLDocument:
     """
     A private function which converts an instance of a string, that being
-    a string representation of a TOML file, into a tomlkit.TOMLDocument
+    a string representation of a TOML file, into a `tomlkit.TOMLDocument`
     instance.
     """
     try:
@@ -44,7 +43,7 @@ def _load_toml(toml_content: Union[str, bytes]) -> TOMLDocument:
     """
     A private function which accepts either a string or bytes instance, 
     being a string or bytes representation of a TOML file respectively, into
-    a tomlkit.TOMLDocument instance.
+    a `tomlkit.TOMLDocument` instance.
     """
     if isinstance(toml_content, bytes):
         detected_encoding: Optional[CharsetMatch] = (
@@ -64,21 +63,18 @@ def _load_toml(toml_content: Union[str, bytes]) -> TOMLDocument:
         return _read_toml(toml_content=toml_content)
 
 
-def load_toml_file(
-    toml_source: Union[str, bytes, bytearray, Path, TOMLDocument, Dict[str, Any]]
-) -> TOMLDocument:
+def load_toml_file(toml_source: TOMLSourceFile) -> TOMLDocument:
     """
-    Accepts a string, bytes, bytearray, Path, tomlkit.TOMLDocument, or
-    Dict[str, Any] instance and converts it into a tomlkit.TOMLDocument
+    Accepts a string, bytes, bytearray, Path, `tomlkit.TOMLDocument`, or
+    Dict[str, Any] instance and converts it into a `tomlkit.TOMLDocument`
     instance.
     
     Args:
-        toml_source (str | bytes | bytearray | Path | TOMLDocument | Dict[str, Any]):
-            A string, bytes, bytearray, Path, tomlkit.TOMLDocument, or Dict[str, Any]
-            instance.
+        toml_source (`TOMLSourceFile`): A string, bytes, bytearray, Path, 
+            `tomlkit.TOMLDocument`, or Dict[str, Any] instance.
     
     Returns:
-        tomlkit.TOMLDocument: A tomlkit.TOMLDocument instance.    
+        `tomlkit.TOMLDocument`: A `tomlkit.TOMLDocument` instance.    
     """    
     if isinstance(toml_source, (str, Path)):
         if os.path.isfile(toml_source):
@@ -112,7 +108,7 @@ def load_toml_file(
     elif isinstance(toml_source, bytes):
         return _load_toml(toml_content=toml_source)
     
-    # In the insanely rare case where the source is passed as a bytearray object
+    # In the case where the source is passed as a bytearray object
     elif isinstance(toml_source, bytearray):
         toml_source_to_bytes = bytes(toml_source)
 
