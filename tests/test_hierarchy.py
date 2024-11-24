@@ -3,7 +3,7 @@ from tomlkit_extras import Hierarchy
 from tomlkit_extras._hierarchy import standardize_hierarchy
 
 def test_standardize_hierarchy() -> None:
-    """"""
+    """Function to test the functionality of `standardize_hierarchy`."""
     HIERARCHY_TOOL_RUFF = 'tool.ruff'
 
     hierarchy_tool_ruff = standardize_hierarchy(hierarchy=HIERARCHY_TOOL_RUFF)
@@ -14,7 +14,7 @@ def test_standardize_hierarchy() -> None:
 
 
 def test_hierarchy() -> None:
-    """"""
+    """Function to test the functionality of methods for `Hierarchy`."""
     hierarchy_tool_ruff = Hierarchy(hierarchy=('tool', ), attribute='ruff')
 
     assert Hierarchy.from_str_hierarchy(hierarchy='tool.ruff') == 'tool.ruff'
@@ -36,10 +36,14 @@ def test_hierarchy() -> None:
 
     # Test class methods
     HIERARCHIES = {'tool', 'tool.ruff.lint', 'tool.rye', 'build-system', 'tool.ruff'}
-    shortest_ancestor_hierarchy = hierarchy_tool_ruff.shortest_ancestor_hierarchy(hierarchies=HIERARCHIES)
+    shortest_ancestor_hierarchy = hierarchy_tool_ruff.shortest_ancestor_hierarchy(
+        hierarchies=HIERARCHIES
+    )
     assert shortest_ancestor_hierarchy == 'tool'
 
-    longest_ancestor_hierarchy = hierarchy_tool_ruff.longest_ancestor_hierarchy(hierarchies=HIERARCHIES)
+    longest_ancestor_hierarchy = hierarchy_tool_ruff.longest_ancestor_hierarchy(
+        hierarchies=HIERARCHIES
+    )
     assert longest_ancestor_hierarchy == 'tool.ruff'
 
     # Test static and other methods

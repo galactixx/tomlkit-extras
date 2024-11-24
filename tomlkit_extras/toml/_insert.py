@@ -51,19 +51,20 @@ def container_insert(
     position: int
 ) -> None:
     """
-    Inserts an object that is tomlkit compatible based on a container position.
-    A "container position" is an integer, indexed at 1, representing the position
-    where the insertion object should be placed amongst all other types, including
-    stylings (whitespace, comments), within a tomlkit type that supports insertion.
+    Inserts an object that is tomlkit compatible based on a container
+    position. A "container position" is an integer, indexed at 1,
+    representing the position where the insertion object should be placed
+    amongst all other types, including stylings (whitespace, comments),
+    within a tomlkit type that supports insertion.
     
-    The `toml_source` argument is the base tomlkit instance, and the `hierarchy`
-    references the hierarchy relative to, and located within `toml_source` where
-    the `insertion` argument will be placed.
+    The `toml_source` argument is the base tomlkit instance, and the
+    `hierarchy` references the hierarchy relative to, and located within
+    `toml_source` where the `insertion` argument will be placed.
 
-    The final level of the `hierarchy` argument must not exist, unless it references
-    an array of tables (tomlkit.items.AoT) or array (tomlkit.items.Array). In those
-    cases, the `insertion` object will be inserted within the set of existing
-    objects.
+    The final level of the `hierarchy` argument must not exist, unless it
+    references an array of tables (`tomlkit.items.AoT`) or array (`tomlkit.items.Array`).
+    In those cases, the `insertion` object will be inserted within the set of
+    existing objects.
 
     Args:
         hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
@@ -89,19 +90,20 @@ def attribute_insert(
     position: int
 ) -> None:
     """
-    Inserts an object that is tomlkit compatible based on an attribute position.
-    An "attribute position" is an integer, indexed at 1, representing the position
-    where the insertion object should be placed amongst all other key value pairs
-    (fields, tables), within a tomlkit type that supports insertion.
+    Inserts an object that is tomlkit compatible based on an attribute
+    position.  An "attribute position" is an integer, indexed at 1,
+    representing the position where the insertion object should be placed
+    amongst all other key value pairs (fields, tables), within a tomlkit
+    type that supports insertion.
     
-    The `toml_source` argument is the base tomlkit instance, and the `hierarchy`
-    references the hierarchy relative to, and located within `toml_source` where
-    the `insertion` argument will be placed.
+    The `toml_source` argument is the base tomlkit instance, and the
+    `hierarchy` references the hierarchy relative to, and located within
+    `toml_source` where the `insertion` argument will be placed.
 
-    The final level of the `hierarchy` argument must not exist, unless it references
-    an array of tables (tomlkit.items.AoT) or array (tomlkit.items.Array). In those
-    cases, the `insertion` object will be inserted within the set of existing
-    objects.
+    The final level of the `hierarchy` argument must not exist, unless it
+    references an array of tables (`tomlkit.items.AoT`) or array (`tomlkit.items.Array`).
+    In those cases, the `insertion` object will be inserted within the set
+    of existing objects.
 
     Args:
         hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
@@ -124,17 +126,17 @@ def general_insert(
     hierarchy: TOMLHierarchy, toml_source: TOMLFieldSource, insertion: Any
 ) -> None:
     """
-    Inserts an object, that is tomlkit compatible, at the bottom of a tomlkit
-    type that supports insertion.
+    Inserts an object, that is `tomlkit` compatible, at the bottom of a
+    `tomlkit` type that supports insertion.
     
-    The `toml_source` argument is the base tomlkit instance, and the `hierarchy`
-    references the hierarchy relative to, and located within `toml_source` where
-    the `insertion` argument will be placed.
+    The `toml_source` argument is the base `tomlkit` instance, and the
+    `hierarchy` references the hierarchy relative to, and located within
+    `toml_source` where the `insertion` argument will be placed.
 
-    The final level of the `hierarchy` argument must not exist, unless it references
-    an array of tables (tomlkit.items.AoT) or array (tomlkit.items.Array). In those
-    cases, the `insertion` object will be inserted within the set of existing
-    objects.
+    The final level of the `hierarchy` argument must not exist, unless it
+    references an array of tables (`tomlkit.items.AoT`) or array (`tomlkit.items.Array`).
+    In those cases, the `insertion` object will be inserted within the set
+    of existing objects.
 
     Args:
         hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
@@ -163,8 +165,8 @@ def _find_final_toml_level(hierarchy: Hierarchy) -> str:
 class _BaseItemInserter(ABC):
     """
     A private base abstract class that is an abstract structure which provides
-    tools to insert tomlkit.items.Item objects at specific positions within 
-    tomlkit types that support insertion.
+    tools to insert a `tomlkit.items.Item` object at a specific position within 
+    a `tomlkit` type that supports insertion.
     """
     def __init__(self, item_to_insert: Tuple[str, items.Item], by_attribute: bool):
         self.item_inserted = False
@@ -175,12 +177,28 @@ class _BaseItemInserter(ABC):
 
     @abstractmethod
     def add(self, item: items.Item, key: Optional[str] = None) -> None:
-        pass
+        """
+        Abstract method to add a `tomlkit.items.Item` instance to a `tomlkit`
+        structure.
+        """
+        raise NotImplementedError("This method must be overridden by subclasses")
 
     def insert_attribute(self) -> None:
+        """
+        Inserts the relevant `items.Item` instance passed into the constructor
+        to a `tomlkit` structure.
+        """
         self.add(key=self.attribute, item=self.insertion)
 
     def insert_attribute_in_loop(self, position: int) -> None:
+        """
+        Runs within a for loop, and inserts the relevant `items.Item` instance
+        passed into the constructor.
+
+        Args:
+            position (int): The current position when iterating through items in
+                the body of a `BodyContainer` instance.
+        """
         if (
             (self.attribute_position == position and self.by_attribute) or
             (self.container_position == position and not self.by_attribute)
@@ -192,8 +210,8 @@ class _BaseItemInserter(ABC):
 
 class _DictLikeItemInserter(_BaseItemInserter):
     """
-    A sub-class of `_BaseItemInserter` which provides tools to insert tomlkit.items.Item
-    objects at specific positions within tomlkit dictionary-like types that support
+    A sub-class of `_BaseItemInserter` which provides tools to insert `tomlkit.items.Item`
+    objects at specific positions within `tomlkit` dictionary-like types that support
     insertion.
     """
     def __init__(
@@ -206,6 +224,14 @@ class _DictLikeItemInserter(_BaseItemInserter):
         self.container = container
 
     def add(self, item: items.Item, key: Optional[str] = None) -> None:
+        """
+        Adds a `tomlkit.items.Item` instance to a dict-like `tomlkit` type.
+        
+        Args:
+            item (`items.Item`): A `tomlkit.items.Item` instance.
+            key (str | None): A string representation of a key in a TOML file,
+                can be a string or None.
+        """
         if key is None:
             self.container.add(cast(Stylings, item))
         else:
@@ -214,8 +240,8 @@ class _DictLikeItemInserter(_BaseItemInserter):
 
 class _ListLikeItemInserter(_BaseItemInserter):
     """
-    A sub-class of `_BaseItemInserter` which provides tools to insert tomlkit.items.Item
-    objects at specific positions within tomlkit list-like types that support insertion.
+    A sub-class of `_BaseItemInserter` which provides tools to insert `tomlkit.items.Item`
+    objects at specific positions within `tomlkit` list-like types that support insertion.
     """
     def __init__(
         self,
@@ -227,14 +253,20 @@ class _ListLikeItemInserter(_BaseItemInserter):
         self.container = container
 
     def add(self, item: items.Item, _: Optional[str] = None) -> None:
+        """
+        Adds a `tomlkit.items.Item` instance to a list-like `tomlkit` type.
+        
+        Args:
+            item (`items.Item`): A `tomlkit.items.Item` instance.
+        """
         self.container.append(item)
 
 
 class _BaseInserter(ABC):
     """
     A private base abstract class that is an abstract structure which provides
-    tools to run the entire insertion process to insert tomlkit types by
-    attribute or container positions within tomlkit types that support insertion.
+    tools to run the entire insertion process to insert `tomlkit` types by
+    attribute or container positions within `tomlkit` types that support insertion.
     """
     def __init__(
         self,
@@ -250,13 +282,28 @@ class _BaseInserter(ABC):
         
     @abstractmethod
     def array_insert(self, parent: TOMLDictLike) -> None:
-        pass
+        """
+        An abstract method to insert an `tomlkit.items.Item` within an
+        `tomlkit.items.AoT` instance.
+        """
+        raise NotImplementedError("This method must be overridden by subclasses")
 
     @abstractmethod
     def insert(self, parent: BodyContainer) -> None:
-        pass
+        """
+        An abstract method to insert an `tomlkit.items.Item` within an
+        a `tomlkit` type that is not a `tomlkit.items.AoT` instance.
+        """
+        raise NotImplementedError("This method must be overridden by subclasses")
 
     def get_parent_container(self) -> BodyContainer:
+        """
+        Retrieve the parent `tomlkit` type of the `toml_source` attribute.
+
+        There is logic to ensure that the `toml_source` is not nested within
+        an array-of-tables, and that the parent is a valid `tomlkit` type that
+        supports insertion.
+        """
         parent_toml = find_parent_toml_source(
             hierarchy=self.hierarchy_obj, toml_source=self.toml_source
         )
@@ -276,6 +323,11 @@ class _BaseInserter(ABC):
         return parent_toml
 
     def ensure_array_of_tables_insert(self) -> items.Table:
+        """
+        Contains logic to ensure that if the insertion is to occur in an
+        array-of-tables, then the item to be inserted must be an `items.Table`
+        instance.
+        """
         if not isinstance(self.insertion_as_toml_item, items.Table):
             raise ValueError(
                 "Insertion at top level of an array of tables must be a table instance"
@@ -284,6 +336,11 @@ class _BaseInserter(ABC):
             return self.insertion_as_toml_item
 
     def ensure_inline_table_insert(self, parent: BodyContainer) -> None:
+        """
+        Contains logic to ensure that if the insertion is to occur in an
+        inline-table, then the item to be inserted must not be an `tomlkit.items.AoT`,
+        `tomlkit.items.Table`, or `tomlkit.items.InlineTable` instance.
+        """
         if (
             isinstance(parent, items.InlineTable) and
             isinstance(self.insertion_as_toml_item, (items.AoT, items.Table, items.InlineTable))
@@ -292,9 +349,11 @@ class _BaseInserter(ABC):
                 "Insertion into an inline table must only be simple key-value pairs"
             )
 
-    def possible_array_retrieval(self, parent: BodyContainer) -> BodyContainer:
+    def possible_array_insertion(self, parent: BodyContainer) -> BodyContainer:
+        """
+        """
         if isinstance(parent, DICTIONARY_LIKE_TYPES):
-            attribute_toml = parent.get(self.attribute)
+            attribute_toml = parent.get(self.attribute, None)
             if isinstance(attribute_toml, items.Array):
                 parent = attribute_toml
             else:
@@ -305,7 +364,7 @@ class _BaseInserter(ABC):
 
 class _GeneralInserter(_BaseInserter):
     """
-    A sub-class of `_BaseInserter` which provides tools to insert tomlkit.items.Item
+    A sub-class of `_BaseInserter` which provides tools to insert `tomlkit.items.Item`
     objects at "generally", AKA at the bottom of tomlkit types that support
     insertion.
     """
@@ -320,11 +379,15 @@ class _GeneralInserter(_BaseInserter):
         )
 
     def array_insert(self, parent: TOMLDictLike) -> None:
+        """
+        """
         table_to_insert: items.Table = self.ensure_array_of_tables_insert()
         array_of_tables = cast(items.AoT, parent[self.attribute])
         array_of_tables.append(table_to_insert)
 
     def insert(self, parent: BodyContainer) -> None:
+        """
+        """
         if isinstance(
             parent, (
                 TOMLDocument, items.Table, items.InlineTable, OutOfOrderTableProxy
@@ -337,8 +400,8 @@ class _GeneralInserter(_BaseInserter):
 
 class _PositionalInserter(_BaseInserter):
     """
-    A sub-class of `_BaseInserter` which provides tools to insert tomlkit.items.Item
-    objects at specific positions within tomlkit types that support insertion.
+    A sub-class of `_BaseInserter` which provides tools to insert `tomlkit.items.Item`
+    objects at specific positions within `tomlkit` types that support insertion.
     """
     def __init__(
         self,
@@ -356,14 +419,20 @@ class _PositionalInserter(_BaseInserter):
 
     @property
     def body_item(self) -> Tuple[str, items.Item]:
+        """
+        """
         return (self.attribute, self.insertion_as_toml_item)
 
     def array_insert(self, parent: TOMLDictLike) -> None:
+        """
+        """
         table_to_insert: items.Table = self.ensure_array_of_tables_insert()
         array_of_tables = cast(items.AoT, parent[self.attribute])
         array_of_tables.insert(self.position - 1, table_to_insert)
 
     def insert(self, parent: BodyContainer) -> None:
+        """
+        """
         item_to_insert: Tuple[str, items.Item] = self.body_item
         toml_body_items = copy.deepcopy(get_container_body(toml_source=parent))
         _refresh_container(initial_container=parent)
@@ -377,18 +446,24 @@ class _PositionalInserter(_BaseInserter):
         inserter: _BaseItemInserter
         if isinstance(container, (TOMLDocument, items.Table, items.InlineTable)):
             inserter = _DictLikeItemInserter(
-                item_to_insert=item_to_insert, container=container, by_attribute=self.by_attribute
+                item_to_insert=item_to_insert,
+                container=container,
+                by_attribute=self.by_attribute
             )
         else:
             inserter = _ListLikeItemInserter(
-                item_to_insert=item_to_insert, container=container, by_attribute=self.by_attribute
+                item_to_insert=item_to_insert,
+                container=container,
+                by_attribute=self.by_attribute
             )
 
         if isinstance(parent, OutOfOrderTableProxy):
             parent.update(container)
 
         _insert_item_at_position_in_container(
-            position=self.position, inserter=inserter, toml_body_items=toml_body_items
+            position=self.position,
+            inserter=inserter,
+            toml_body_items=toml_body_items
         )
 
 
@@ -396,8 +471,8 @@ def _insert_item_at_position_in_container(
     position: int, inserter: _BaseItemInserter, toml_body_items: BodyContainerItems
 ) -> None:
     """
-    A private function which executes the insertion logic to place a tomlkit.items.Item
-    object into a BodyContainer instance at a specific position.
+    A private function which executes the insertion logic to place a `tomlkit.items.Item`
+    object into a `BodyContainer` instance at a specific position.
     """
     for toml_table_item in toml_body_items:
         item_key, toml_item = decompose_body_item(body_item=toml_table_item)
@@ -448,7 +523,7 @@ def _insert_into_toml_source(inserter: _BaseInserter) -> None:
     ):
         inserter.array_insert(parent=parent)
     else:
-        parent = inserter.possible_array_retrieval(parent=parent)
+        parent = inserter.possible_array_insertion(parent=parent)
         inserter.ensure_inline_table_insert(parent=parent)
         
         inserter.insert(parent=parent)

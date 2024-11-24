@@ -12,7 +12,10 @@ from tests.typing import FixtureFunction
 
 @dataclass(frozen=True)
 class DeletionTestCase:
-    """"""
+    """
+    Dataclass representing a test case for the `delete_from_toml_source`
+    function
+    """
     fixture: FixtureFunction
     hierarchy: str
 
@@ -41,7 +44,7 @@ class DeletionTestCase:
 def test_deletion_from_toml_document(
     test_case: DeletionTestCase, request: pytest.FixtureRequest
 ) -> None:
-    """"""
+    """Function to test the functionality of `delete_from_toml_source`."""
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
     delete_from_toml_source(hierarchy=test_case.hierarchy, toml_source=toml_document)
 
@@ -65,7 +68,7 @@ def test_deletion_from_toml_document(
 def test_invalid_deletion(
     test_case: DeletionTestCase, request: pytest.FixtureRequest
 ) -> None:
-    """"""
+    """Function to test the error handling of `delete_from_toml_source`."""
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
     with pytest.raises(InvalidHierarchyError) as exc_info:
         delete_from_toml_source(hierarchy=test_case.hierarchy, toml_source=toml_document)

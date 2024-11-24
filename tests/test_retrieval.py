@@ -16,7 +16,10 @@ from tests.typing import FixtureFunction
 
 @dataclass(frozen=True)
 class RetrievalTestCase:
-    """"""
+    """
+    Dataclass representing a test case for the `get_attribute_from_toml_source`
+    function.
+    """
     fixture: FixtureFunction
     hierarchy: str
     value: Any
@@ -139,7 +142,7 @@ class RetrievalTestCase:
 def test_retrieval_from_toml_document(
     test_case: RetrievalTestCase, request: pytest.FixtureRequest
 ) -> None:
-    """"""
+    """Function to test the functionality of `get_attribute_from_toml_source`."""
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
     toml_structure = get_attribute_from_toml_source(
         hierarchy=test_case.hierarchy, toml_source=toml_document

@@ -4,6 +4,8 @@ from typing import (
     Dict,
     List,
     Optional,
+    Tuple,
+    Type,
     Union
 )
 
@@ -29,7 +31,12 @@ from tomlkit_extras._typing import (
     TOMLSource
 )
 
-_VALID_TYPES = (TOMLDocument, items.Table, items.AoT, OutOfOrderTableProxy)
+_VALID_TYPES: Tuple[Type[TOMLSource]] = (
+    TOMLDocument,
+    items.Table,
+    items.AoT, 
+    OutOfOrderTableProxy
+)
 
 def contains_out_of_order_tables(toml_source: TOMLSource) -> bool:
     """
@@ -46,28 +53,36 @@ def contains_out_of_order_tables(toml_source: TOMLSource) -> bool:
     Returns:
         bool: A boolean indicating whether there are any out-of-order tables
             located in the TOML structure. 
-    """
-    # Recursively iterate through dictionary-like tomlkit structures
-    if isinstance(toml_source, (TOMLDocument, items.Table)):
-        return any(
-            contains_out_of_order_tables(toml_source=document_value)
-            for _, document_value in toml_source.items()
+    """    
+    def out_of_order_detect(toml_source: TOMLSource) -> bool:
+        # Recursively iterate through dictionary-like tomlkit structures
+        if isinstance(toml_source, (TOMLDocument, items.Table)):
+            return any(
+                contains_out_of_order_tables(toml_source=document_value)
+                for _, document_value in toml_source.items()
 
-            # Only recursively traverse through sub-structures if they
-            # are tomlkit structures that can contain out-of-order tables
-            if isinstance(document_value, _VALID_TYPES)
+                # Only recursively traverse through sub-structures if they
+                # are tomlkit structures that can contain out-of-order tables
+                if isinstance(document_value, _VALID_TYPES)
+            )
+        # Recursively iterate through list-like tomlkit structures
+        # Because items in an array of tables can only be tables, there is
+        # no need for a valid type check
+        elif isinstance(toml_source, items.AoT):
+            return any(
+                contains_out_of_order_tables(toml_source=aot_table)
+                for aot_table in toml_source
+            )
+        # Otherwise the structure is an out-of-order table
+        else:
+            return True
+        
+    if not isinstance(toml_source, _VALID_TYPES):
+        raise TypeError(
+            f'Expected an instance of TOMLSource, but got {type(toml_source).__name__}'
         )
-    # Recursively iterate through list-like tomlkit structures
-    # Because items in an array of tables can only be tables, there is
-    # no need for a conditional statement
-    elif isinstance(toml_source, items.AoT):
-        return any(
-            contains_out_of_order_tables(toml_source=aot_table)
-            for aot_table in toml_source
-        )
-    # Otherwise the structure is an out-of-order table
-    else:
-        return True
+        
+    return out_of_order_detect(toml_source=toml_source)
 
 
 def find_comment_line_no(line_no: int, item: items.Item) -> Optional[int]:

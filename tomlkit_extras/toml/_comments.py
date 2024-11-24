@@ -93,13 +93,13 @@ def get_comments(
 def get_array_field_comment(array: items.Array, array_item: Any) -> Optional[str]:
     """
     Will return the comment associated with an array item appearing within a
-    tomlkit.items.Array instance. Association in this case means the first comment
+    `tomlkit.items.Array` instance. Association in this case means the first comment
     appearing after the item in question, but before any whitespace (a new line).
 
     Will return None if no comment was found.
     
     Args:
-        array (tomlkit.items.Array): A tomlkit.items.Array instance.
+        array (`tomlkit.items.Array`): A `tomlkit.items.Array` instance.
         array_item (Any): Any type corresponding to an array item.
     
     Returns:

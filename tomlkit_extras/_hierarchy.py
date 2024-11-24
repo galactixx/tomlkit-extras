@@ -31,15 +31,28 @@ def standardize_hierarchy(hierarchy: TOMLHierarchy) -> Hierarchy:
 
 
 class Hierarchy:
-    """"""
+    """
+    A class representing a hierarchy, commonly used for managing and manipulating 
+    string-based hierarchical structures, such as those found in TOML files. 
+
+    This class provides methods to construct, decompose, compare, and navigate 
+    hierarchical structures. It also supports operations to retrieve ancestors, 
+    append levels, and determine relationships between hierarchies.
+
+    Attributes:
+        hierarchy (Tuple[str, ...]): A tuple representing the base levels of the hierarchy.
+        attribute (str): The final level or attribute of the hierarchy.
+    """
     def __init__(self, hierarchy: Tuple[str, ...], attribute: str) -> None:
         self.hierarchy = hierarchy
         self.attribute = attribute
 
     def __eq__(self, hierarchy: Any) -> bool:
         if not isinstance(hierarchy, (str, Hierarchy)):
-            message_core = 'Expected an instance of string or Hierarchy'
-            return TypeError(f"{message_core}, but got {type(hierarchy).__name__}")
+            return TypeError(
+                'Expected an instance of string or Hierarchy,'
+                f" but got {type(hierarchy).__name__}"
+            )
 
         hierarchy_arg = standardize_hierarchy(hierarchy=hierarchy)
         return (
@@ -59,7 +72,15 @@ class Hierarchy:
     @staticmethod
     def parent_level(hierarchy: str) -> str:
         """
+        A static method that extracts and returns the last level of a given
+        hierarchy string.
 
+        Args:
+            hierarchy (str): A string representing a hierarchical structure, 
+                where levels are separated by dots.
+
+        Returns:
+            str: The last level of the hierarchy.
         """
         return hierarchy.split('.')[-1]
 

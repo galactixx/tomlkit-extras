@@ -18,7 +18,10 @@ from tests.typing import FixtureFunction
 
 @dataclass(frozen=True)
 class InsertionTestCase:
-    """"""
+    """
+    Dataclass representing a test case for the `general_insert`,
+    `attribute_insert`, and `container_insert` functions.
+    """
     fixture: FixtureFunction
     insertion: Literal['general', 'attribute', 'container']
     hierarchy: str
@@ -116,7 +119,10 @@ class InsertionTestCase:
 def test_insertion_into_toml_document(
     test_case: InsertionTestCase, request: pytest.FixtureRequest
 ) -> None:
-    """"""
+    """
+    Function to test the functionality of the `general_insert`,
+    `attribute_insert`, and `container_insert` functions.
+    """
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
 
     # Generate the common insertion arguments

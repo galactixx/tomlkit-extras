@@ -22,7 +22,10 @@ from tests.typing import FixtureFunction
 
 @dataclass(frozen=True)
 class OutOfOrderTestCase:
-    """"""
+    """
+    Dataclass representing a test case for the `fix_out_of_order_table`
+    function
+    """
     fixture: FixtureFunction
     hierarchy: Optional[str]
     tables: List[Tuple[str, List[ContainerComment]]]
@@ -34,7 +37,7 @@ class OutOfOrderTestCase:
 def test_fix_all_out_of_order_tables(
     fixture: FixtureFunction, request: pytest.FixtureRequest
 ) -> None:
-    """Fix the out-order-table from the TOML document in place."""
+    """Function to test the functionality of `fix_out_of_order_tables`."""
     # Fix the out-order-table from the TOML document in place
     toml_document: TOMLDocument = request.getfixturevalue(fixture)
     toml_document_original = copy.deepcopy(toml_document)
@@ -85,7 +88,7 @@ def test_fix_all_out_of_order_tables(
 def test_fix_out_of_order_table(
     test_case: OutOfOrderTestCase, request: pytest.FixtureRequest
 ) -> None:
-    """"""
+    """Function to test the functionality of `fix_out_of_order_table`."""
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
     out_of_order_table = get_attribute_from_toml_source(
         hierarchy=test_case.hierarchy, toml_source=toml_document

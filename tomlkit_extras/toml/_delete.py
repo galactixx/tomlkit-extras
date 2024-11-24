@@ -40,7 +40,7 @@ def _delete_iteration_for_aot(
     attribute: str, current_source: items.AoT, hierarchy_queue: PDeque[str]
 ) -> None:
     """
-    A private function that executes the recursive deletion for a tomlkit.items.AoT
+    A private function that executes the recursive deletion for a `tomlkit.items.AoT`
     instance.
     """
     for table_source in current_source:
@@ -71,7 +71,9 @@ def _recursive_deletion(
                 del cast(TOMLDictLike, current_source)[current_table]
         elif isinstance(current_source, items.AoT):
             _delete_iteration_for_aot(
-                attribute=current_table, current_source=current_source, hierarchy_queue=hierarchy_queue_new
+                attribute=current_table,
+                current_source=current_source,
+                hierarchy_queue=hierarchy_queue_new
             )
         else:
             next_source = cast(TOMLValidReturn, current_source[current_table]) # type: ignore[index]
@@ -82,7 +84,6 @@ def _recursive_deletion(
                 del cast(TOMLDictLike, current_source)[current_table]
     except KeyError:
         raise InvalidHierarchyError("Hierarchy does not exist in TOML source space")
-
 
 
 def delete_from_toml_source(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> None:

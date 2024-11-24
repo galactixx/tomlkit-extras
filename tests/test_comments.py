@@ -18,7 +18,10 @@ from tests.typing import FixtureFunction
 
 @pytest.fixture(scope='function')
 def load_c_dev_field_array(load_toml_c: TOMLDocument) -> items.Array:
-    """"""
+    """
+    Function-scoped fixture for the toml_c tool.rye.dev-dependencies
+    `items.Array` instance.
+    """
     dev_dependencies_array = get_attribute_from_toml_source(
         hierarchy='tool.rye.dev-dependencies', toml_source=load_toml_c
     )
@@ -28,7 +31,7 @@ def load_c_dev_field_array(load_toml_c: TOMLDocument) -> items.Array:
 
 @dataclass(frozen=True)
 class CommentsTestCase:
-    """"""
+    """Dataclass representing a test case for the `get_comments` function"""
     fixture: FixtureFunction
     hierarchy: str
     comments: Optional[List[ContainerComment]]
@@ -36,7 +39,10 @@ class CommentsTestCase:
 
 @dataclass(frozen=True)
 class ArrayCommentTestCase:
-    """"""
+    """
+    Dataclass representing a test case for the `get_array_field_comment`
+    function
+    """
     item: str
     comment: Optional[str]
 
@@ -83,7 +89,7 @@ class ArrayCommentTestCase:
 def test_comments_from_toml_document(
     test_case: CommentsTestCase, request: pytest.FixtureRequest
 ) -> None:
-    """"""
+    """Function to test the functionality of `get_comments`."""
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
     comments = get_comments(toml_source=toml_document, hierarchy=test_case.hierarchy)
     assert test_case.comments == comments
@@ -101,6 +107,6 @@ def test_comments_from_toml_document(
 def test_array_comments_toml_c(
     test_case: ArrayCommentTestCase, load_c_dev_field_array: items.Array
 ) -> None:
-    """"""
+    """Function to test the functionality of `get_array_field_comment`."""
     ruff_comment = get_array_field_comment(array=load_c_dev_field_array, array_item=test_case.item)
     assert test_case.comment == ruff_comment

@@ -18,6 +18,7 @@ from tomlkit_extras._typing import (
 from tomlkit_extras._utils import (
     complete_clear_toml_document,
     create_array_of_tables,
+    create_table,
     create_toml_document,
     decompose_body_item,
     from_dict_to_toml_document,
@@ -28,40 +29,58 @@ from tests.typing import FixtureFunction
 
 @dataclass(frozen=True)
 class BaseClearTestCase:
-    """"""
+    """
+    Dataclass representing a test case for the any functions that clear or
+    delete attributes/data from a `tomlkit` type.
+    """
     fixture: FixtureFunction
     num_attributes: int
 
 
 @dataclass(frozen=True)
 class ClearDocumentTestCase(BaseClearTestCase):
-    """"""
+    """
+    Dataclass representing a test case for the `complete_clear_toml_document`
+    function.
+    """
     pass
 
 
 @dataclass(frozen=True)
 class PartialClearDocumentTestCase(BaseClearTestCase):
-    """"""
+    """
+    Dataclass representing a test case for the `_partial_clear_dict_like_toml_item`
+    function.
+    """
     pass
 
 
 @dataclass(frozen=True)
 class CreateArrayOTablesTestCase:
-    """"""
+    """
+    Dataclass representing a test case for the `create_array_of_tables`
+    function.
+    """
     arrays: List[Any]
     num_aots: int
 
 
 @dataclass(frozen=True)
 class CreateDocumentTestCase:
-    """"""
+    """
+    Dataclass representing a test case for the `create_toml_document`
+    function.
+    """
     hierarchy: str
     table: Dict[str, Any]
 
 
 @dataclass(frozen=True)
 class DecomposeBodyItemTestCase:
-    """"""
+    """
+    Dataclass representing a test case for the `decompose_body_item`
+    function.
+    """
     key: Optional[items.Key]
     item: items.Item
 
@@ -73,16 +92,12 @@ class DecomposeBodyItemTestCase:
 
 @dataclass(frozen=True)
 class GetContainerBodyTestCase:
-    """"""
+    """
+    Dataclass representing a test case for the `get_container_body`
+    function.
+    """
     structure: BodyContainer
     container_body: BodyContainerItems
-
-
-def table_from_dict(to_table: Dict[str, Any]) -> items.Table:
-    """"""
-    table: items.Table = tomlkit.table()
-    table.update(to_table)
-    return table
 
 
 @pytest.mark.parametrize(
@@ -95,7 +110,7 @@ def table_from_dict(to_table: Dict[str, Any]) -> items.Table:
 def test_complete_clear_toml_document(
     test_case: ClearDocumentTestCase, request: pytest.FixtureRequest
 ) -> None:
-    """"""
+    """Function to test the functionality of `complete_clear_toml_document`."""
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
 
     assert len(toml_document.values()) == test_case.num_attributes
@@ -120,17 +135,17 @@ _RAW_TABLE_DICTS: List[Dict[str, Any]] = [
     [
         CreateArrayOTablesTestCase(arrays=_RAW_TABLE_DICTS, num_aots=2),
         CreateArrayOTablesTestCase(
-            arrays=[table_from_dict(to_table=table) for table in _RAW_TABLE_DICTS],
+            arrays=[create_table(fields=table) for table in _RAW_TABLE_DICTS],
             num_aots=2
         ),
         CreateArrayOTablesTestCase(
-            arrays=[table_from_dict(to_table=_RAW_TABLE_DICTS[0]), _RAW_TABLE_DICTS[1]],
+            arrays=[create_table(fields=_RAW_TABLE_DICTS[0]), _RAW_TABLE_DICTS[1]],
             num_aots=2
         )
     ]
 )
 def test_create_array_of_tables(test_case: CreateArrayOTablesTestCase) -> None:
-    """"""
+    """Function to test the functionality of `create_array_of_tables`."""
     aot_from_dictionaries = create_array_of_tables(tables=test_case.arrays)
     assert isinstance(aot_from_dictionaries, items.AoT)
     assert len(aot_from_dictionaries) == test_case.num_aots
@@ -154,7 +169,7 @@ def test_create_array_of_tables(test_case: CreateArrayOTablesTestCase) -> None:
     ]
 )
 def test_create_toml_document(test_case: CreateDocumentTestCase) -> None:
-    """"""
+    """Function to test the functionality of `create_toml_document`."""
     project_toml_document = create_toml_document(
         hierarchy=test_case.hierarchy, value=test_case.table
     )
@@ -180,7 +195,7 @@ def test_create_toml_document(test_case: CreateDocumentTestCase) -> None:
     ]
 )
 def test_decompose_body_item(test_case: DecomposeBodyItemTestCase) -> None:
-    """"""
+    """Function to test the functionality of `decompose_body_item`."""
     item_key, toml_item = decompose_body_item(body_item=test_case.body_item)
     assert (
         (
@@ -236,7 +251,7 @@ def test_decompose_body_item(test_case: DecomposeBodyItemTestCase) -> None:
     ]
 )
 def test_from_dict_to_toml_document(dictionary: Dict[str, Any]) -> None:
-    """"""
+    """Function to test the functionality of `from_dict_to_toml_document`."""
     toml_converted_document = from_dict_to_toml_document(dictionary=dictionary)
     assert isinstance(toml_converted_document, TOMLDocument)
     assert toml_converted_document.unwrap() == dictionary
@@ -253,7 +268,7 @@ def test_from_dict_to_toml_document(dictionary: Dict[str, Any]) -> None:
             ]
         ),
         GetContainerBodyTestCase(
-            table_from_dict({'server': '192.168.1.1', 'port': 5432}),
+            create_table({'server': '192.168.1.1', 'port': 5432}),
             [
                 (tomlkit.key('server'), tomlkit.string('192.168.1.1')),
                 (tomlkit.key('port'), tomlkit.integer(5432))
@@ -262,7 +277,7 @@ def test_from_dict_to_toml_document(dictionary: Dict[str, Any]) -> None:
     ]
 )
 def test_get_container_body(test_case: GetContainerBodyTestCase) -> None:
-    """"""
+    """Function to test the functionality of `get_container_body`."""
     container_body = get_container_body(toml_source=test_case.structure)
     assert test_case.container_body == container_body
 
@@ -278,7 +293,7 @@ def test_get_container_body(test_case: GetContainerBodyTestCase) -> None:
 def test_partial_clear_dict_like_toml_item(
     test_case: PartialClearDocumentTestCase, request: pytest.FixtureRequest
 ) -> None:
-    """"""
+    """Function to test the functionality of `_partial_clear_dict_like_toml_item`."""
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
 
     assert len(toml_document.values()) == test_case.num_attributes
