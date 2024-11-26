@@ -36,7 +36,11 @@ from tomlkit_extras.descriptor._types import (
 )
 
 class TOMLDocumentDescriptor:
-    """"""
+    """
+    
+    
+    
+    """
     def __init__(
         self, toml_source: DescriptorInput, top_level_only: bool = False
     ):
@@ -87,60 +91,127 @@ class TOMLDocumentDescriptor:
 
     @property
     def number_of_tables(self) -> int:
-        """"""
+        """
+        Returns an integer representing the number of non-inline/non-super tables
+        appearing in the TOML file.
+        """
         return self._toml_statistics._number_of_tables
 
     @property
     def number_of_inline_tables(self) -> int:
-        """"""
+        """
+        Returns an integer representing the number of inline tables appearing in the
+        TOML file.
+        """
         return self._toml_statistics._number_of_inline_tables
 
     @property
     def number_of_aots(self) -> int:
-        """"""
+        """
+        Returns an integer representing the number of array-of-tables appearing in
+        the TOML file.
+        """
         return self._toml_statistics._number_of_aots
     
     @property
     def number_of_arrays(self) -> int:
-        """"""
+        """
+        Returns an integer representing the number of arrays appearing in the TOML
+        file.
+        """
         return self._toml_statistics._number_of_arrays
 
     @property
     def number_of_comments(self) -> int:
-        """"""
+        """
+        Returns an integer representing the number of comments appearing in the TOML
+        file.
+        """
         return self._toml_statistics._number_of_comments
 
     @property
     def number_of_fields(self) -> int:
-        """"""
+        """
+        Returns an integer representing the number of non-array fields appearing in
+        the TOML file.
+        """
         return self._toml_statistics._number_of_fields
 
     def get_field_from_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[FieldDescriptor]:
-        """"""
+        """
+        Retrieves a list of `FieldDescriptor` objects, representing fields, from
+        an array-of-tables that correspond to a specific hierarchy within the TOML
+        file.
+        
+        Args:
+            hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
+        
+        Returns:
+            List[`FieldDescriptor`]: A list of `FieldDescriptor` instances.
+        """
         return self._retriever.get_field_from_array_of_tables(hierarchy=hierarchy)
 
     def get_table_from_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[TableDescriptor]:
-        """"""
+        """
+        Retrieves a list of `TableDescriptor` objects, representing non-super tables,
+        from an array-of-tables that correspond to a specific hierarchy within the TOML
+        file.
+        
+        Args:
+            hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
+        
+        Returns:
+            List[`TableDescriptor`]: A list of `TableDescriptor` instances.
+        """
         return self._retriever.get_table_from_array_of_tables(hierarchy=hierarchy)
 
     def get_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[ArrayOfTablesDescriptor]:
-        """"""
+        """
+        Retrieves a list of `ArrayOfTablesDescriptor` objects, representing
+        array-of-tables, that correspond to a specific hierarchy within the TOML file.
+        
+        Args:
+            hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
+        
+        Returns:
+            List[`ArrayOfTablesDescriptor`]: A list of `ArrayOfTablesDescriptor` instances.
+        """
         return self._retriever.get_array_of_tables(hierarchy=hierarchy)
 
     def get_field(self, hierarchy: TOMLHierarchy) -> FieldDescriptor:
-        """"""
+        """
+        Retrieves a `FieldDescriptor` object, representing a field that corresponds
+        to a specific hierarchy within the TOML file.
+        
+        Args:
+            hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
+        
+        Returns:
+            `FieldDescriptor`: A `FieldDescriptor` instance.
+        """
         return self._retriever.get_field(hierarchy=hierarchy)
 
     def get_table(self, hierarchy: TOMLHierarchy) -> TableDescriptor:
-        """"""
+        """
+        Retrieves a `TableDescriptor` object, representing a non-super table that
+        corresponds to a specific hierarchy within the TOML file.
+        
+        Args:
+            hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
+        
+        Returns:
+            `TableDescriptor`: A `TableDescriptor` instance.
+        """
         return self._retriever.get_table(hierarchy=hierarchy)
     
     def get_top_level_stylings(self, styling: StyleItem) -> List[StyleDescriptor]:
-        """"""
+        """
+        """
         return self._retriever.get_top_level_stylings(styling=styling)
 
     def get_styling(self, styling: str, hierarchy: Optional[TOMLHierarchy] = None) -> List[StyleDescriptor]:
-        """"""
+        """
+        """
         return self._retriever.get_styling(styling=styling, hierarchy=hierarchy)
 
     def _generate_descriptor_from_array_of_tables(

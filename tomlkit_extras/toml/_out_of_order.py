@@ -17,8 +17,8 @@ def _fix_of_out_of_order_table_chain(
 ) -> None:
     """
     A private function which will iterate through a chain of tables and fixes any
-    out-of-order tables that are encountered. Within tomlkit, these out-of-order
-    tables are represented by tomlkit.container.OutOfOrderTableProxy types.
+    out-of-order tables that are encountered. Within `tomlkit`, these out-of-order
+    tables are represented by `tomlkit.container.OutOfOrderTableProxy` types.
 
     This manipulations are done in-place.
     """
@@ -57,27 +57,27 @@ def _find_child_table(table_value: Any) -> items.Table:
 
 def fix_out_of_order_table(table: OutOfOrderTableProxy) -> items.Table:
     """
-    Given an out-of-order table, represented by a tomlkit.container.OutOfOrderTableProxy
-    instance, will fix the order of the table and return a tomlkit.items.Table
+    Given an out-of-order table, represented by a `tomlkit.container.OutOfOrderTableProxy`
+    instance, will fix the order of the table and return a `tomlkit.items.Table`
     instance.
     
     Out-of-order tables occur when a descendant of a hierarchy appears above
     that hierarchy within a TOML file. In these cases, instead of returning a
-    tomlkit.items.Table instance as would normally be done, a
-    tomlkit.container.OutOfOrderTableProxy is generated. While the ordering in
+    `tomlkit.items.Table` instance as would normally be done, a
+    `tomlkit.container.OutOfOrderTableProxy` is generated. While the ordering in
     the TOML file is maintained, it poses some issues. Since it is not a sub-class
-    of tomlkit.items.Item, it therefore does not contain a comment or other info.
+    of `tomlkit.items.Item`, it therefore does not contain a comment or other info.
     
     This simple function was built to parse and fix any of those issues by
     re-ordering the table. It navigates through the entire structure, so if there
     are any nested out-of-order tables, these will be fixed as well.
 
     Args:
-        table (tomlkit.container.OutOfOrderTableProxy): A tomlkit.container.OutOfOrderTableProxy
-            instance.
+        table (`tomlkit.container.OutOfOrderTableProxy`): A
+            `tomlkit.container.OutOfOrderTableProxy` instance.
     
     Returns:
-        tomlkit.items.Table: A tomlkit.items.Table instance.
+        `tomlkit.items.Table`: A `tomlkit.items.Table` instance.
     """
     component_tables = cast(List[items.Table], copy.deepcopy(table._tables))
 
@@ -121,7 +121,7 @@ def fix_out_of_order_table(table: OutOfOrderTableProxy) -> items.Table:
 
 def fix_out_of_order_tables(toml_source: TOMLSource) -> None:
     """
-    Fixes all out-of-order tables, represented by a tomlkit.container.OutOfOrderTableProxy
+    Fixes all out-of-order tables, represented by a `tomlkit.container.OutOfOrderTableProxy`
     instances, appearing in a `TOMLSource` instance. The re-ordering an manipluations are
     done in-place and no type is returned.
     
@@ -138,4 +138,6 @@ def fix_out_of_order_tables(toml_source: TOMLSource) -> None:
         for aot_table in toml_source:
             fix_out_of_order_tables(toml_source=aot_table)
     else:
-        raise TypeError(f"Expected an instance of TOMLSource, but got {type(toml_source).__name__}")
+        raise TypeError(
+            f"Expected an instance of TOMLSource, but got {type(toml_source).__name__}"
+        )

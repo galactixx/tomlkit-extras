@@ -324,9 +324,8 @@ class _BaseInserter(ABC):
 
     def ensure_array_of_tables_insert(self) -> items.Table:
         """
-        Contains logic to ensure that if the insertion is to occur in an
-        array-of-tables, then the item to be inserted must be an `items.Table`
-        instance.
+        Ensures that if the insertion is to occur in an array-of-tables,
+        then the item to be inserted must be an `items.Table` instance.
         """
         if not isinstance(self.insertion_as_toml_item, items.Table):
             raise ValueError(
@@ -337,8 +336,8 @@ class _BaseInserter(ABC):
 
     def ensure_inline_table_insert(self, parent: BodyContainer) -> None:
         """
-        Contains logic to ensure that if the insertion is to occur in an
-        inline-table, then the item to be inserted must not be an `tomlkit.items.AoT`,
+        Ensures that if the insertion is to occur in an inline-table, then
+        the item to be inserted must not be an `tomlkit.items.AoT`,
         `tomlkit.items.Table`, or `tomlkit.items.InlineTable` instance.
         """
         if (
@@ -351,6 +350,8 @@ class _BaseInserter(ABC):
 
     def possible_array_insertion(self, parent: BodyContainer) -> BodyContainer:
         """
+        Checks if insertion is to occur in an array. If so, then will retrieve
+        and return the `tomlkit.items.Array` instance.
         """
         if isinstance(parent, DICTIONARY_LIKE_TYPES):
             attribute_toml = parent.get(self.attribute, None)
@@ -365,7 +366,7 @@ class _BaseInserter(ABC):
 class _GeneralInserter(_BaseInserter):
     """
     A sub-class of `_BaseInserter` which provides tools to insert `tomlkit.items.Item`
-    objects at "generally", AKA at the bottom of tomlkit types that support
+    objects "generally", AKA at the bottom of tomlkit types, that support
     insertion.
     """
     def __init__(
@@ -380,6 +381,8 @@ class _GeneralInserter(_BaseInserter):
 
     def array_insert(self, parent: TOMLDictLike) -> None:
         """
+        Inserts an `tomlkit.items.Item` within an `tomlkit.items.AoT` instance
+        for the "general" insert case.
         """
         table_to_insert: items.Table = self.ensure_array_of_tables_insert()
         array_of_tables = cast(items.AoT, parent[self.attribute])
@@ -387,6 +390,8 @@ class _GeneralInserter(_BaseInserter):
 
     def insert(self, parent: BodyContainer) -> None:
         """
+        Inserts an `tomlkit.items.Item` within a `tomlkit` type that is not
+        a `tomlkit.items.AoT` instance.
         """
         if isinstance(
             parent, (
@@ -420,11 +425,15 @@ class _PositionalInserter(_BaseInserter):
     @property
     def body_item(self) -> Tuple[str, items.Item]:
         """
+        Returns a tuple containing the string key and `tomlkit.items.Item`
+        of the item to be inserted
         """
         return (self.attribute, self.insertion_as_toml_item)
 
     def array_insert(self, parent: TOMLDictLike) -> None:
         """
+        Inserts an `tomlkit.items.Item` within an `tomlkit.items.AoT` instance
+        for the "positional" insert case.
         """
         table_to_insert: items.Table = self.ensure_array_of_tables_insert()
         array_of_tables = cast(items.AoT, parent[self.attribute])
@@ -432,18 +441,26 @@ class _PositionalInserter(_BaseInserter):
 
     def insert(self, parent: BodyContainer) -> None:
         """
+        Inserts an `tomlkit.items.Item` within a `tomlkit` type that is not
+        a `tomlkit.items.AoT` instance.
         """
         item_to_insert: Tuple[str, items.Item] = self.body_item
         toml_body_items = copy.deepcopy(get_container_body(toml_source=parent))
         _refresh_container(initial_container=parent)
 
         container: BodyContainerInOrder
+
+        # If the parent of the insertion point is an out-of-order table,
+        # then overwrite the container variable by creating a temporary
+        # new items.Table instance.
         if isinstance(parent, OutOfOrderTableProxy):
             container = tomlkit.table()
         else:
             container = parent
 
         inserter: _BaseItemInserter
+
+        # Conditional to create insert object for dict-like or list-like tomlkit types
         if isinstance(container, (TOMLDocument, items.Table, items.InlineTable)):
             inserter = _DictLikeItemInserter(
                 item_to_insert=item_to_insert,
@@ -457,6 +474,8 @@ class _PositionalInserter(_BaseInserter):
                 by_attribute=self.by_attribute
             )
 
+        # For out-of-order tables, update the original parent container (which
+        # has been cleared of its contents)
         if isinstance(parent, OutOfOrderTableProxy):
             parent.update(container)
 
@@ -507,7 +526,7 @@ def _refresh_container(initial_container: BodyContainer) -> None:
         case TOMLDocument():
             complete_clear_toml_document(toml_document=initial_container)
         case _:
-            raise ValueError("Type is not a valid container-like structure")
+            raise TypeError("Type is not a valid container-like structure")
 
 
 def _insert_into_toml_source(inserter: _BaseInserter) -> None:

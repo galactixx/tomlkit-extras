@@ -39,7 +39,7 @@ from tomlkit_extras._typing import (
 
 def _get_table_from_aot(current_source: List[items.Item], table: str) -> List[items.Item]:
     """
-    A private function that extracts all items within a tomlkit.items.AoT instance
+    A private function that extracts all items within a `tomlkit.items.AoT` instance
     that correspond to a specific hierarchy.
     """
     next_source: List[items.Item] = []
@@ -150,9 +150,9 @@ def get_attribute_from_toml_source(
     fix_order: bool = False
 ) -> Retrieval:
     """
-    Retrieves and returns the tomlkit type located at a specific hierarchy
+    Retrieves and returns the `tomlkit` type located at a specific hierarchy
     within a `TOMLFieldSource` instance. If the hierarchy is nested within
-    a `tomlkit.items.AoT` type, then a list with multiple tomlkit types can be
+    a `tomlkit.items.AoT` type, then a list with multiple `tomlkit` types can be
     returned. Otherwise a `tomlkit.container.OutOfOrderTableProxy` or a
     subclass of `tomlkit.items.Item` will be returned.
 
@@ -215,7 +215,7 @@ def is_toml_instance(
     Checks if an item located at a specified hierarchy within a `TOMLFieldSource`
     instance is of a specific type.
     
-    If the hierarchy is nested within a tomlkit.items.AoT type then multiple items
+    If the hierarchy is nested within a `tomlkit.items.AoT` type then multiple items
     will correspond to the hierarchy. In this case, each item is tested for type
     equality.
     
@@ -223,7 +223,7 @@ def is_toml_instance(
         _type (Type[Any]): The type to check.
         hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
         toml_source (`TOMLFieldSource`): A `TOMLFieldSource` instance.
-        array (bool, optional): If set to False, when a tomlkit.items.AoT instance
+        array (bool, optional): If set to False, when a `tomlkit.items.AoT` instance
             is to be tested, each table in the array is tested for type equality.
             Otherwise it will be the AoT instance itself that is checked. Defaults
             to False.
