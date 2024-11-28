@@ -17,7 +17,7 @@ from tomlkit_extras.toml._comments import (
 )
 from tomlkit_extras.descriptor._helpers import CommentDescriptor
 from tomlkit_extras.descriptor._descriptors import (
-    ArrayOfTablesDescriptor,
+    AoTDescriptor,
     FieldDescriptor,
     StyleDescriptor,
     TableDescriptor
@@ -63,7 +63,7 @@ __all__ = [
     'get_comments',
     'StructureComment',
     'CommentDescriptor',
-    'ArrayOfTablesDescriptor',
+    'AoTDescriptor',
     'FieldDescriptor',
     'StyleDescriptor',
     'TableDescriptor',

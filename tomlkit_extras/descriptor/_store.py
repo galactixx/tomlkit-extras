@@ -26,8 +26,8 @@ from tomlkit_extras.descriptor._types import (
     ItemInfo
 )
 from tomlkit_extras.descriptor._descriptors import (
-    ArrayOfTablesDescriptor,
-    ArrayOfTablesDescriptors,
+    AoTDescriptor,
+    AoTDescriptors,
     FieldDescriptor,
     StylingDescriptors,
     TableDescriptor
@@ -41,22 +41,27 @@ class BaseStore(ABC):
     """
     @abstractmethod
     def get(self, hierarchy: str) -> Any:
+        """"""
         pass
 
     @abstractmethod
     def contains(self, hierarchy: str) -> bool:
+        """"""
         pass
 
     @abstractmethod
     def update(self, item: items.Item, info: ItemInfo, position: ItemPosition) -> None:
+        """"""
         pass
 
     @abstractmethod
     def get_stylings(self, style_info: ItemInfo) -> StylingDescriptors:
+        """"""
         pass
 
     @abstractmethod
     def get_array(self, info: ItemInfo) -> FieldDescriptor:
+        """"""
         pass
 
 
@@ -179,7 +184,7 @@ class ArrayOfTablesStore(BaseTableStore):
     """
     def __init__(self, line_counter: LineCounter) -> None:
         self._line_counter = line_counter
-        self._array_of_tables: Dict[str, ArrayOfTablesDescriptors] = dict()
+        self._array_of_tables: Dict[str, AoTDescriptors] = dict()
 
     @property
     def hierarchies(self) -> Set[str]:
@@ -189,16 +194,16 @@ class ArrayOfTablesStore(BaseTableStore):
         """
         return set(self._array_of_tables.keys())
 
-    def get(self, hierarchy: str) -> ArrayOfTablesDescriptors:
+    def get(self, hierarchy: str) -> AoTDescriptors:
         """
-        Given an array of tables hierarchy will return a `ArrayOfTablesDescriptors`
+        Given an array of tables hierarchy will return a `AoTDescriptors`
         instance corresponding to that array.
 
         Args:
             hierarchy (str): A TOML hierarchy corresponding to an array of tables.
 
         Returns:
-            `ArrayOfTablesDescriptors`: An `ArrayOfTablesDescriptors` instance.
+            `AoTDescriptors`: An `AoTDescriptors` instance.
         """
         return self._array_of_tables[hierarchy]
     
@@ -216,24 +221,24 @@ class ArrayOfTablesStore(BaseTableStore):
         """
         return hierarchy in self._array_of_tables
 
-    def append(self, hierarchy: str, array_of_tables: ArrayOfTablesDescriptor) -> None:
+    def append(self, hierarchy: str, array_of_tables: AoTDescriptor) -> None:
         """
         Updates the existing array of tables store based on a hierarchy.
         
         If the hierarchy has not already been encountered then a new key-value pair
         is created where the key is the string hierarchy and the value is an
-        `ArrayOfTablesDescriptors` instance.
+        `AoTDescriptors` instance.
 
         If the hierarchy has already been encountered, then the existing value
-        corresponding to a `ArrayOfTablesDescriptors` instance is updated.
+        corresponding to a `AoTDescriptors` instance is updated.
         
         Args:
             hierarchy (str): A TOML hierarchy corresponding to an array of tables.
-            array_of_tables (`ArrayOfTablesDescriptors`): An `ArrayOfTablesDescriptors`
+            array_of_tables (`AoTDescriptors`): An `AoTDescriptors`
                 instance.
         """
         if not hierarchy in self._array_of_tables:
-            self._array_of_tables[hierarchy] = ArrayOfTablesDescriptors(
+            self._array_of_tables[hierarchy] = AoTDescriptors(
                 aots=[array_of_tables], array_indices={hierarchy: 0}
             )
         else:
@@ -546,7 +551,7 @@ class DescriptorStore:
         """
         descriptor_store = self._store_choice(info=style_info)
         styling_positions = descriptor_store.get_stylings(style_info=style_info)
-        styling_positions.update_stylings(
+        styling_positions._update_stylings(
             style=style,
             info=style_info,
             position=position,

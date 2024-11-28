@@ -181,7 +181,7 @@ class _BaseItemInserter(ABC):
         Abstract method to add a `tomlkit.items.Item` instance to a `tomlkit`
         structure.
         """
-        raise NotImplementedError("This method must be overridden by subclasses")
+        pass
 
     def insert_attribute(self) -> None:
         """
@@ -286,7 +286,7 @@ class _BaseInserter(ABC):
         An abstract method to insert an `tomlkit.items.Item` within an
         `tomlkit.items.AoT` instance.
         """
-        raise NotImplementedError("This method must be overridden by subclasses")
+        pass
 
     @abstractmethod
     def insert(self, parent: BodyContainer) -> None:
@@ -294,7 +294,7 @@ class _BaseInserter(ABC):
         An abstract method to insert an `tomlkit.items.Item` within an
         a `tomlkit` type that is not a `tomlkit.items.AoT` instance.
         """
-        raise NotImplementedError("This method must be overridden by subclasses")
+        pass
 
     def get_parent_container(self) -> BodyContainer:
         """

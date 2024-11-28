@@ -10,7 +10,7 @@ from typing import (
 
 import pytest
 from tomlkit_extras import (
-    ArrayOfTablesDescriptor,
+    AoTDescriptor,
     CommentDescriptor,
     FieldDescriptor,
     Hierarchy,
@@ -58,7 +58,7 @@ class AbstractTestCase(ABC):
     @abstractmethod
     def validate_descriptor(self, descriptor: Any) -> None:
         """Abstract method to validate the output of method being tested."""
-        raise NotImplementedError("This method must be overridden by subclasses")
+        pass
 
 
 @dataclass(frozen=True)
@@ -180,7 +180,7 @@ class AoTDescriptorTestCase(AbstractTestCase):
     # Number of tables expected to be contained in array
     tables: int
 
-    def validate_descriptor(self, descriptor: ArrayOfTablesDescriptor) -> None:
+    def validate_descriptor(self, descriptor: AoTDescriptor) -> None:
         """
         Validate the output from the `get_array_of_tables` method when tested.
         """
@@ -701,7 +701,7 @@ def test_toml_array_field_descriptor(
 ) -> None:
     """Function to test the functionality of `get_field_from_array_of_tables`."""
     toml_descriptor: TOMLDocumentDescriptor = request.getfixturevalue(test_case.fixture)
-    descriptors = toml_descriptor.get_field_from_array_of_tables(
+    descriptors = toml_descriptor.get_field_from_aot(
         hierarchy=test_case.hierarchy
     )
     assert len(descriptors) == len(test_case.test_cases)
@@ -784,7 +784,7 @@ def test_toml_array_table_descriptor(
 ) -> None:
     """Function to test the functionality of `get_table_from_array_of_tables`."""
     toml_descriptor: TOMLDocumentDescriptor = request.getfixturevalue(test_case.fixture)
-    descriptors = toml_descriptor.get_table_from_array_of_tables(
+    descriptors = toml_descriptor.get_table_from_aot(
         hierarchy=test_case.hierarchy
     )
     assert len(descriptors) == len(test_case.test_cases)
@@ -839,7 +839,7 @@ def test_toml_array_descriptor(
 ) -> None:
     """Function to test the functionality of `get_array_of_tables`."""
     toml_descriptor: TOMLDocumentDescriptor = request.getfixturevalue(test_case.fixture)
-    descriptors = toml_descriptor.get_array_of_tables(hierarchy=test_case.hierarchy)
+    descriptors = toml_descriptor.get_aot(hierarchy=test_case.hierarchy)
     assert len(descriptors) == len(test_case.test_cases)
 
     for idx, table in enumerate(test_case.test_cases):

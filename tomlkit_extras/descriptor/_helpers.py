@@ -66,8 +66,8 @@ def create_comment_descriptor(item: items.Item, line_no: Optional[int]) -> Optio
 
 def item_is_table(item_type: Item) -> bool:
     """
-    A private function that determines if an `Item` which corresponds to a
-    tomlkit instance, is a table.
+    A private function that determines if an `Item`, which is a literal that
+    identifies the type of `tomlkit` object, is a table.
     """
     return item_type in {'table', 'inline-table'}
 
@@ -90,12 +90,12 @@ def find_child_tables(root_hierarchy: str, hierarchies: Set[str]) -> Set[str]:
 
 def get_item_type(toml_item: Union[TOMLDocument, TOMLValidReturn]) -> Item:
     """
-    A private function that will return an Item, corresponding to a string
+    A private function that will return an `Item`, corresponding to a string
     literal representing the type of the TOML structure, given a
-    tomlkit.TOMLDocument or `TOMLValidReturn` instance
+    `tomlkit.TOMLDocument` or `TOMLValidReturn` instance
 
     So, for example, if a tomlkit.TOMLDocument is passed in, then 'document'
-    would be returned. If a tomlkit.items.AoT is passed, then 'array-of-tables'
+    would be returned. If a `tomlkit.items.AoT` is passed, then 'array-of-tables'
     would output.
     """
     toml_item_type: Item

@@ -18,8 +18,8 @@ from tomlkit_extras._hierarchy import (
     standardize_hierarchy
 )
 from tomlkit_extras.descriptor._descriptors import (
-    ArrayOfTablesDescriptor,
-    ArrayOfTablesDescriptors,
+    AoTDescriptor,
+    AoTDescriptors,
     FieldDescriptor,
     StyleDescriptor,
     StylingDescriptors,
@@ -143,7 +143,7 @@ class DescriptorRetriever:
 
         return field_descriptor
     
-    def get_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[ArrayOfTablesDescriptor]:
+    def get_aot(self, hierarchy: TOMLHierarchy) -> List[AoTDescriptor]:
         """"""
         array_hierarchies: Set[str] = self._store.array_of_tables.hierarchies
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
@@ -158,13 +158,13 @@ class DescriptorRetriever:
                 "Hierarchy does not map to an existing array of tables"
             )
 
-        array_of_tables: ArrayOfTablesDescriptors = self._store.array_of_tables.get(
+        array_of_tables: AoTDescriptors = self._store.array_of_tables.get(
             hierarchy=longest_hierarchy
         )
-        array_descriptors: List[ArrayOfTablesDescriptor] = array_of_tables.aots
+        array_descriptors: List[AoTDescriptor] = array_of_tables.aots
         return array_descriptors
     
-    def get_table_from_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[TableDescriptor]:
+    def get_table_from_aot(self, hierarchy: TOMLHierarchy) -> List[TableDescriptor]:
         """"""
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str = str(hierarchy_obj)
@@ -176,10 +176,10 @@ class DescriptorRetriever:
         if longest_hierarchy is None:
             raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
         
-        array_of_tables: ArrayOfTablesDescriptors = self._store.array_of_tables.get(
+        array_of_tables: AoTDescriptors = self._store.array_of_tables.get(
             hierarchy=longest_hierarchy
         )
-        arrays: List[ArrayOfTablesDescriptor] = array_of_tables.aots
+        arrays: List[AoTDescriptor] = array_of_tables.aots
 
         table_descriptors: List[TableDescriptor] = []
 
@@ -193,7 +193,7 @@ class DescriptorRetriever:
 
         return table_descriptors
     
-    def get_field_from_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[FieldDescriptor]:
+    def get_field_from_aot(self, hierarchy: TOMLHierarchy) -> List[FieldDescriptor]:
         """"""
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str: str = str(hierarchy_obj)
@@ -208,10 +208,10 @@ class DescriptorRetriever:
         if longest_hierarchy == hierarchy_as_str:
             raise InvalidFieldError("Hierarchy does not map to an existing field")
 
-        array_of_tables: ArrayOfTablesDescriptors = self._store.array_of_tables.get(
+        array_of_tables: AoTDescriptors = self._store.array_of_tables.get(
             hierarchy=longest_hierarchy
         )
-        arrays: List[ArrayOfTablesDescriptor] = array_of_tables.aots
+        arrays: List[AoTDescriptor] = array_of_tables.aots
         field_descriptors: List[FieldDescriptor] = []
 
         hierarchy_table = Hierarchy.parent_hierarchy(hierarchy=hierarchy_as_str)

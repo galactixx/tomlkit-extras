@@ -24,22 +24,34 @@ from tomlkit_extras._typing import (
     TopLevelItem
 )
 from tomlkit_extras.descriptor._descriptors import (
-    ArrayOfTablesDescriptor,
+    AoTDescriptor,
     FieldDescriptor,
     StyleDescriptor,
     TableDescriptor
 )
 from tomlkit_extras.descriptor._types import (
-    ItemPosition,
     ItemInfo,
+    ItemPosition,
     TOMLStatistics
 )
 
 class TOMLDocumentDescriptor:
     """
+    A class that iterates through, maps out, and collects all relevant information for
+    all fields, tables and stylings appearing in a `DescriptorInput` instance. A
+    `DescriptorInput` instance is a `tomlkit` type of either `tomlkit.TOMLDocument`,
+    `tomlkit.items.Table`, `tomlkit.items.AoT`, or `tomlkit.items.Array`. 
     
+    Parsing occurs within the constructor. Methods are provided to retrieve basic
+    summary statistics about the TOML file, and to extract granular information
+    about fields, tables, or stylings appearing at a specific hierarchy.
     
-    
+    Args:
+        toml_source (`DescriptorInput`): A `tomlkit` type of either `tomlkit.TOMLDocument`,
+            `tomlkit.items.Table`, `tomlkit.items.AoT`, or `tomlkit.items.Array`
+        top_level_only (bool): A boolean value that indicates whether only the
+            top-level space of the `DescriptorInput` structure should be parsed.
+            Defaults to False.
     """
     def __init__(
         self, toml_source: DescriptorInput, top_level_only: bool = False
@@ -69,7 +81,7 @@ class TOMLDocumentDescriptor:
         position = ItemPosition(attribute=1, container=1)
         if isinstance(toml_source, (items.Table, items.AoT)):
             update_key = toml_source.name
-            assert update_key is not None, 'table must have a string name'
+            assert update_key is not None, 'structure must have a string name'
         else:
             update_key = str()
 
@@ -78,8 +90,7 @@ class TOMLDocumentDescriptor:
         )
 
         if isinstance(toml_source, items.AoT):
-            assert toml_source.name is not None, 'array of tables must have a string name'
-            self._generate_descriptor_from_array_of_tables(
+            self._generate_descriptor_from_aot(
                 array=toml_source, position=position, info=container_info
             )          
         else:
@@ -137,11 +148,10 @@ class TOMLDocumentDescriptor:
         """
         return self._toml_statistics._number_of_fields
 
-    def get_field_from_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[FieldDescriptor]:
+    def get_field_from_aot(self, hierarchy: TOMLHierarchy) -> List[FieldDescriptor]:
         """
-        Retrieves a list of `FieldDescriptor` objects, representing fields, from
-        an array-of-tables that correspond to a specific hierarchy within the TOML
-        file.
+        Retrieves all fields from an array-of-tables, where each field is represented
+        by a `FieldDescriptor` object, that correspond to a specific hierarchy.
         
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
@@ -149,39 +159,38 @@ class TOMLDocumentDescriptor:
         Returns:
             List[`FieldDescriptor`]: A list of `FieldDescriptor` instances.
         """
-        return self._retriever.get_field_from_array_of_tables(hierarchy=hierarchy)
+        return self._retriever.get_field_from_aot(hierarchy=hierarchy)
 
-    def get_table_from_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[TableDescriptor]:
+    def get_table_from_aot(self, hierarchy: TOMLHierarchy) -> List[TableDescriptor]:
         """
-        Retrieves a list of `TableDescriptor` objects, representing non-super tables,
-        from an array-of-tables that correspond to a specific hierarchy within the TOML
-        file.
-        
+        Retrieves all tables from an array-of-tables, where each table is represented
+        by a `TableDescriptor` object, that correspond to a specific hierarchy.
+
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
         
         Returns:
             List[`TableDescriptor`]: A list of `TableDescriptor` instances.
         """
-        return self._retriever.get_table_from_array_of_tables(hierarchy=hierarchy)
+        return self._retriever.get_table_from_aot(hierarchy=hierarchy)
 
-    def get_array_of_tables(self, hierarchy: TOMLHierarchy) -> List[ArrayOfTablesDescriptor]:
+    def get_aot(self, hierarchy: TOMLHierarchy) -> List[AoTDescriptor]:
         """
-        Retrieves a list of `ArrayOfTablesDescriptor` objects, representing
-        array-of-tables, that correspond to a specific hierarchy within the TOML file.
-        
+        Retrieves all array-of-tables, where each array is represented
+        by a `AoTDescriptor` object, that correspond to a specific hierarchy.
+
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
         
         Returns:
-            List[`ArrayOfTablesDescriptor`]: A list of `ArrayOfTablesDescriptor` instances.
+            List[`AoTDescriptor`]: A list of `AoTDescriptor` instances.
         """
-        return self._retriever.get_array_of_tables(hierarchy=hierarchy)
+        return self._retriever.get_aot(hierarchy=hierarchy)
 
     def get_field(self, hierarchy: TOMLHierarchy) -> FieldDescriptor:
         """
-        Retrieves a `FieldDescriptor` object, representing a field that corresponds
-        to a specific hierarchy within the TOML file.
+        Retrieves a field represented by a `FieldDescriptor` object which
+        corresponds to a specific hierarchy.
         
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
@@ -193,8 +202,8 @@ class TOMLDocumentDescriptor:
 
     def get_table(self, hierarchy: TOMLHierarchy) -> TableDescriptor:
         """
-        Retrieves a `TableDescriptor` object, representing a non-super table that
-        corresponds to a specific hierarchy within the TOML file.
+        Retrieves a table represented by a `TableDescriptor` object which
+        corresponds to a specific hierarchy.
         
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
@@ -206,21 +215,46 @@ class TOMLDocumentDescriptor:
     
     def get_top_level_stylings(self, styling: StyleItem) -> List[StyleDescriptor]:
         """
+        Retrieves all stylings (comments or whitespace) that occur at the
+        top-level of the TOML source.
+
+        Args:
+            styling (`StyleItem`): A literal that identifies the type of styling
+                to retrieve. Can be either "whitespace" or "comment".
+
+        Returns:
+            List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.
         """
         return self._retriever.get_top_level_stylings(styling=styling)
 
-    def get_styling(self, styling: str, hierarchy: Optional[TOMLHierarchy] = None) -> List[StyleDescriptor]:
+    def get_styling(
+        self, styling: str, hierarchy: Optional[TOMLHierarchy] = None
+    ) -> List[StyleDescriptor]:
         """
+        Retrieves all stylings corresponding to a specific string representation,
+        where each styling is represented by a `StyleDescriptor` object. In
+        addition, if the search should be narrowed, a `TOMLHierarchy` object
+        can be passed.
+        
+        A styling can either be whitespace or comment.
+        
+        Args:
+            styling (str): A string representation of a comment or whitespace.
+            hierarchy (`TOMLHierarchy` | None) A `TOMLHierarchy` instance. Is
+                optional and defaults to None.
+        
+        Returns:
+            List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.
         """
         return self._retriever.get_styling(styling=styling, hierarchy=hierarchy)
 
-    def _generate_descriptor_from_array_of_tables(
+    def _generate_descriptor_from_aot(
         self, array: items.AoT, position: ItemPosition, info: ItemInfo
     ) -> None:
         """"""
         array_name = cast(str, array.name)
         hierarchy = Hierarchy.create_hierarchy(hierarchy=info.hierarchy, attribute=array_name)
-        array_of_tables = ArrayOfTablesDescriptor(
+        array_of_tables = AoTDescriptor(
             line_no=self._line_counter.line_no,
             info=info,
             position=position
@@ -316,7 +350,7 @@ class TOMLDocumentDescriptor:
             # If the item is an array of tables
             elif isinstance(toml_item, items.AoT) and not self.top_level_only:
                 self._toml_statistics.add_aot()
-                self._generate_descriptor_from_array_of_tables(
+                self._generate_descriptor_from_aot(
                     array=toml_item, position=new_position, info=toml_item_info
                 )
                 new_position.update_positions()
