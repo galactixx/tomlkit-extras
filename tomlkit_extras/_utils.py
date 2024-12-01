@@ -31,7 +31,7 @@ from tomlkit_extras._typing import (
     TOMLSource
 )
 
-_VALID_TYPES: Tuple[Type[TOMLSource]] = (
+_VALID_TYPES: Tuple[Type[TOMLSource], ...] = (
     TOMLDocument,
     items.Table,
     items.AoT, 
@@ -54,12 +54,12 @@ def contains_out_of_order_tables(toml_source: TOMLSource) -> bool:
         bool: A boolean indicating whether there are any out-of-order tables
             located in the TOML structure. 
     """    
-    def out_of_order_detect(toml_source: TOMLSource) -> bool:
+    def out_of_order_detect(source: TOMLSource) -> bool:
         # Recursively iterate through dictionary-like tomlkit structures
-        if isinstance(toml_source, (TOMLDocument, items.Table)):
+        if isinstance(source, (TOMLDocument, items.Table)):
             return any(
-                contains_out_of_order_tables(toml_source=document_value)
-                for _, document_value in toml_source.items()
+                out_of_order_detect(source=document_value)
+                for _, document_value in source.items()
 
                 # Only recursively traverse through sub-structures if they
                 # are tomlkit structures that can contain out-of-order tables
@@ -68,21 +68,20 @@ def contains_out_of_order_tables(toml_source: TOMLSource) -> bool:
         # Recursively iterate through list-like tomlkit structures
         # Because items in an array of tables can only be tables, there is
         # no need for a valid type check
-        elif isinstance(toml_source, items.AoT):
+        elif isinstance(source, items.AoT):
             return any(
-                contains_out_of_order_tables(toml_source=aot_table)
-                for aot_table in toml_source
+                out_of_order_detect(source=aot_table)
+                for aot_table in source
             )
-        # Otherwise the structure is an out-of-order table
-        else:
-            return True
+        # Otherwise check if structure is an out-of-order table
+        return isinstance(source, OutOfOrderTableProxy)
         
     if not isinstance(toml_source, _VALID_TYPES):
         raise TypeError(
             f'Expected an instance of TOMLSource, but got {type(toml_source).__name__}'
         )
         
-    return out_of_order_detect(toml_source=toml_source)
+    return out_of_order_detect(source=toml_source)
 
 
 def find_comment_line_no(line_no: int, item: items.Item) -> Optional[int]:
@@ -378,8 +377,9 @@ def decompose_body_item(body_item: BodyContainerItem) -> BodyContainerItemDecomp
     Returns:
         `BodyContainerItemDecomposed`: A `BodyContainerItemDecomposed` instance.
     """
+    raw_key = body_item[0]
     item_key: Optional[str] = (
-        body_item[0].as_string().strip() if body_item[0] is not None else None
+        raw_key.as_string().strip() if raw_key is not None else None
     )
     toml_item: items.Item = body_item[1]
     return item_key, toml_item

@@ -21,10 +21,7 @@ from tomlkit_extras._typing import (
     Table,
     TOMLHierarchy
 )
-from tomlkit_extras.descriptor._types import (
-    ItemPosition,
-    ItemInfo
-)
+from tomlkit_extras.descriptor._types import ItemInfo
 from tomlkit_extras.descriptor._descriptors import (
     AoTDescriptor,
     AoTDescriptors,
@@ -45,22 +42,22 @@ class BaseStore(ABC):
         pass
 
     @abstractmethod
-    def contains(self, hierarchy: str) -> bool:
-        """"""
-        pass
-
-    @abstractmethod
-    def update(self, item: items.Item, info: ItemInfo, position: ItemPosition) -> None:
-        """"""
-        pass
-
-    @abstractmethod
     def get_stylings(self, style_info: ItemInfo) -> StylingDescriptors:
         """"""
         pass
 
     @abstractmethod
     def get_array(self, info: ItemInfo) -> FieldDescriptor:
+        """"""
+        pass
+
+    @abstractmethod
+    def contains(self, hierarchy: str) -> bool:
+        """"""
+        pass
+
+    @abstractmethod
+    def update(self, item: items.Item, info: ItemInfo) -> None:
         """"""
         pass
 
@@ -81,8 +78,7 @@ class BaseTableStore(BaseStore):
         self, 
         hierarchy: str, 
         table: Table, 
-        info: ItemInfo,
-        position: ItemPosition
+        info: ItemInfo
     ) -> None:
         pass
 
@@ -127,7 +123,7 @@ class DocumentStore(BaseStore):
         """
         return hierarchy in self._document_fields
 
-    def update(self, item: items.Item, info: ItemInfo, position: ItemPosition) -> None:
+    def update(self, item: items.Item, info: ItemInfo) -> None:
         """
         Adds a new field to the store of fields already processed. A new key-value
         pair is added to the dictionary, where the key is the string name of the field,
@@ -137,10 +133,9 @@ class DocumentStore(BaseStore):
             item (`tomlkit.items.Item`): A `tomlkit.items.Item` instance corresponding
                 to a field appearing in a TOML file.
             info (`ItemInfo`): An `ItemInfo` instance with basic info on the field.
-            position (`ItemPosition`): An `ItemPosition` with position info on the field.
         """
         self._document_fields[info.key] = FieldDescriptor._from_toml_item(
-            item=item, info=info, line_no=self._line_counter.line_no, position=position
+            item=item, info=info, line_no=self._line_counter.line_no
         )
 
     def get_stylings(self, style_info: ItemInfo) -> StylingDescriptors:
@@ -284,7 +279,7 @@ class ArrayOfTablesStore(BaseTableStore):
 
         return array_of_tables.get_array(hierarchy=hierarchy)._get_table(hierarchy=hierarchy)
 
-    def update(self, item: items.Item, info: ItemInfo, position: ItemPosition) -> None:
+    def update(self, item: items.Item, info: ItemInfo) -> None:
         """
         Adds a new field to the store of fields already processed. A new key-value
         pair is added to the dictionary, where the key is the string name of the field,
@@ -294,7 +289,6 @@ class ArrayOfTablesStore(BaseTableStore):
             item (`tomlkit.items.Item`): A `tomlkit.items.Item` instance corresponding
                 to a field appearing in a TOML file.
             info (`ItemInfo`): An `ItemInfo` instance with basic info on the field.
-            position (`ItemPosition`): An `ItemPosition` with position info on the field.
         """
         array_hierarchy = cast(str, self.get_array_hierarchy(hierarchy=info.hierarchy))
         array_of_tables = self._array_of_tables[array_hierarchy]
@@ -304,17 +298,10 @@ class ArrayOfTablesStore(BaseTableStore):
         table._add_field(
             item=item,
             info=info,
-            line_no=self._line_counter.line_no,
-            position=position
+            line_no=self._line_counter.line_no
         )
 
-    def add_table(
-        self,
-        hierarchy: str,
-        table: Table,
-        info: ItemInfo,
-        position: ItemPosition
-    ) -> None:
+    def add_table(self, hierarchy: str, table: Table, info: ItemInfo) -> None:
         """
         Adds a new table to the store of tables already processed. A new key-value
         pair is added to the dictionary, where the key is the string hierarchy of the table,
@@ -325,7 +312,6 @@ class ArrayOfTablesStore(BaseTableStore):
             table (`Table`): A Table instance, being either a tomlkit.items.Table or
                 tomlkit.items.InlineTable.
             info (`ItemInfo`): An `ItemInfo` instance with basic info on the table.
-            position (`ItemPosition`): An `ItemPosition` with position info on the table.
         """
         array_hierarchy = cast(str, self.get_array_hierarchy(hierarchy=hierarchy))
         array_of_tables = self._array_of_tables[array_hierarchy]
@@ -333,7 +319,6 @@ class ArrayOfTablesStore(BaseTableStore):
         table_descriptor = TableDescriptor._from_table_item(
             table=table,
             info=info,
-            position=position,
             line_no=self._line_counter.line_no
         )
 
@@ -419,7 +404,7 @@ class TableStore(BaseTableStore):
         """
         return hierarchy in self._tables
 
-    def update(self, item: items.Item, info: ItemInfo, position: ItemPosition) -> None:
+    def update(self, item: items.Item, info: ItemInfo) -> None:
         """
         Adds a new field to the store of fields already processed. A new key-value
         pair is added to the dictionary, where the key is the string name of the field,
@@ -429,22 +414,14 @@ class TableStore(BaseTableStore):
             item (`tomlkit.items.Item`): A `tomlkit.items.Item` instance corresponding
                 to a field appearing in a TOML file.
             info (`ItemInfo`): An `ItemInfo` instance with basic info on the field.
-            position (`ItemPosition`): An `ItemPosition` with position info on the field.
         """
         self._tables[info.hierarchy]._add_field(
             item=item,
             info=info,
-            position=position,
             line_no=self._line_counter.line_no
         )
 
-    def add_table(
-        self,
-        hierarchy: str,
-        table: Table,
-        info: ItemInfo,
-        position: ItemPosition
-    ) -> None:
+    def add_table(self, hierarchy: str, table: Table, info: ItemInfo) -> None:
         """
         Adds a new table to the store of tables already processed. A new key-value
         pair is added to the dictionary, where the key is the string hierarchy of the
@@ -455,12 +432,10 @@ class TableStore(BaseTableStore):
             table (`Table`): A Table instance, being either a tomlkit.items.Table or
                 tomlkit.items.InlineTable.
             info (`ItemInfo`): An `ItemInfo` instance with basic info on the table.
-            position (`ItemPosition`): An `ItemPosition` with position info on the table.
         """
         table_descriptor = TableDescriptor._from_table_item(
             table=table,
             info=info,
-            position=position,
             line_no=self._line_counter.line_no
         )
         self._tables.update({hierarchy: table_descriptor})
@@ -542,9 +517,7 @@ class DescriptorStore:
 
         return descriptor_store
 
-    def update_styling(
-        self, style: Stylings, style_info: ItemInfo, position: ItemPosition
-    ) -> None:
+    def update_styling(self, style: Stylings, style_info: ItemInfo) -> None:
         """
         Adds a new styling, corresponding to a string comment or whitespace within
         a TOML file, to a store.
@@ -554,19 +527,16 @@ class DescriptorStore:
         styling_positions._update_stylings(
             style=style,
             info=style_info,
-            position=position,
             line_no=self._line_counter.line_no
         )
 
-    def update_field_descriptor(
-        self, item: items.Item, info: ItemInfo, position: ItemPosition
-    ) -> None:
+    def update_field_descriptor(self, item: items.Item, info: ItemInfo) -> None:
         """
         Adds a new field, corresponding to a non-table key-value pair within a TOML
         file, to a store.
         """
         descriptor_store = self._store_choice(info=info)
-        descriptor_store.update(item=item, info=info, position=position)
+        descriptor_store.update(item=item, info=info)
 
     def update_array_comment(self, array: items.Array, info: ItemInfo) -> None:
         """
@@ -578,11 +548,7 @@ class DescriptorStore:
         field_position._update_comment(item=array, line_no=self._line_counter.line_no)
 
     def update_table_descriptor(
-        self,
-        hierarchy: str,
-        container: BodyContainerInOrder,
-        container_info: ItemInfo,
-        position: ItemPosition,
+        self, hierarchy: str, container: BodyContainerInOrder, container_info: ItemInfo
     ) -> None:
         """
         Adds a new table, corresponding to a table pair within a TOML file, to a
@@ -599,5 +565,5 @@ class DescriptorStore:
                 descriptor_store = self.tables
 
             descriptor_store.add_table(
-                hierarchy=hierarchy, table=container, info=container_info, position=position
+                hierarchy=hierarchy, table=container, info=container_info
             )

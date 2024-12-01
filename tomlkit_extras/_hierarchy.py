@@ -49,7 +49,7 @@ class Hierarchy:
 
     def __eq__(self, hierarchy: Any) -> bool:
         if not isinstance(hierarchy, (str, Hierarchy)):
-            return TypeError(
+            raise TypeError(
                 'Expected an instance of string or Hierarchy,'
                 f" but got {type(hierarchy).__name__}"
             )
@@ -157,6 +157,9 @@ class Hierarchy:
         if not hierarchy:
             raise ValueError("There must be an existing hierarchy")
 
+        attribute_hierarchy: Tuple[str, ...]
+
+        # Compile attribute and rest of hierarchy
         if len(hierarchy) == 1:
             attribute = hierarchy[0]
             attribute_hierarchy = tuple()

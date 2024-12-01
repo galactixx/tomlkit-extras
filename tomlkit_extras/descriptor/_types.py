@@ -9,7 +9,6 @@ from typing import (
 from tomlkit import items
 
 from tomlkit_extras.descriptor._helpers import get_item_type
-from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras._typing import (
     BodyContainerItemDecomposed,
     DescriptorInput,
@@ -18,20 +17,57 @@ from tomlkit_extras._typing import (
 )
 
 @dataclass
-class ItemInfo:
+class ItemPosition:
     """"""
-    item_type: Item
-    parent_type: Optional[ParentItem]
-    key: str
-    hierarchy: str
-    from_aot: bool
+    attribute: int
+    container: int
 
-    @property
-    def full_hierarchy(self) -> str:
+    @staticmethod
+    def default_position() -> ItemPosition:
         """"""
-        return Hierarchy.create_hierarchy(
-            hierarchy=self.hierarchy, attribute=self.key
-        )
+        return ItemPosition(attribute=1, container=1)
+
+    def update_position(self) -> None:
+        """"""
+        self.attribute += 1
+
+    def update_body_position(self) -> None:
+        """"""
+        self.container += 1
+
+    def update_positions(self) -> None:
+        self.update_position()
+        self.update_body_position()
+
+
+class ItemInfo:
+    """
+    """
+    def __init__(
+        self,
+        item_type: Item,
+        parent_type: Optional[ParentItem],
+        key: str,
+        hierarchy: str,
+        from_aot: bool
+    ) -> None:
+        self.item_type = item_type
+        self.parent_type = parent_type
+        self.key = key
+        self.hierarchy = hierarchy
+        self.from_aot = from_aot
+
+        self._position: ItemPosition
+    
+    @property
+    def position(self) -> ItemPosition:
+        """"""
+        return self._position
+    
+    @position.setter
+    def position(self, position: ItemPosition) -> None:
+        """"""
+        self._position = position
 
     @classmethod
     def from_parent_type(
@@ -73,27 +109,9 @@ class ItemInfo:
         )
 
 
-@dataclass
-class ItemPosition:
-    """"""
-    attribute: int
-    container: int
-
-    def update_position(self) -> None:
-        """"""
-        self.attribute += 1
-
-    def update_body_position(self) -> None:
-        """"""
-        self.container += 1
-
-    def update_positions(self) -> None:
-        self.update_position()
-        self.update_body_position()
-
-
 class TOMLStatistics:
-    """"""
+    """
+    """
     def __init__(self) -> None:
         self._number_of_tables = 0
         self._number_of_inline_tables = 0

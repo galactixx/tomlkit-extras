@@ -36,7 +36,8 @@ from tomlkit_extras._exceptions import (
 _WHITESPACE_PATTERN = r'^[ \n\r]*$'
 
 class DescriptorRetriever:
-    """"""
+    """
+    """
     def __init__(
         self,
         store: DescriptorStore,
@@ -47,8 +48,25 @@ class DescriptorRetriever:
         self._top_level_type = top_level_type
         self._top_level_hierarchy = top_level_hierarchy
 
-    def get_styling(self, styling: str, hierarchy: Optional[TOMLHierarchy]) -> List[StyleDescriptor]:
-        """"""
+    def get_styling(
+        self, styling: str, hierarchy: Optional[TOMLHierarchy]
+    ) -> List[StyleDescriptor]:
+        """
+        Retrieves all stylings corresponding to a specific string representation,
+        where each styling is represented by a `StyleDescriptor` object. In
+        addition, if the search should be narrowed, a `TOMLHierarchy` object
+        can be passed.
+        
+        A styling can either be whitespace or comment.
+        
+        Args:
+            styling (str): A string representation of a comment or whitespace.
+            hierarchy (`TOMLHierarchy` | None) A `TOMLHierarchy` instance. Is
+                optional and defaults to None.
+        
+        Returns:
+            List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.
+        """
         hierarchy_obj: Optional[Hierarchy] = None
         stylings: StylingDescriptors
         
@@ -73,7 +91,17 @@ class DescriptorRetriever:
         return [styling_descriptor for styling_descriptor in styling_space[styling]]
     
     def get_top_level_stylings(self, styling: StyleItem) -> List[StyleDescriptor]:
-        """"""
+        """
+        Retrieves all stylings (comments or whitespace) that occur at the
+        top-level of the TOML source.
+
+        Args:
+            styling (`StyleItem`): A literal that identifies the type of styling
+                to retrieve. Can be either "whitespace" or "comment".
+
+        Returns:
+            List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.
+        """
         stylings: Dict[str, List[StyleDescriptor]]
         styling_descriptors: StylingDescriptors
 
@@ -99,7 +127,16 @@ class DescriptorRetriever:
         ]
     
     def get_table(self, hierarchy: TOMLHierarchy) -> TableDescriptor:
-        """"""
+        """
+        Retrieves a table represented by a `TableDescriptor` object which
+        corresponds to a specific hierarchy.
+        
+        Args:
+            hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
+        
+        Returns:
+            `TableDescriptor`: A `TableDescriptor` instance.
+        """
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)   
         hierarchy_as_str = str(hierarchy_obj)
 
@@ -110,7 +147,16 @@ class DescriptorRetriever:
         return table_descriptor
     
     def get_field(self, hierarchy: TOMLHierarchy) -> FieldDescriptor:
-        """"""
+        """
+        Retrieves a field represented by a `FieldDescriptor` object which
+        corresponds to a specific hierarchy.
+        
+        Args:
+            hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
+        
+        Returns:
+            `FieldDescriptor`: A `FieldDescriptor` instance.
+        """
         field_descriptor: FieldDescriptor
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str = str(hierarchy_obj)
@@ -144,7 +190,16 @@ class DescriptorRetriever:
         return field_descriptor
     
     def get_aot(self, hierarchy: TOMLHierarchy) -> List[AoTDescriptor]:
-        """"""
+        """
+        Retrieves all array-of-tables, where each array is represented
+        by a `AoTDescriptor` object, that correspond to a specific hierarchy.
+
+        Args:
+            hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
+        
+        Returns:
+            List[`AoTDescriptor`]: A list of `AoTDescriptor` instances.
+        """
         array_hierarchies: Set[str] = self._store.array_of_tables.hierarchies
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str = str(hierarchy_obj)
@@ -165,7 +220,16 @@ class DescriptorRetriever:
         return array_descriptors
     
     def get_table_from_aot(self, hierarchy: TOMLHierarchy) -> List[TableDescriptor]:
-        """"""
+        """
+        Retrieves all tables from an array-of-tables, where each table is represented
+        by a `TableDescriptor` object, that correspond to a specific hierarchy.
+
+        Args:
+            hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
+        
+        Returns:
+            List[`TableDescriptor`]: A list of `TableDescriptor` instances.
+        """
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str = str(hierarchy_obj)
 
@@ -194,7 +258,16 @@ class DescriptorRetriever:
         return table_descriptors
     
     def get_field_from_aot(self, hierarchy: TOMLHierarchy) -> List[FieldDescriptor]:
-        """"""
+        """
+        Retrieves all fields from an array-of-tables, where each field is represented
+        by a `FieldDescriptor` object, that correspond to a specific hierarchy.
+        
+        Args:
+            hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
+        
+        Returns:
+            List[`FieldDescriptor`]: A list of `FieldDescriptor` instances.
+        """
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str: str = str(hierarchy_obj)
 

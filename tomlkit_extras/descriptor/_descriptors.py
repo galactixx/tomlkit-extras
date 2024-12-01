@@ -21,10 +21,7 @@ from tomlkit_extras.descriptor._helpers import (
     CommentDescriptor,
     create_comment_descriptor
 )
-from tomlkit_extras.descriptor._types import (
-    ItemInfo,
-    ItemPosition
-)
+from tomlkit_extras.descriptor._types import ItemInfo
 from tomlkit_extras._typing import (
     AoTItem,
     FieldItem,
@@ -89,9 +86,7 @@ class StylingDescriptors:
     comments: Dict[str, List[StyleDescriptor]]
     whitespace: Dict[str, List[StyleDescriptor]]
 
-    def _update_stylings(
-        self, style: Stylings, info: ItemInfo, position: ItemPosition, line_no: int
-    ) -> None:
+    def _update_stylings(self, style: Stylings, info: ItemInfo, line_no: int) -> None:
         """
         Private method that will create a new `StyleDescriptor` and update the
         existing store of stylings (comments and whitespaces) already parsed.
@@ -111,10 +106,7 @@ class StylingDescriptors:
         # Generate a StyleDescriptor object that will be added to the already
         # collected store of stylings
         styling_position = StyleDescriptor(
-            style=styling_value,
-            line_no=line_no,
-            info=info,
-            position=position
+            style=styling_value, line_no=line_no, info=info
         )
         if styling_value not in current_source:
             current_source[styling_value] = [styling_position]
@@ -140,9 +132,8 @@ class AbstractDescriptor(ABC):
         from_aot (bool): A boolean indicating whether the structure is nested
             within an array of tables.
     """
-    def __init__(self, item_info: ItemInfo, position: ItemPosition) -> None:
-        self._item_info = item_info
-        self._position = copy.copy(position)
+    def __init__(self, item_info: ItemInfo) -> None:
+        self._item_info = copy.deepcopy(item_info)
 
     def copy(self) -> Descriptor:
         """Returns a shallow copy of the object."""
@@ -181,7 +172,7 @@ class AbstractDescriptor(ABC):
 
         Attributes in this case are fields, tables, or arrays.
         """
-        return self._position.container
+        return self._item_info.position.container
 
     @property
     def parent_type(self) -> Optional[ParentItem]:
@@ -215,7 +206,7 @@ class AttributeDescriptor(AbstractDescriptor):
 
         Attributes in this case are fields, tables, or arrays.
         """
-        return self._position.attribute
+        return self._item_info.position.attribute
     
 
 class FieldDescriptor(AttributeDescriptor):
@@ -249,12 +240,11 @@ class FieldDescriptor(AttributeDescriptor):
         self,
         line_no: int,
         info: ItemInfo,
-        position: ItemPosition,
         value: Any,
         comment: Optional[CommentDescriptor],
         stylings: StylingDescriptors
     ):
-        super().__init__(item_info=info, position=position)
+        super().__init__(item_info=info)
         self.line_no = line_no
         self.value = value
         self.comment = comment
@@ -275,7 +265,7 @@ class FieldDescriptor(AttributeDescriptor):
 
     @classmethod
     def _from_toml_item(
-        cls, item: items.Item, info: ItemInfo, line_no: int, position: ItemPosition
+        cls, item: items.Item, info: ItemInfo, line_no: int
     ) -> FieldDescriptor:
         """
         Private class method which generates an instance of `FieldDescriptor` for
@@ -294,7 +284,6 @@ class FieldDescriptor(AttributeDescriptor):
         return cls(
             line_no=line_no,
             info=info,
-            position=position,
             value=value,
             comment=comment,
             stylings=stylings
@@ -342,11 +331,10 @@ class TableDescriptor(AttributeDescriptor):
         self,
         line_no: int,
         info: ItemInfo,
-        position: ItemPosition,
         comment: Optional[CommentDescriptor],
         stylings: StylingDescriptors
     ):
-        super().__init__(item_info=info, position=position)
+        super().__init__(item_info=info)
         self.line_no = line_no
         self.comment = comment
         self.stylings = stylings
@@ -377,9 +365,7 @@ class TableDescriptor(AttributeDescriptor):
         return cast(TableItem, self._item_info.item_type)
 
     @classmethod
-    def _from_table_item(
-        cls, table: Table, info: ItemInfo, position: ItemPosition, line_no: int
-    ) -> TableDescriptor:
+    def _from_table_item(cls, table: Table, info: ItemInfo, line_no: int) -> TableDescriptor:
         """
         Private class method which generates an instance of `TableDescriptor` for
         a given table while recursively traversing a TOML structure in the
@@ -391,17 +377,16 @@ class TableDescriptor(AttributeDescriptor):
         return cls(
             line_no=line_no,
             info=info,
-            position=position,
             comment=comment,
             stylings=stylings
         )
 
     def _add_field(
-        self, item: items.Item, info: ItemInfo, position: ItemPosition, line_no: int
+        self, item: items.Item, info: ItemInfo, line_no: int
     ) -> None:
         """A private method that adds a field to the existing store of fields."""
         field_descriptor = FieldDescriptor._from_toml_item(
-            item=item, info=info, line_no=line_no, position=position
+            item=item, info=info, line_no=line_no
         )
         self._fields.update({info.key: field_descriptor})
 
@@ -433,14 +418,8 @@ class StyleDescriptor(AbstractDescriptor):
         line_no (int): An integer line number marking the beginning of the
             styling.
     """
-    def __init__(
-        self,
-        style: str,
-        line_no: int,
-        info: ItemInfo,
-        position: ItemPosition,
-    ) -> None:
-        super().__init__(item_info=info, position=position)
+    def __init__(self, style: str, line_no: int, info: ItemInfo) -> None:
+        super().__init__(item_info=info)
         self.style = style
         self.line_no = line_no
 
@@ -483,13 +462,8 @@ class AoTDescriptor(AttributeDescriptor):
             instances where each one represents a table within the array
             of tables.
     """
-    def __init__(
-        self,
-        line_no: int,
-        info: ItemInfo,
-        position: ItemPosition
-    ) -> None:
-        super().__init__(item_info=info, position=position)
+    def __init__(self, line_no: int, info: ItemInfo) -> None:
+        super().__init__(item_info=info)
         self.line_no = line_no
 
         self._tables: Dict[str, List[TableDescriptor]] = dict()
