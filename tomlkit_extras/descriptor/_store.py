@@ -15,7 +15,6 @@ from tomlkit_extras.descriptor._helpers import (
 )
 from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras._typing import (
-    BodyContainerInOrder,
     Item,
     Stylings,
     Table,
@@ -548,22 +547,18 @@ class DescriptorStore:
         field_position._update_comment(item=array, line_no=self._line_counter.line_no)
 
     def update_table_descriptor(
-        self, hierarchy: str, container: BodyContainerInOrder, container_info: ItemInfo
+        self, hierarchy: str, table: Table, table_info: ItemInfo
     ) -> None:
         """
         Adds a new table, corresponding to a table pair within a TOML file, to a
         store.
         """
-        if (
-            isinstance(container, items.InlineTable) or
-            (isinstance(container, items.Table) and not container.is_super_table())
-        ):
-            descriptor_store: BaseTableStore
-            if container_info.from_aot:
-                descriptor_store = self.array_of_tables
-            else:
-                descriptor_store = self.tables
+        descriptor_store: BaseTableStore
+        if table_info.from_aot:
+            descriptor_store = self.array_of_tables
+        else:
+            descriptor_store = self.tables
 
-            descriptor_store.add_table(
-                hierarchy=hierarchy, table=container, info=container_info
-            )
+        descriptor_store.add_table(
+            hierarchy=hierarchy, table=table, info=table_info
+        )

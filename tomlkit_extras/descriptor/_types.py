@@ -22,8 +22,8 @@ class ItemPosition:
     attribute: int
     container: int
 
-    @staticmethod
-    def default_position() -> ItemPosition:
+    @classmethod
+    def default_position(cls) -> ItemPosition:
         """"""
         return ItemPosition(attribute=1, container=1)
 
