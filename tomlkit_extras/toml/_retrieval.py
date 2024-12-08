@@ -255,7 +255,7 @@ def find_parent_toml_source(
     hierarchy within a `TOMLFieldSource` instance.
     """
     parent_toml: Union[Retrieval, TOMLFieldSource]
-    if hierarchy.hierarchy_depth > 1:
+    if hierarchy.depth > 1:
         hierarchy_parent = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy))
         parent_toml = get_attribute_from_toml_source(
             hierarchy=hierarchy_parent, toml_source=toml_source

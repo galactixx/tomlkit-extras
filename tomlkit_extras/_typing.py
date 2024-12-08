@@ -16,7 +16,12 @@ from tomlkit import items, TOMLDocument
 from tomlkit_extras._hierarchy import Hierarchy
 
 TOMLSourceFile: TypeAlias = Union[
-    str, bytes, bytearray, Path, TOMLDocument, Dict[str, Any]
+    str,
+    bytes,
+    bytearray,
+    Path,
+    TOMLDocument,
+    Dict[str, Any]
 ]
 
 # The return type of get_comments function, returning a tuple where the first item
@@ -25,7 +30,12 @@ TOMLSourceFile: TypeAlias = Union[
 ContainerComment: TypeAlias = Tuple[int, int, str]
 
 # Tomlkit types that are subclasses of dictionaries
-TOMLDictLike: TypeAlias = Union[TOMLDocument, items.Table, items.InlineTable, OutOfOrderTableProxy]
+TOMLDictLike: TypeAlias = Union[
+    TOMLDocument,
+    items.Table,
+    items.InlineTable,
+    OutOfOrderTableProxy
+]
 
 # Tomlkit types that are tables
 Table: TypeAlias = Union[items.Table, items.InlineTable]
@@ -54,7 +64,12 @@ BodyContainer: TypeAlias = Union[
     items.Array,
     OutOfOrderTableProxy
 ]
-BodyContainerInOrder: TypeAlias = Union[TOMLDocument, items.Table, items.InlineTable, items.Array]
+BodyContainerInOrder: TypeAlias = Union[
+    TOMLDocument,
+    items.Table,
+    items.InlineTable,
+    items.Array
+]
 
 # Tomlkit types that container key-value pairs
 TOMLFieldSource: TypeAlias = Union[
@@ -66,10 +81,20 @@ TOMLFieldSource: TypeAlias = Union[
 ]
 
 # Valid input tomlkit types for most TOML related functions in package
-TOMLSource: TypeAlias = Union[TOMLDocument, items.Table, items.AoT, OutOfOrderTableProxy]
+TOMLSource: TypeAlias = Union[
+    TOMLDocument,
+    items.Table,
+    items.AoT,
+    OutOfOrderTableProxy
+]
 
 # Valid input tomlkit types for the TOMLDocumentDescriptor class
-DescriptorInput = Union[TOMLDocument, items.Table, items.AoT, items.Array]
+DescriptorInput = Union[
+    TOMLDocument,
+    items.Table,
+    items.AoT,
+    items.Array
+]
 
 # Tomlkit types that can have comments in the top-level space
 AnnotatedContainer: TypeAlias = Union[

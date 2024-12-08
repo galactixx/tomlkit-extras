@@ -155,7 +155,7 @@ def _find_final_toml_level(hierarchy: Hierarchy) -> str:
     A private function that retrieves the last level of a hierarchy given a
     `Hierarchy` instance.
     """
-    if hierarchy.hierarchy_depth > 1:
+    if hierarchy.depth > 1:
         hierarchy_remaining = hierarchy.attribute
     else:
         hierarchy_remaining = str(hierarchy)
@@ -168,7 +168,7 @@ class _BaseItemInserter(ABC):
     tools to insert a `tomlkit.items.Item` object at a specific position within 
     a `tomlkit` type that supports insertion.
     """
-    def __init__(self, item_to_insert: Tuple[str, items.Item], by_attribute: bool):
+    def __init__(self, item_to_insert: Tuple[str, items.Item], by_attribute: bool) -> None:
         self.item_inserted = False
         self.attribute, self.insertion = item_to_insert
         self.by_attribute = by_attribute
@@ -219,7 +219,7 @@ class _DictLikeItemInserter(_BaseItemInserter):
         item_to_insert: Tuple[str, items.Item],
         container: Union[TOMLDocument, items.Table, items.InlineTable],
         by_attribute: bool = True
-    ):
+    ) -> None:
         super().__init__(item_to_insert=item_to_insert, by_attribute=by_attribute)
         self.container = container
 
@@ -248,7 +248,7 @@ class _ListLikeItemInserter(_BaseItemInserter):
         item_to_insert: Tuple[str, items.Item],
         container: items.Array,
         by_attribute: bool = True
-    ):
+    ) -> None:
         super().__init__(item_to_insert=item_to_insert, by_attribute=by_attribute)
         self.container = container
 
@@ -273,7 +273,7 @@ class _BaseInserter(ABC):
         toml_source: TOMLFieldSource,
         hierarchy: TOMLHierarchy,
         insertion: Any
-    ):
+    ) -> None:
         self.toml_source = toml_source
 
         self.insertion_as_toml_item: items.Item = convert_to_tomlkit_item(value=insertion)
@@ -374,7 +374,7 @@ class _GeneralInserter(_BaseInserter):
         toml_source: TOMLFieldSource,
         hierarchy: TOMLHierarchy,
         insertion: Any
-    ):
+    ) -> None:
         super().__init__(
             toml_source=toml_source, hierarchy=hierarchy, insertion=insertion
         )
@@ -415,7 +415,7 @@ class _PositionalInserter(_BaseInserter):
         insertion: Any,
         position: int,
         by_attribute: bool
-    ):
+    ) -> None:
         super().__init__(
             toml_source=toml_source, hierarchy=hierarchy, insertion=insertion
         )

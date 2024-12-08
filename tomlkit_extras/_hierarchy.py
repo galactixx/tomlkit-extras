@@ -67,7 +67,7 @@ class Hierarchy:
         return f'<Hierarchy {self.full_hierarchy_str}>'
     
     def __len__(self) -> int:
-        return self.hierarchy_depth
+        return self.depth
     
     @staticmethod
     def parent_level(hierarchy: str) -> str:
@@ -172,7 +172,7 @@ class Hierarchy:
         )
 
     @property
-    def hierarchy_depth(self) -> int:
+    def depth(self) -> int:
         """
         Returns the depth of the hierarchy, also known as the number of levels
         in the hierarchy.
@@ -218,7 +218,9 @@ class Hierarchy:
 
         start_hierarchy = str()
         for hierarchy in self.full_hierarchy:
-            start_hierarchy = Hierarchy.create_hierarchy(hierarchy=start_hierarchy, attribute=hierarchy)
+            start_hierarchy = Hierarchy.create_hierarchy(
+                hierarchy=start_hierarchy, attribute=hierarchy
+            )
             sub_hierarchies.append(start_hierarchy)
 
         return sub_hierarchies

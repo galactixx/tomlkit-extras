@@ -28,7 +28,8 @@ from tomlkit_extras._typing import (
     BodyContainerItems,
     TOMLDictLike,
     TOMLHierarchy,
-    TOMLSource
+    TOMLSource,
+    TOMLValidReturn
 )
 
 _VALID_TYPES: Tuple[Type[TOMLSource], ...] = (
@@ -37,6 +38,30 @@ _VALID_TYPES: Tuple[Type[TOMLSource], ...] = (
     items.AoT, 
     OutOfOrderTableProxy
 )
+
+def safe_unwrap(structure: TOMLValidReturn) -> Any:
+    """
+    Safely unwraps a `tomlkit` object, which is the action of returning
+    the underlying value that the `tomlkit` type is wrapping.
+
+    This safe logic is needed because even though most types contain an
+    `unwrap` method, there are a few in which it is not implemented.
+
+    Args:
+        structure (`TOMLValidReturn`): A `TOMLValidReturn` instance.
+
+    Returns:
+        Any: Any instance, including pritimitive types and others.
+    """
+    if isinstance(structure, items.Whitespace):
+        return structure.value
+    elif isinstance(structure, items.Comment):
+        return structure.as_string()
+    elif isinstance(structure, bool):
+        return structure
+    else:
+        return structure.unwrap()
+
 
 def contains_out_of_order_tables(toml_source: TOMLSource) -> bool:
     """

@@ -23,6 +23,7 @@ from tomlkit_extras._utils import (
     decompose_body_item,
     from_dict_to_toml_document,
     get_container_body,
+    safe_unwrap,
     _partial_clear_dict_like_toml_item
 )
 from tests.typing import FixtureFunction
@@ -175,7 +176,7 @@ def test_create_toml_document(test_case: CreateDocumentTestCase) -> None:
     )
     assert isinstance(project_toml_document, TOMLDocument)
 
-    document_unwrapped = project_toml_document.unwrap()
+    document_unwrapped = safe_unwrap(structure=project_toml_document)
     for level in test_case.hierarchy.split('.'):
         document_unwrapped = document_unwrapped[level]
     
@@ -254,7 +255,7 @@ def test_from_dict_to_toml_document(dictionary: Dict[str, Any]) -> None:
     """Function to test the functionality of `from_dict_to_toml_document`."""
     toml_converted_document = from_dict_to_toml_document(dictionary=dictionary)
     assert isinstance(toml_converted_document, TOMLDocument)
-    assert toml_converted_document.unwrap() == dictionary
+    assert safe_unwrap(structure=toml_converted_document) == dictionary
 
 
 @pytest.mark.parametrize(

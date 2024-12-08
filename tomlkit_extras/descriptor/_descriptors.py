@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 import copy
+import re
+import itertools
 from typing import (
     Any,
     cast,
@@ -15,7 +17,11 @@ from typing import (
 
 from tomlkit import items
 
-from tomlkit_extras._utils import find_comment_line_no
+from tomlkit_extras._exceptions import InvalidStylingError
+from tomlkit_extras._utils import (
+    find_comment_line_no,
+    safe_unwrap
+)
 from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras.descriptor._helpers import (
     CommentDescriptor,
@@ -32,6 +38,8 @@ from tomlkit_extras._typing import (
     Table,
     TableItem
 )
+
+_WHITESPACE_PATTERN = r'^[ \n\r]*$'
 
 Descriptor = TypeVar('Descriptor', bound='AbstractDescriptor')
 
@@ -86,6 +94,47 @@ class StylingDescriptors:
     comments: Dict[str, List[StyleDescriptor]]
     whitespace: Dict[str, List[StyleDescriptor]]
 
+    @property
+    def _decomposed_comments(self) -> List[List[StyleDescriptor]]:
+        """Private property that returns a list of the comments store values."""
+        return list(self.comments.values())
+    
+    @property
+    def _decomposed_whitespace(self) -> List[List[StyleDescriptor]]:
+        """Private property that returns a list of the whitespace store values."""
+        return list(self.whitespace.values())
+
+    def get_styling(self, styling: str) -> List[StyleDescriptor]:
+        """"""
+        # Check if the string representation of the styling matches the
+        # format of a whitespace or text comment
+        is_comment = not re.match(_WHITESPACE_PATTERN, styling)
+
+        styling_space = self.comments if is_comment else self.whitespace
+        if styling not in styling_space:
+            raise InvalidStylingError("Styling does not exist in set of valid stylings")
+        
+        return styling_space[styling]
+
+    def get_stylings(self, styling: Optional[StyleItem]) -> List[StyleDescriptor]:
+        """"""
+        stylings: List[StyleDescriptor] = []
+
+        if styling is None:
+            stylings.extend(self._decomposed_comments)
+            stylings.extend(self._decomposed_whitespace)
+        elif styling == 'comment':
+            stylings.extend(self._decomposed_comments)
+        elif styling == 'whitespace':
+            stylings.extend(self._decomposed_whitespace)
+        else:
+            raise TypeError(
+                f"Invalid type for 'styling'. Expected None, 'comment',"
+                f"or 'whitespace', but got {type(styling).__name__}: {styling!r}"
+            )
+
+        return list(itertools.chain.from_iterable(stylings))
+        
     def _update_stylings(self, style: Stylings, info: ItemInfo, line_no: int) -> None:
         """
         Private method that will create a new `StyleDescriptor` and update the
@@ -243,7 +292,7 @@ class FieldDescriptor(AttributeDescriptor):
         value: Any,
         comment: Optional[CommentDescriptor],
         stylings: StylingDescriptors
-    ):
+    ) -> None:
         super().__init__(item_info=info)
         self.line_no = line_no
         self.value = value
@@ -280,7 +329,7 @@ class FieldDescriptor(AttributeDescriptor):
             comment_line_no = find_comment_line_no(line_no=line_no, item=item)
 
         comment = create_comment_descriptor(item=item, line_no=comment_line_no)
-        value = item.unwrap()
+        value = safe_unwrap(structure=item)
         return cls(
             line_no=line_no,
             info=info,
@@ -333,7 +382,7 @@ class TableDescriptor(AttributeDescriptor):
         info: ItemInfo,
         comment: Optional[CommentDescriptor],
         stylings: StylingDescriptors
-    ):
+    ) -> None:
         super().__init__(item_info=info)
         self.line_no = line_no
         self.comment = comment
@@ -425,7 +474,7 @@ class StyleDescriptor(AbstractDescriptor):
 
     @property
     def hierarchy(self) -> Optional[Hierarchy]:
-        """Returns the hierarchy of the TOML structure as a `Hierarchy` object."""
+        """Returns the hierarchy of the TOML sstructure as a `Hierarchy` object."""
         if not self._item_info.hierarchy:
             return None
         else:

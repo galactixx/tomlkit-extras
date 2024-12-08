@@ -318,7 +318,7 @@ def test_toml_style_descriptor(
 ) -> None:
     """Function to test the functionality of `get_styling`."""
     toml_descriptor: TOMLDocumentDescriptor = request.getfixturevalue(test_case.fixture)
-    styling_descriptors = toml_descriptor.get_styling(
+    styling_descriptors = toml_descriptor.get_stylings(
         styling=test_case.style, hierarchy=test_case.hierarchy
     )
     assert len(styling_descriptors) == 1

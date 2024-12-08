@@ -29,7 +29,7 @@ def test_hierarchy() -> None:
     # Test properties
     assert hierarchy_tool_ruff.full_hierarchy == ('tool', 'ruff')
     assert hierarchy_tool_ruff.full_hierarchy_str == 'tool.ruff'
-    assert hierarchy_tool_ruff.hierarchy_depth == 2
+    assert hierarchy_tool_ruff.depth == 2
     assert hierarchy_tool_ruff.root_attribute == 'tool'
     assert hierarchy_tool_ruff.base_hierarchy_str == 'tool'
     assert hierarchy_tool_ruff.ancestor_hierarchies == ['tool', 'tool.ruff']

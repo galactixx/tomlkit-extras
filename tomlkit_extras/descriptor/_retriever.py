@@ -1,10 +1,8 @@
-import re
+import itertools
 from typing import (
     cast,
-    Dict,
     List,
-    Optional,
-    Set
+    Optional
 )
 
 from tomlkit_extras.descriptor._store import DescriptorStore
@@ -29,11 +27,8 @@ from tomlkit_extras._exceptions import (
     InvalidArrayOfTablesError,
     InvalidFieldError,
     InvalidHierarchyError,
-    InvalidStylingError,
     InvalidTableError
 )
-
-_WHITESPACE_PATTERN = r'^[ \n\r]*$'
 
 class DescriptorRetriever:
     """
@@ -43,12 +38,12 @@ class DescriptorRetriever:
         store: DescriptorStore,
         top_level_type: TopLevelItem,
         top_level_hierarchy: Optional[str]
-    ):
+    ) -> None:
         self._store = store
         self._top_level_type = top_level_type
         self._top_level_hierarchy = top_level_hierarchy
 
-    def get_styling(
+    def get_stylings(
         self, styling: str, hierarchy: Optional[TOMLHierarchy]
     ) -> List[StyleDescriptor]:
         """
@@ -67,64 +62,67 @@ class DescriptorRetriever:
         Returns:
             List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.
         """
-        hierarchy_obj: Optional[Hierarchy] = None
-        stylings: StylingDescriptors
-        
-        is_comment = not re.match(_WHITESPACE_PATTERN, styling)
-
         if hierarchy is None:
-            stylings = self._store.document._document_stylings # TODO: need to adjust
+            return (
+                self._store.document._document_stylings
+                .get_styling(styling=styling)
+            )
         else:
-            hierarchy_obj = standardize_hierarchy(hierarchy=hierarchy)
-            hierarchy_as_str: str = str(hierarchy_obj)
+            hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
-            if not self._store.tables.get(hierarchy=hierarchy_as_str):
-                raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
-            
-            table_descriptor: TableDescriptor = self._store.tables.get(hierarchy=hierarchy_as_str)
-            stylings = table_descriptor.stylings
+            if self._store.tables.contains(hierarchy=str(hierarchy_obj)):
+                hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
+                hierarchy_as_str = str(hierarchy_obj)
 
-        styling_space = stylings.comments if is_comment else stylings.whitespace
-        if styling not in styling_space:
-            raise InvalidStylingError("Styling does not exist in set of valid stylings")
-        
-        return [styling_descriptor for styling_descriptor in styling_space[styling]]
+                return (
+                    self._store.tables
+                    .get(hierarchy=hierarchy_as_str)
+                    .stylings
+                    .get_styling(styling=styling)
+                )
+            else:
+                table_descriptors = self._get_table_descriptors_from_aot(
+                    hierarchy_obj=hierarchy_obj,
+                    table_hierarchy=hierarchy_as_str
+                )
+
+                stylings = [
+                    table.stylings.get_styling(styling=styling)
+                    for table in table_descriptors
+                ]
+
+                return list(itertools.chain.from_iterable(stylings))
     
-    def get_top_level_stylings(self, styling: StyleItem) -> List[StyleDescriptor]:
+    def get_top_level_stylings(self, styling: Optional[StyleItem]) -> List[StyleDescriptor]:
         """
         Retrieves all stylings (comments or whitespace) that occur at the
         top-level of the TOML source.
 
         Args:
-            styling (`StyleItem`): A literal that identifies the type of styling
-                to retrieve. Can be either "whitespace" or "comment".
+            styling (`StyleItem` | None): A literal that identifies the type of
+                styling to retrieve. Can be either "whitespace" or "comment".
 
         Returns:
             List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.
         """
-        stylings: Dict[str, List[StyleDescriptor]]
-        styling_descriptors: StylingDescriptors
+        descriptors: StylingDescriptors
 
-        if self._top_level_hierarchy is None:
-            styling_descriptors = self._store.document._document_stylings # TODO: need to adjust
-        elif (
+        if (
             self._top_level_type == 'table' and
             self._store.tables.contains(hierarchy=self._top_level_hierarchy)
         ):
-            top_level_cast = cast(str, self._top_level_hierarchy)
-            styling_descriptors = self._store.tables.get(hierarchy=top_level_cast).stylings
+            descriptors = (
+                self._store
+                .tables
+                .get(hierarchy=cast(str, self._top_level_hierarchy))
+                .stylings
+            )
+        elif self._top_level_hierarchy is None:
+            descriptors = self._store.document._document_stylings
         else:
-            styling_descriptors = StylingDescriptors(comments=dict(), whitespace=dict())
+            descriptors = StylingDescriptors(comments=dict(), whitespace=dict())
 
-        if styling == 'comment':
-            stylings = styling_descriptors.comments
-        else:
-            stylings = styling_descriptors.whitespace
-
-        return [
-            style_descriptor
-            for stylings in stylings.values() for style_descriptor in stylings
-        ]
+        return descriptors.get_stylings(styling=styling)
     
     def get_table(self, hierarchy: TOMLHierarchy) -> TableDescriptor:
         """
@@ -141,10 +139,11 @@ class DescriptorRetriever:
         hierarchy_as_str = str(hierarchy_obj)
 
         if not self._store.tables.contains(hierarchy=hierarchy_as_str):
-            raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
+            raise InvalidHierarchyError(
+                "Hierarchy does not exist in set of valid hierarchies"
+            )
 
-        table_descriptor: TableDescriptor = self._store.tables.get(hierarchy=hierarchy_as_str)
-        return table_descriptor
+        return self._store.tables.get(hierarchy=hierarchy_as_str)
     
     def get_field(self, hierarchy: TOMLHierarchy) -> FieldDescriptor:
         """
@@ -161,31 +160,35 @@ class DescriptorRetriever:
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str = str(hierarchy_obj)
 
-        if hierarchy_obj.hierarchy_depth == 1:
+        if hierarchy_obj.depth == 1:
             if not self._store.document.contains(hierarchy=hierarchy_as_str):
-                raise InvalidFieldError("Field does not exist in top-level document space")
+                raise InvalidFieldError(
+                    "Field does not exist in top-level document space"
+                )
             
             field_descriptor = self._store.document.get(hierarchy=hierarchy_as_str)
         else:
-            longest_hierarchy: Optional[str] = hierarchy_obj.longest_ancestor_hierarchy(
-                hierarchies=self._store.tables.hierarchies
-            )
+            # Take the hierarchy passed in and split it up into two parts. The
+            # first part being the expected table hierarchy, and the second
+            # the field name
+            table_hierarchy = Hierarchy.parent_hierarchy(hierarchy=hierarchy_as_str)
+            field = hierarchy_obj.attribute
 
-            if longest_hierarchy is None:
-                raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
-
-            table_descriptor: TableDescriptor = self._store.tables.get(hierarchy=longest_hierarchy)
-
-            remaining_heirarchy = hierarchy_as_str.replace(longest_hierarchy, str())
-            remaining_heirarchy = remaining_heirarchy.lstrip('.')
+            if not self._store.tables.contains(hierarchy=table_hierarchy):
+                raise InvalidHierarchyError(
+                    "Hierarchy does not exist in set of valid hierarchies"
+                )  
             
-            if (
-                not remaining_heirarchy or
-                remaining_heirarchy not in table_descriptor.fields
-            ):
+            # Retrieve the TableDescriptor instance from the table store
+            table_descriptor = self._store.tables.get(hierarchy=table_hierarchy)
+
+            # The field part of the hierarchy may have been passed incorrectly,
+            # so there is a check below to ensure that it does exist
+            if field not in table_descriptor.fields:
                 raise InvalidFieldError("Hierarchy does not map to an existing field")
             
-            field_descriptor = table_descriptor.fields[remaining_heirarchy]
+            # Retrieve the FieldDescriptor instance from the TableDescriptor 
+            field_descriptor = table_descriptor.fields[field]
 
         return field_descriptor
     
@@ -200,25 +203,50 @@ class DescriptorRetriever:
         Returns:
             List[`AoTDescriptor`]: A list of `AoTDescriptor` instances.
         """
-        array_hierarchies: Set[str] = self._store.array_of_tables.hierarchies
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str = str(hierarchy_obj)
 
-        longest_hierarchy: Optional[str] = hierarchy_obj.longest_ancestor_hierarchy(
-            hierarchies=array_hierarchies
-        )
-
-        if longest_hierarchy is None or hierarchy_as_str != longest_hierarchy:
+        if not self._store.array_of_tables.contains(hierarchy=hierarchy_as_str):
             raise InvalidArrayOfTablesError(
                 "Hierarchy does not map to an existing array of tables"
             )
 
         array_of_tables: AoTDescriptors = self._store.array_of_tables.get(
+            hierarchy=hierarchy_as_str
+        )
+        return array_of_tables.aots
+    
+    def _get_table_descriptors_from_aot(
+        self, hierarchy_obj: Hierarchy, table_hierarchy: str
+    ) -> List[TableDescriptor]:
+        """
+        Private method that stores logic to get all `TableDescriptor` instances
+        associated with a hierarchy that is located within an array-of-tables.
+        """
+        # There is a need to identify the part of the hierarchy that
+        # corresponds to the array-of-tables
+        longest_hierarchy = hierarchy_obj.longest_ancestor_hierarchy(
+            hierarchies=self._store.array_of_tables.hierarchies
+        )
+
+        if longest_hierarchy is None:
+            raise InvalidHierarchyError(
+                "Hierarchy does not exist in set of valid hierarchies"
+            )
+        
+        # Grab all AoTDescriptor instances from the retrieved array
+        array_of_tables: AoTDescriptors = self._store.array_of_tables.get(
             hierarchy=longest_hierarchy
         )
-        array_descriptors: List[AoTDescriptor] = array_of_tables.aots
-        return array_descriptors
-    
+        arrays: List[AoTDescriptor] = array_of_tables.aots
+
+        table_descriptors: List[List[TableDescriptor]] = [
+            array.tables[table_hierarchy]
+            for array in arrays if table_hierarchy in array.tables
+        ]
+        
+        return list(itertools.chain.from_iterable(table_descriptors))
+
     def get_table_from_aot(self, hierarchy: TOMLHierarchy) -> List[TableDescriptor]:
         """
         Retrieves all tables from an array-of-tables, where each table is represented
@@ -231,29 +259,16 @@ class DescriptorRetriever:
             List[`TableDescriptor`]: A list of `TableDescriptor` instances.
         """
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
-        hierarchy_as_str = str(hierarchy_obj)
-
-        longest_hierarchy: Optional[str] = hierarchy_obj.longest_ancestor_hierarchy(
-            hierarchies=self._store.array_of_tables.hierarchies
-        )
-
-        if longest_hierarchy is None:
-            raise InvalidHierarchyError("Hierarchy does not exist in set of valid hierarchies")
         
-        array_of_tables: AoTDescriptors = self._store.array_of_tables.get(
-            hierarchy=longest_hierarchy
+        table_descriptors: List[TableDescriptor] = self._get_table_descriptors_from_aot(
+            hierarchy_obj=hierarchy_obj, table_hierarchy=str(hierarchy_obj)
         )
-        arrays: List[AoTDescriptor] = array_of_tables.aots
 
-        table_descriptors: List[TableDescriptor] = []
-
-        for array_of_table in arrays:            
-            if hierarchy_as_str in array_of_table.tables:
-                for table_descriptor in array_of_table.tables[hierarchy_as_str]:
-                    table_descriptors.append(table_descriptor)
-
+        # In the event that no tables were found with the matching hierarchy
         if not table_descriptors:
-            raise InvalidTableError("Hierarchy does not map to an existing table")
+            raise InvalidTableError(
+                "Hierarchy does not map to an existing table within an array"
+            )
 
         return table_descriptors
     
@@ -269,35 +284,27 @@ class DescriptorRetriever:
             List[`FieldDescriptor`]: A list of `FieldDescriptor` instances.
         """
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
-        hierarchy_as_str: str = str(hierarchy_obj)
 
-        longest_hierarchy: Optional[str] = hierarchy_obj.longest_ancestor_hierarchy(
-            hierarchies=self._store.array_of_tables.hierarchies
+        # Take the hierarchy passed in and split it up into two parts. The
+        # first part being the expected table hierarchy, and the second
+        # the field name
+        table_hierarchy = Hierarchy.parent_hierarchy(hierarchy=str(hierarchy_obj))
+        field = hierarchy_obj.attribute
+
+        table_descriptors: List[TableDescriptor] = self._get_table_descriptors_from_aot(
+            hierarchy_obj=hierarchy_obj, table_hierarchy=table_hierarchy
         )
 
-        if longest_hierarchy is None:
-            raise InvalidHierarchyError("Hierarchy does not exist in set of valid array hierarchies")
+        field_descriptors: List[FieldDescriptor] = [
+            table_descriptor.fields[field]
+            for table_descriptor in table_descriptors
+            if field in table_descriptor.fields
+        ]
 
-        if longest_hierarchy == hierarchy_as_str:
-            raise InvalidFieldError("Hierarchy does not map to an existing field")
-
-        array_of_tables: AoTDescriptors = self._store.array_of_tables.get(
-            hierarchy=longest_hierarchy
-        )
-        arrays: List[AoTDescriptor] = array_of_tables.aots
-        field_descriptors: List[FieldDescriptor] = []
-
-        hierarchy_table = Hierarchy.parent_hierarchy(hierarchy=hierarchy_as_str)
-        hierarchy_field = hierarchy_obj.attribute
-
-        for array_of_table in arrays:
-            if hierarchy_table in array_of_table.tables:
-                for table in array_of_table.tables[hierarchy_table]:
-                    if hierarchy_field in table.fields:
-                        field_descriptor: FieldDescriptor = table.fields[hierarchy_field]
-                        field_descriptors.append(field_descriptor)
-
+        # In the event that no fields were found with the matching hierarchy
         if not field_descriptors:
-            raise InvalidFieldError("Hierarchy does not map to an existing field")
+            raise InvalidFieldError(
+                "Hierarchy does not map to an existing field within an array"
+            )
 
         return field_descriptors

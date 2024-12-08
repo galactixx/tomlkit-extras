@@ -9,7 +9,8 @@ from tomlkit_extras._utils import (
     create_array_of_tables,
     create_inline_table,
     create_table,
-    create_toml_document
+    create_toml_document,
+    safe_unwrap
 )
 from tomlkit_extras.toml._comments import (
     get_array_field_comment,
@@ -59,6 +60,7 @@ __all__ = [
     'create_inline_table',
     'create_table',
     'create_toml_document',
+    'safe_unwrap',
     'get_array_field_comment',
     'get_comments',
     'StructureComment',

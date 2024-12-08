@@ -3,7 +3,6 @@ from typing import (
     Any,
     cast,
     Dict,
-    Optional,
     Set
 )
 
@@ -37,29 +36,24 @@ class BaseStore(ABC):
     """
     @abstractmethod
     def get(self, hierarchy: str) -> Any:
-        """"""
         pass
 
     @abstractmethod
     def get_stylings(self, style_info: ItemInfo) -> StylingDescriptors:
-        """"""
         pass
 
     @abstractmethod
     def get_array(self, info: ItemInfo) -> FieldDescriptor:
-        """"""
         pass
 
     @abstractmethod
     def contains(self, hierarchy: str) -> bool:
-        """"""
         pass
 
     @abstractmethod
     def update(self, item: items.Item, info: ItemInfo) -> None:
-        """"""
         pass
-
+    
 
 class BaseTableStore(BaseStore):
     """
@@ -213,7 +207,7 @@ class ArrayOfTablesStore(BaseTableStore):
         Returns:
             bool: A boolean indicating whether the hierarchy exists.
         """
-        return hierarchy in self._array_of_tables
+        return hierarchy in self.hierarchies
 
     def append(self, hierarchy: str, array_of_tables: AoTDescriptor) -> None:
         """
@@ -240,29 +234,28 @@ class ArrayOfTablesStore(BaseTableStore):
                 hierarchy=hierarchy, array=array_of_tables
             )
 
-    def get_array_hierarchy(self, hierarchy: TOMLHierarchy) -> Optional[str]:
+    def _get_array_hierarchy(self, hierarchy: TOMLHierarchy) -> str:
         """
         Given a `TOMLHierarchy` instance representing a TOML hierarchy, will return
         the longest ancestor hierarchy that exists in the store. This effectively
         finds the newest array of tables ancestor of the given hierarchy.
 
-        If a corresponding hierarchy was found, then a string is returned. Otherwise
-        None is returned.
-
         Args:
             hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
 
         Returns:
-            str | None: Returns a string hierarchy if a match was found in the store,
-                otherwise returns None.
+            str: Returns a string hierarchy where a match was found.
         """
         if isinstance(hierarchy, Hierarchy):
             hierarchy_obj = hierarchy
         else:
             hierarchy_obj = Hierarchy.from_str_hierarchy(hierarchy=hierarchy)
-        return hierarchy_obj.longest_ancestor_hierarchy(hierarchies=self.hierarchies)
-    
-    def get_aot_table(self, hierarchy: str) -> TableDescriptor:
+        return cast(
+            str,
+            hierarchy_obj.longest_ancestor_hierarchy(hierarchies=self.hierarchies)
+        )
+        
+    def _get_aot_table(self, hierarchy: str) -> TableDescriptor:
         """
         Retrieves a table located in an array of tables. Given a string table hierarchy
         will return a `TableDescriptor` instance.
@@ -273,10 +266,14 @@ class ArrayOfTablesStore(BaseTableStore):
         Returns:
             `TableDescriptor`: A `TableDescriptor` instance.
         """
-        array_hierarchy = cast(str, self.get_array_hierarchy(hierarchy=hierarchy))
+        array_hierarchy = self._get_array_hierarchy(hierarchy=hierarchy)
         array_of_tables = self._array_of_tables[array_hierarchy]
 
-        return array_of_tables.get_array(hierarchy=hierarchy)._get_table(hierarchy=hierarchy)
+        return (
+            array_of_tables
+            .get_array(hierarchy=hierarchy)
+            ._get_table(hierarchy=hierarchy)
+        )
 
     def update(self, item: items.Item, info: ItemInfo) -> None:
         """
@@ -289,7 +286,7 @@ class ArrayOfTablesStore(BaseTableStore):
                 to a field appearing in a TOML file.
             info (`ItemInfo`): An `ItemInfo` instance with basic info on the field.
         """
-        array_hierarchy = cast(str, self.get_array_hierarchy(hierarchy=info.hierarchy))
+        array_hierarchy = self._get_array_hierarchy(hierarchy=info.hierarchy)
         array_of_tables = self._array_of_tables[array_hierarchy]
 
         array = array_of_tables.get_array(hierarchy=info.hierarchy)
@@ -303,8 +300,8 @@ class ArrayOfTablesStore(BaseTableStore):
     def add_table(self, hierarchy: str, table: Table, info: ItemInfo) -> None:
         """
         Adds a new table to the store of tables already processed. A new key-value
-        pair is added to the dictionary, where the key is the string hierarchy of the table,
-        and the value is a `TableDescriptor` instance.
+        pair is added to the dictionary, where the key is the string hierarchy of the
+        table, and the value is a `TableDescriptor` instance.
         
         Args:
             hierarchy (str): A TOML hierarchy corresponding to a table.
@@ -312,7 +309,7 @@ class ArrayOfTablesStore(BaseTableStore):
                 tomlkit.items.InlineTable.
             info (`ItemInfo`): An `ItemInfo` instance with basic info on the table.
         """
-        array_hierarchy = cast(str, self.get_array_hierarchy(hierarchy=hierarchy))
+        array_hierarchy = self._get_array_hierarchy(hierarchy=hierarchy)
         array_of_tables = self._array_of_tables[array_hierarchy]
 
         table_descriptor = TableDescriptor._from_table_item(
@@ -336,7 +333,7 @@ class ArrayOfTablesStore(BaseTableStore):
             `StylingDescriptors`: A `StylingDescriptors` instance containing all
                 stylings associated with a table.
         """
-        table_descriptor: TableDescriptor = self.get_aot_table(hierarchy=style_info.hierarchy)
+        table_descriptor: TableDescriptor = self._get_aot_table(hierarchy=style_info.hierarchy)
         if item_is_table(item_type=style_info.parent_type):
             styling_descriptors = table_descriptor.stylings
         else:
@@ -354,7 +351,7 @@ class ArrayOfTablesStore(BaseTableStore):
         Returns:
             `FieldDescriptor`: A `FieldDescriptor` instance.
         """
-        return self.get_aot_table(hierarchy=info.hierarchy).fields[info.key]
+        return self._get_aot_table(hierarchy=info.hierarchy).fields[info.key]
 
 
 class TableStore(BaseTableStore):
@@ -454,8 +451,8 @@ class TableStore(BaseTableStore):
         if item_is_table(item_type=style_info.parent_type):
             styling_positions = self._tables[style_info.hierarchy].stylings
         else:
-            field = Hierarchy.parent_level(hierarchy=style_info.hierarchy)
             hierarchy = Hierarchy.parent_hierarchy(hierarchy=style_info.hierarchy)
+            field = Hierarchy.parent_level(hierarchy=style_info.hierarchy)
             styling_positions = self._tables[hierarchy].fields[field].stylings
         return styling_positions
     
@@ -488,13 +485,13 @@ class DescriptorStore:
     def __init__(self, line_counter: LineCounter) -> None:
         self._line_counter = line_counter
         
-        # Structures for storing any attributes occurring in top-level space
+        # Object for storing any attributes occurring in top-level space
         self.document = DocumentStore(line_counter=self._line_counter)
 
-        # Structure for storing any array of tables objects
+        # Object for storing any array of tables objects
         self.array_of_tables = ArrayOfTablesStore(line_counter=self._line_counter)
 
-        # Structure for storing any attributes occurring within at least one table
+        # Object for storing any attributes occurring within at least one table
         self.tables = TableStore(line_counter=self._line_counter)
 
     def _store_choice(self, info: ItemInfo) -> BaseStore:
@@ -515,7 +512,7 @@ class DescriptorStore:
             descriptor_store = self.tables
 
         return descriptor_store
-
+    
     def update_styling(self, style: Stylings, style_info: ItemInfo) -> None:
         """
         Adds a new styling, corresponding to a string comment or whitespace within
@@ -531,20 +528,23 @@ class DescriptorStore:
 
     def update_field_descriptor(self, item: items.Item, info: ItemInfo) -> None:
         """
-        Adds a new field, corresponding to a non-table key-value pair within a TOML
-        file, to a store.
+        Adds a new field, corresponding to a non-table key-value pair within a
+        TOML file, to a store.
         """
         descriptor_store = self._store_choice(info=info)
         descriptor_store.update(item=item, info=info)
 
     def update_array_comment(self, array: items.Array, info: ItemInfo) -> None:
         """
-        Adds a comment to an array field, corresponding to a non-table key-value pair
-        within a TOML file, to a store.
+        Adds a comment to an array field, corresponding to a non-table key-value
+        pair within a TOML file, to a store.
         """
         descriptor_store = self._store_choice(info=info)
         field_position = descriptor_store.get_array(info=info)
-        field_position._update_comment(item=array, line_no=self._line_counter.line_no)
+        field_position._update_comment(
+            item=array,
+            line_no=self._line_counter.line_no
+        )
 
     def update_table_descriptor(
         self, hierarchy: str, table: Table, table_info: ItemInfo
