@@ -32,6 +32,21 @@ from tomlkit_extras._exceptions import (
 
 class DescriptorRetriever:
     """
+    A class that houses get methods that retrieve certain TOML structures from a
+    `DescriptorStore` instance. There are separate methods to retrieve fields and
+    tables that appear within an array-of-tables and those that do not.
+
+    Methods are provided to retrieve the following structures:
+    - stylings (whitespaces and comments)
+    - array-of-tables
+
+    Not within an array-of-tables:
+    - fields (including arrays)
+    - tables (including inline tables)
+
+    Within an array-of-tables:
+    - fields (including arrays)
+    - tables (including inline tables)
     """
     def __init__(
         self,
@@ -101,6 +116,7 @@ class DescriptorRetriever:
         Args:
             styling (`StyleItem` | None): A literal that identifies the type of
                 styling to retrieve. Can be either "whitespace" or "comment".
+                Defaults to None.
 
         Returns:
             List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.

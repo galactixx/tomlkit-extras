@@ -243,8 +243,7 @@ class _TOMLParser:
                 self._parse_stylings(toml_item=toml_item, info=toml_item_info)
 
             # For an array-of-tables, recursive call is made as arrays can
-            # contain any tomlkit object nested within except a
-            # tomlkit.TOMLDocument
+            # contain any tomlkit object nested within except a tomlkit.TOMLDocument
             elif isinstance(toml_item, items.AoT) and not self.top_level_only:
                 self._parse_array_of_tables(toml_item=toml_item, info=toml_item_info)
 
@@ -357,7 +356,7 @@ class TOMLDocumentDescriptor:
         Returns an integer representing the number of non-inline/non-super tables
         appearing in the TOML file.
         """
-        return self._toml_statistics._number_of_tables
+        return self._toml_statistics.number_of_tables
 
     @property
     def number_of_inline_tables(self) -> int:
@@ -365,7 +364,7 @@ class TOMLDocumentDescriptor:
         Returns an integer representing the number of inline tables appearing in
         the TOML file.
         """
-        return self._toml_statistics._number_of_inline_tables
+        return self._toml_statistics.number_of_inline_tables
 
     @property
     def number_of_aots(self) -> int:
@@ -373,7 +372,7 @@ class TOMLDocumentDescriptor:
         Returns an integer representing the number of array-of-tables appearing
         in the TOML file.
         """
-        return self._toml_statistics._number_of_aots
+        return self._toml_statistics.number_of_aots
     
     @property
     def number_of_arrays(self) -> int:
@@ -381,7 +380,7 @@ class TOMLDocumentDescriptor:
         Returns an integer representing the number of arrays appearing in the
         TOML file.
         """
-        return self._toml_statistics._number_of_arrays
+        return self._toml_statistics.number_of_arrays
 
     @property
     def number_of_comments(self) -> int:
@@ -389,7 +388,7 @@ class TOMLDocumentDescriptor:
         Returns an integer representing the number of comments appearing in the
         TOML file.
         """
-        return self._toml_statistics._number_of_comments
+        return self._toml_statistics.number_of_comments
 
     @property
     def number_of_fields(self) -> int:
@@ -397,7 +396,7 @@ class TOMLDocumentDescriptor:
         Returns an integer representing the number of non-array fields appearing
         in the TOML file.
         """
-        return self._toml_statistics._number_of_fields
+        return self._toml_statistics.number_of_fields
 
     def get_field_from_aot(self, hierarchy: TOMLHierarchy) -> List[FieldDescriptor]:
         """
@@ -464,14 +463,19 @@ class TOMLDocumentDescriptor:
         """
         return self._retriever.get_table(hierarchy=hierarchy)
     
-    def get_top_level_stylings(self, styling: StyleItem) -> List[StyleDescriptor]:
+    def get_top_level_stylings(self, styling: Optional[StyleItem] = None) -> List[StyleDescriptor]:
         """
         Retrieves all stylings (comments or whitespace) that occur at the
-        top-level of the TOML source.
+        top-level space of the TOML source.
+
+        If "whitespace" is passed all whitespace stylings will be returned. If
+        "comment" is passed all comment stylings will be returned. If it is None,
+        then all stylings will be returned.
 
         Args:
-            styling (`StyleItem`): A literal that identifies the type of styling
-                to retrieve. Can be either "whitespace" or "comment".
+            styling (`StyleItem` | None): A literal that identifies the type of
+                styling to retrieve. Can be either "whitespace" or "comment".
+                Defaults to None.
 
         Returns:
             List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.

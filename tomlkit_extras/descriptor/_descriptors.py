@@ -48,24 +48,16 @@ class AoTDescriptors:
     """
     Stores all array-of-tables that have been parsed while recursively
     traversing a TOML structure in the `_generate_descriptor` method of
-    `TOMLDocumentDescriptor`.
+    `_TOMLParser`.
     """
     aots: List[AoTDescriptor]
-    array_indices: Dict[str, int]
 
-    def get_array(self, hierarchy: str) -> AoTDescriptor:
-        """
-        Retrieves a specific `AoTDescriptor` object, representing an
-        array-of-tables, given a string hierarchy.
-        """
-        return self.aots[self.array_indices[hierarchy]]
+    def get_array(self) -> AoTDescriptor:
+        """Retrieves the most recent `AoTDescriptor` object added."""
+        return self.aots[-1]
 
-    def update_arrays(self, hierarchy: str, array: AoTDescriptor) -> None:
-        """
-        Adds a new `AoTDescriptor` object to existing store of array-of-tables
-        parsed.
-        """
-        self.array_indices[hierarchy] += 1
+    def update_arrays(self, array: AoTDescriptor) -> None:
+        """Adds a new `AoTDescriptor` object to existing store."""
         self.aots.append(array)
 
 
@@ -105,19 +97,45 @@ class StylingDescriptors:
         return list(self.whitespace.values())
 
     def get_styling(self, styling: str) -> List[StyleDescriptor]:
-        """"""
+        """
+        Retrieves all stylings, represented by `StyleDescriptor` objects, that
+        correspond to a specific string representation.
+
+        Args:
+            styling (str): A string representation of a comment or whitespace.
+
+        Returns:
+            List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.
+        """
         # Check if the string representation of the styling matches the
         # format of a whitespace or text comment
         is_comment = not re.match(_WHITESPACE_PATTERN, styling)
 
         styling_space = self.comments if is_comment else self.whitespace
         if styling not in styling_space:
-            raise InvalidStylingError("Styling does not exist in set of valid stylings")
+            raise InvalidStylingError(
+                "Styling does not exist in set of valid stylings"
+            )
         
         return styling_space[styling]
 
-    def get_stylings(self, styling: Optional[StyleItem]) -> List[StyleDescriptor]:
-        """"""
+    def get_stylings(self, styling: Optional[StyleItem] = None) -> List[StyleDescriptor]:
+        """
+        Retrieves all stylings, represented by `StyleDescriptor` objects, that
+        correspond to a specific string literal.
+        
+        If "whitespace" is passed all whitespace stylings will be returned. If
+        "comment" is passed all comment stylings will be returned. If it is None,
+        then all stylings will be returned.
+
+        Args:
+            styling (`StyleItem` | None): A literal that identifies the type of
+                styling to retrieve. Can be either "whitespace" or "comment".
+                Defaults to None.
+
+        Returns:
+            List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.
+        """
         stylings: List[StyleDescriptor] = []
 
         if styling is None:
@@ -319,7 +337,7 @@ class FieldDescriptor(AttributeDescriptor):
         """
         Private class method which generates an instance of `FieldDescriptor` for
         a given field while recursively traversing a TOML structure in the
-        `_generate_descriptor` method of `TOMLDocumentDescriptor`.
+        `_generate_descriptor` method of `_TOMLParser`.
         """
         comment_line_no: Optional[int]
         stylings = StylingDescriptors(comments=dict(), whitespace=dict())
@@ -418,7 +436,7 @@ class TableDescriptor(AttributeDescriptor):
         """
         Private class method which generates an instance of `TableDescriptor` for
         a given table while recursively traversing a TOML structure in the
-        `_generate_descriptor` method of `TOMLDocumentDescriptor`.
+        `_generate_descriptor` method of `_TOMLParser`.
         """
         comment_line_no = find_comment_line_no(line_no=line_no, item=table)
         stylings = StylingDescriptors(comments=dict(), whitespace=dict())
@@ -430,14 +448,13 @@ class TableDescriptor(AttributeDescriptor):
             stylings=stylings
         )
 
-    def _add_field(
-        self, item: items.Item, info: ItemInfo, line_no: int
-    ) -> None:
+    def _add_field(self, item: items.Item, info: ItemInfo, line_no: int) -> FieldDescriptor:
         """A private method that adds a field to the existing store of fields."""
         field_descriptor = FieldDescriptor._from_toml_item(
             item=item, info=info, line_no=line_no
         )
         self._fields.update({info.key: field_descriptor})
+        return field_descriptor
 
 
 class StyleDescriptor(AbstractDescriptor):
@@ -516,7 +533,6 @@ class AoTDescriptor(AttributeDescriptor):
         self.line_no = line_no
 
         self._tables: Dict[str, List[TableDescriptor]] = dict()
-        self._table_indices: Dict[str, int] = dict()
     
     @property
     def item_type(self) -> AoTItem:
@@ -564,13 +580,11 @@ class AoTDescriptor(AttributeDescriptor):
         A private method that retrieves a specific `TableDescriptor` object,
         representing a table in an array-of-tables, given a string hierarchy.
         """
-        return self._tables[hierarchy][self._table_indices[hierarchy]]
+        return self._tables[hierarchy][-1]
 
     def _update_tables(self, hierarchy: str, table_descriptor: TableDescriptor) -> None:
         """A private method that adds a table to the existing store of tables."""    
         if hierarchy not in self._tables:
             self._tables[hierarchy] = [table_descriptor]
-            self._table_indices[hierarchy] = 0
         else:
             self._tables[hierarchy].append(table_descriptor)
-            self._table_indices[hierarchy] += 1

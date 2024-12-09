@@ -68,21 +68,6 @@ class Hierarchy:
     
     def __len__(self) -> int:
         return self.depth
-    
-    @staticmethod
-    def parent_level(hierarchy: str) -> str:
-        """
-        A static method that extracts and returns the last level of a given
-        hierarchy string.
-
-        Args:
-            hierarchy (str): A string representing a hierarchical structure, 
-                where levels are separated by dots.
-
-        Returns:
-            str: The last level of the hierarchy.
-        """
-        return hierarchy.split('.')[-1]
 
     @staticmethod
     def parent_hierarchy(hierarchy: str) -> str:

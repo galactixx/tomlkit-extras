@@ -60,10 +60,10 @@ def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[in
     Returns both the attribute and container positions of an item located at a
     specific hierarchy within a `TOMLSource` instance. The attribute and container
     positions are relative to other items within the containing type of the item
-    in question. The attribute position refers to the position of item amongst all
-    other key value pairs (fields, tables) within the containing class. The
+    in question. The attribute position refers to the position of an item amongst all
+    other key value pairs (fields, tables) within the containing object. The
     container position is the position of the item amongst all other types,
-    including stylings (whitespace, comments), within the containing class.
+    including stylings (whitespace, comments), within the containing object.
 
     A tuple is returned, with the first item being an integer representing the
     attribute position, and the second item the container position.
