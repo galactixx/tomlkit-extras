@@ -100,6 +100,14 @@ class DocumentStore(BaseStore):
             comments=dict(), whitespace=dict()
         )
 
+    @property
+    def fields(self) -> Set[str]:
+        """
+        Returns a set of strings corresponding to all fields that have
+        been processed.
+        """
+        return set(self._document_fields.keys())
+
     def get(self, hierarchy: str) -> FieldDescriptor:
         """
         Given an field name will return a `FieldDescriptor` instance corresponding

@@ -65,7 +65,7 @@ def _load_toml(toml_content: Union[str, bytes]) -> TOMLDocument:
 
 def load_toml_file(toml_source: TOMLSourceFile) -> TOMLDocument:
     """
-    Accepts a string, bytes, bytearray, Path, `tomlkit.TOMLDocument`, or
+    Accepts a string, bytes, bytearray, `Path`, `tomlkit.TOMLDocument`, or
     Dict[str, Any] instance and converts it into a `tomlkit.TOMLDocument`
     instance.
     
@@ -114,4 +114,7 @@ def load_toml_file(toml_source: TOMLSourceFile) -> TOMLDocument:
 
         return _load_toml(toml_content=toml_source_to_bytes)
     else:
-        raise TypeError(f"Invalid type passed for toml_source argument")
+        raise TypeError(
+            'Expected an instance of TOMLSourceFile, but got '
+            f'{type(toml_source).__name__}'
+        )

@@ -16,7 +16,10 @@ from tomlkit.container import OutOfOrderTableProxy
 from tomlkit import items
 
 from tomlkit_extras.toml._out_of_order import fix_out_of_order_table
-from tomlkit_extras._exceptions import InvalidHierarchyError
+from tomlkit_extras._exceptions import (
+    NotContainerLikeError,
+    InvalidHierarchyRetrievalError
+)
 from tomlkit_extras._utils import (
     decompose_body_item,
     get_container_body
@@ -47,7 +50,8 @@ def _get_table_from_aot(current_source: List[items.Item], table: str) -> List[it
     for source_item in current_source:
         if isinstance(source_item, items.AoT):
             next_source.extend(
-                aot_item[table] for aot_item in source_item if table in aot_item
+                aot_item[table]
+                for aot_item in source_item if table in aot_item
             )
         elif isinstance(source_item, DICTIONARY_LIKE_TYPES) and table in source_item:
             next_source.append(source_item[table])
@@ -84,7 +88,7 @@ def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[in
 
     parent_source = find_parent_toml_source(hierarchy=hierarchy_obj, toml_source=toml_source)
     if not isinstance(parent_source, INSERTION_TYPES):
-        raise InvalidHierarchyError("Hierarchy maps to a non-container-like instance")
+        raise NotContainerLikeError("Hierarchy maps to a non-container-like object")
 
     table_body_items: Iterator[BodyContainerItem] = iter(
         get_container_body(toml_source=parent_source)
@@ -106,7 +110,7 @@ def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[in
             if item_key == hierarchy_obj.attribute:
                 finding_positions = False 
     except StopIteration:
-        raise InvalidHierarchyError(
+        raise InvalidHierarchyRetrievalError(
             "Hierarchy specified does not exist in TOMLDocument instance"
         )
 
@@ -186,12 +190,12 @@ def get_attribute_from_toml_source(
             else:
                 current_source = cast(Retrieval, current_source[table]) # type: ignore[index]
     except KeyError:
-        raise InvalidHierarchyError(
+        raise InvalidHierarchyRetrievalError(
             "Hierarchy specified does not exist in TOMLDocument instance"
         )
     else:
         if isinstance(current_source, list) and not current_source:
-            raise InvalidHierarchyError(
+            raise InvalidHierarchyRetrievalError(
                 "Hierarchy specified does not exist in TOMLDocument instance"
             )
 

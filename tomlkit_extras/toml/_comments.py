@@ -105,7 +105,8 @@ def get_array_field_comment(array: items.Array, array_item: Any) -> Optional[str
     Returns:
         str | None: None if no comment was found, or a string comment if found.
     """
-    array_body_items: Iterator[BodyContainerItem] = iter(get_container_body(toml_source=array))
+    array_items = get_container_body(toml_source=array)
+    array_items_iter: Iterator[BodyContainerItem] = iter(array_items)
 
     seen_first_ws_after_comment = False
     seen_array_item = False
@@ -116,7 +117,7 @@ def get_array_field_comment(array: items.Array, array_item: Any) -> Optional[str
             not (seen_array_item and seen_first_ws_after_comment) and
             array_item_comment is None
         ):
-            _, array_body_item = decompose_body_item(body_item=next(array_body_items))
+            _, array_body_item = decompose_body_item(body_item=next(array_items_iter))
 
             if not seen_array_item:
                 seen_array_item = array_body_item == array_item
@@ -128,6 +129,9 @@ def get_array_field_comment(array: items.Array, array_item: Any) -> Optional[str
         pass
 
     if not seen_array_item:
-        raise InvalidArrayItemError("Data item does not exist in specified array")
+        raise InvalidArrayItemError(
+            "Data item does not exist in specified array",
+            array_items
+        )
 
     return array_item_comment

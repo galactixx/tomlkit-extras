@@ -6,7 +6,7 @@ from typing import (
 from pyrsistent import pdeque, PDeque
 from tomlkit import items, TOMLDocument
 
-from tomlkit_extras._exceptions import InvalidHierarchyError
+from tomlkit_extras._exceptions import InvalidHierarchyDeletionError
 from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
@@ -33,7 +33,9 @@ def _delete_attribute_from_aot(attribute: str, current_source: items.AoT) -> Non
             current_source.remove(table_source)
 
     if not table_deleted:
-        raise InvalidHierarchyError("Hierarchy does not exist in TOML source space")
+        raise InvalidHierarchyDeletionError(
+            "Hierarchy does not exist in TOML source space"
+        )
 
 
 def _delete_iteration_for_aot(
@@ -66,7 +68,9 @@ def _recursive_deletion(
 
         if not hierarchy_queue_new:
             if isinstance(current_source, items.AoT):
-                _delete_attribute_from_aot(attribute=current_table, current_source=current_source)
+                _delete_attribute_from_aot(
+                    attribute=current_table, current_source=current_source
+                )
             else:
                 del cast(TOMLDictLike, current_source)[current_table]
         elif isinstance(current_source, items.AoT):
@@ -83,7 +87,9 @@ def _recursive_deletion(
             if not next_source:
                 del cast(TOMLDictLike, current_source)[current_table]
     except KeyError:
-        raise InvalidHierarchyError("Hierarchy does not exist in TOML source space")
+        raise InvalidHierarchyDeletionError(
+            "Hierarchy does not exist in TOML source space"
+        )
 
 
 def delete_from_toml_source(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> None:

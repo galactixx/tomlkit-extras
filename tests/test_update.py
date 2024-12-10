@@ -9,7 +9,7 @@ from tomlkit import TOMLDocument
 from tomlkit_extras import (
     create_inline_table,
     get_attribute_from_toml_source,
-    InvalidHierarchyError,
+    InvalidHierarchyUpdateError,
     update_toml_source
 )
 
@@ -112,7 +112,7 @@ def test_update_toml_document_errors(
 ) -> None:
     """Function to test the error handling of `update_toml_source`."""
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
-    with pytest.raises(InvalidHierarchyError) as exc_info:
+    with pytest.raises(InvalidHierarchyUpdateError) as exc_info:
         update_toml_source(
             hierarchy=test_case.hierarchy, toml_source=toml_document, update=test_case.update
         )

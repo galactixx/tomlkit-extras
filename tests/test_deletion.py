@@ -5,7 +5,8 @@ import pytest
 from tomlkit_extras import (
     delete_from_toml_source,
     get_attribute_from_toml_source,
-    InvalidHierarchyError
+    InvalidHierarchyDeletionError,
+    InvalidHierarchyRetrievalError
 )
 
 from tests.typing import FixtureFunction
@@ -48,7 +49,7 @@ def test_deletion_from_toml_document(
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
     delete_from_toml_source(hierarchy=test_case.hierarchy, toml_source=toml_document)
 
-    with pytest.raises(InvalidHierarchyError) as exc_info:
+    with pytest.raises(InvalidHierarchyRetrievalError) as exc_info:
         _ = get_attribute_from_toml_source(
             hierarchy=test_case.hierarchy, toml_source=toml_document
         )
@@ -70,6 +71,6 @@ def test_invalid_deletion(
 ) -> None:
     """Function to test the error handling of `delete_from_toml_source`."""
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
-    with pytest.raises(InvalidHierarchyError) as exc_info:
+    with pytest.raises(InvalidHierarchyDeletionError) as exc_info:
         delete_from_toml_source(hierarchy=test_case.hierarchy, toml_source=toml_document)
     assert str(exc_info.value) == "Hierarchy does not exist in TOML source space"

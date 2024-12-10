@@ -16,7 +16,7 @@ from tomlkit import (
 )
 
 from tomlkit_extras.toml._retrieval import find_parent_toml_source
-from tomlkit_extras._exceptions import InvalidHierarchyError
+from tomlkit_extras._exceptions import TOMLInsertionError
 from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
@@ -310,14 +310,16 @@ class _BaseInserter(ABC):
 
         # Ensure the hierarchy does not map to a nested item within an array of tables
         if isinstance(parent_toml, (list, items.AoT)):
-            raise InvalidHierarchyError(
-                "Hierarchy maps to multiple items, insertion is not possible"
+            raise TOMLInsertionError(
+                "Hierarchy maps to multiple items, insertion is not possible",
+                parent_toml
             )
 
         # Ensure that the hierarchy does not map to a type that does not support insertion
         if not isinstance(parent_toml, INSERTION_TYPES):
-            raise InvalidHierarchyError(
-                "Hierarchy maps to an instance that does not support insertion"
+            raise TOMLInsertionError(
+                "Hierarchy maps to an instance that does not support insertion",
+                parent_toml
             )
         
         return parent_toml

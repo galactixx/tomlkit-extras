@@ -4,7 +4,10 @@ from tomlkit import items
 
 from tomlkit_extras._constants import DICTIONARY_LIKE_TYPES
 from tomlkit_extras.toml._retrieval import find_parent_toml_source
-from tomlkit_extras._exceptions import InvalidHierarchyError
+from tomlkit_extras._exceptions import (
+    InvalidHierarchyUpdateError,
+    NotContainerLikeError
+)
 from tomlkit_extras._hierarchy import (
     Hierarchy,
     standardize_hierarchy
@@ -46,16 +49,16 @@ def update_toml_source(
     )
 
     if isinstance(retrieved_from_toml, (list, items.AoT)):
-        raise InvalidHierarchyError(
+        raise InvalidHierarchyUpdateError(
             'Hierarchy maps to multiple items within an array of tables, '
             'not a feature of this function'
         )
     elif not isinstance(retrieved_from_toml, DICTIONARY_LIKE_TYPES):
-        raise ValueError("Type is not a valid container-like structure")
+        raise NotContainerLikeError("Type is not a valid container-like structure")
             
     hierarchy_field = hierarchy_obj.attribute
     if hierarchy_field not in retrieved_from_toml:
-        raise InvalidHierarchyError(
+        raise InvalidHierarchyUpdateError(
             'Hierarchy specified does not exist in TOMLDocument instance'
         )
 

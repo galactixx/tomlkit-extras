@@ -84,11 +84,9 @@ class DescriptorRetriever:
             )
         else:
             hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
+            hierarchy_as_str = str(hierarchy_obj)
 
             if self._store.tables.contains(hierarchy=str(hierarchy_obj)):
-                hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
-                hierarchy_as_str = str(hierarchy_obj)
-
                 return (
                     self._store.tables
                     .get(hierarchy=hierarchy_as_str)
@@ -156,7 +154,9 @@ class DescriptorRetriever:
 
         if not self._store.tables.contains(hierarchy=hierarchy_as_str):
             raise InvalidHierarchyError(
-                "Hierarchy does not exist in set of valid hierarchies"
+                "Hierarchy does not exist in set of valid hierarchies",
+                hierarchy_obj,
+                self._store.tables.hierarchies
             )
 
         return self._store.tables.get(hierarchy=hierarchy_as_str)
@@ -179,7 +179,9 @@ class DescriptorRetriever:
         if hierarchy_obj.depth == 1:
             if not self._store.document.contains(hierarchy=hierarchy_as_str):
                 raise InvalidFieldError(
-                    "Field does not exist in top-level document space"
+                    "Field does not exist in top-level document space",
+                    hierarchy_obj,
+                    self._store.document.fields
                 )
             
             field_descriptor = self._store.document.get(hierarchy=hierarchy_as_str)
@@ -192,7 +194,9 @@ class DescriptorRetriever:
 
             if not self._store.tables.contains(hierarchy=table_hierarchy):
                 raise InvalidHierarchyError(
-                    "Hierarchy does not exist in set of valid hierarchies"
+                    "Hierarchy does not exist in set of valid hierarchies",
+                    hierarchy_obj,
+                    self._store.tables.hierarchies
                 )  
             
             # Retrieve the TableDescriptor instance from the table store
@@ -201,7 +205,11 @@ class DescriptorRetriever:
             # The field part of the hierarchy may have been passed incorrectly,
             # so there is a check below to ensure that it does exist
             if field not in table_descriptor.fields:
-                raise InvalidFieldError("Hierarchy does not map to an existing field")
+                raise InvalidFieldError(
+                    "Hierarchy does not map to an existing field",
+                    hierarchy_obj,
+                    set(table_descriptor.fields.keys())
+                )
             
             # Retrieve the FieldDescriptor instance from the TableDescriptor 
             field_descriptor = table_descriptor.fields[field]
@@ -224,7 +232,9 @@ class DescriptorRetriever:
 
         if not self._store.array_of_tables.contains(hierarchy=hierarchy_as_str):
             raise InvalidArrayOfTablesError(
-                "Hierarchy does not map to an existing array of tables"
+                "Hierarchy does not map to an existing array of tables",
+                hierarchy_obj,
+                self._store.array_of_tables.hierarchies
             )
 
         array_of_tables: AoTDescriptors = self._store.array_of_tables.get(
@@ -247,7 +257,9 @@ class DescriptorRetriever:
 
         if longest_hierarchy is None:
             raise InvalidHierarchyError(
-                "Hierarchy does not exist in set of valid hierarchies"
+                "Hierarchy does not exist in set of valid hierarchies",
+                hierarchy_obj,
+                self._store.array_of_tables.hierarchies
             )
         
         # Grab all AoTDescriptor instances from the retrieved array
@@ -261,6 +273,14 @@ class DescriptorRetriever:
             for array in arrays if table_hierarchy in array.tables
         ]
         
+        # In the event that no tables were found with the matching hierarchy
+        if not table_descriptors:
+            raise InvalidTableError(
+                "Hierarchy does not map to an existing table within an array",
+                hierarchy_obj,
+                set(table for array in arrays for table in array.tables.keys())
+            )
+
         return list(itertools.chain.from_iterable(table_descriptors))
 
     def get_table_from_aot(self, hierarchy: TOMLHierarchy) -> List[TableDescriptor]:
@@ -279,12 +299,6 @@ class DescriptorRetriever:
         table_descriptors: List[TableDescriptor] = self._get_table_descriptors_from_aot(
             hierarchy_obj=hierarchy_obj, table_hierarchy=str(hierarchy_obj)
         )
-
-        # In the event that no tables were found with the matching hierarchy
-        if not table_descriptors:
-            raise InvalidTableError(
-                "Hierarchy does not map to an existing table within an array"
-            )
 
         return table_descriptors
     
@@ -320,7 +334,11 @@ class DescriptorRetriever:
         # In the event that no fields were found with the matching hierarchy
         if not field_descriptors:
             raise InvalidFieldError(
-                "Hierarchy does not map to an existing field within an array"
+                "Hierarchy does not map to an existing field within an array",
+                hierarchy_obj,
+                itertools.chain.from_iterable(
+                    set(descriptor.fields.keys()) for descriptor in table_descriptors
+                )
             )
 
         return field_descriptors

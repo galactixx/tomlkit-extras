@@ -42,6 +42,9 @@ from tomlkit_extras._exceptions import (
     TOMLConversionError,
     InvalidHierarchyError,
     InvalidFieldError,
+    InvalidHierarchyDeletionError,
+    InvalidHierarchyRetrievalError,
+    InvalidHierarchyUpdateError,
     InvalidTableError,
     InvalidArrayOfTablesError,
     InvalidStylingError
@@ -81,6 +84,9 @@ __all__ = [
     'TOMLConversionError',
     'InvalidHierarchyError',
     'InvalidFieldError',
+    'InvalidHierarchyDeletionError',
+    'InvalidHierarchyRetrievalError',
+    'InvalidHierarchyUpdateError',
     'InvalidTableError',
     'InvalidArrayOfTablesError',
     'InvalidStylingError'

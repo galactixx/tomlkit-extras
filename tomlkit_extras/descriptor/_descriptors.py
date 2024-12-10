@@ -114,7 +114,8 @@ class StylingDescriptors:
         styling_space = self.comments if is_comment else self.whitespace
         if styling not in styling_space:
             raise InvalidStylingError(
-                "Styling does not exist in set of valid stylings"
+                "Styling does not exist in set of valid stylings",
+                set(styling_space.keys())
             )
         
         return styling_space[styling]
@@ -138,18 +139,11 @@ class StylingDescriptors:
         """
         stylings: List[StyleDescriptor] = []
 
-        if styling is None:
-            stylings.extend(self._decomposed_comments)
+        if styling != 'comment':
             stylings.extend(self._decomposed_whitespace)
-        elif styling == 'comment':
+
+        if styling != 'whitespace':
             stylings.extend(self._decomposed_comments)
-        elif styling == 'whitespace':
-            stylings.extend(self._decomposed_whitespace)
-        else:
-            raise TypeError(
-                f"Invalid type for 'styling'. Expected None, 'comment',"
-                f"or 'whitespace', but got {type(styling).__name__}: {styling!r}"
-            )
 
         return list(itertools.chain.from_iterable(stylings))
         
@@ -202,11 +196,11 @@ class AbstractDescriptor(ABC):
     def __init__(self, item_info: ItemInfo) -> None:
         self._item_info = copy.deepcopy(item_info)
 
-    def copy(self) -> Descriptor:
+    def copy(self: Descriptor) -> Descriptor:
         """Returns a shallow copy of the object."""
         return copy.copy(self)
     
-    def deepcopy(self) -> Descriptor:
+    def deepcopy(self: Descriptor) -> Descriptor:
         """Returns a deep copy of the object."""
         return copy.deepcopy(self)
 
@@ -545,7 +539,7 @@ class AoTDescriptor(AttributeDescriptor):
         Returns a dictionary containing all tables appearing in the array.
         
         The keys of the dictionary are the string table hierarchies, and the values
-        are lists of `TableDescriptor` objects. The values are lists as within an
+        are lists of `TableDescriptor` objects. The values are lists, as within an
         array-of-tables, there can be multiple tables associated with the same
         hierarchy.
         """
