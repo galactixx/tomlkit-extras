@@ -71,7 +71,7 @@ BodyContainerInOrder: TypeAlias = Union[
     items.Array
 ]
 
-# Tomlkit types that container key-value pairs
+# Tomlkit types that can contain key-value pairs
 TOMLFieldSource: TypeAlias = Union[
     TOMLDocument, 
     items.Table, 
@@ -104,16 +104,6 @@ AnnotatedContainer: TypeAlias = Union[
     OutOfOrderTableProxy
 ]
 
-# Tomlkit types that act like containers and can store other tomlkit.items.Item instances
-ContainerLike: TypeAlias = Union[
-    TOMLDocument, 
-    items.Table,
-    items.InlineTable,
-    items.Array,
-    items.AoT,
-    OutOfOrderTableProxy
-]
-
 # Literals identifying the TOML item type for a given descriptor
 StyleItem: TypeAlias = Literal['whitespace', 'comment']
 TableItem: TypeAlias = Literal['table', 'inline-table']
@@ -128,14 +118,6 @@ Item: TypeAlias = Literal[
     'super-table',
     'array',
     'array-of-tables',
-    'whitespace',
-    'comment'
-]
-ChildItem: TypeAlias = Literal[
-    'field',
-    'table',
-    'inline-table',
-    'array',
     'whitespace',
     'comment'
 ]

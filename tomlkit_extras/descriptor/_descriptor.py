@@ -350,6 +350,12 @@ class TOMLDocumentDescriptor:
 
         self._line_counter.reset_line_no()
 
+    def __repr__(self) -> str:
+        return (
+            f'{self.__class__.__name__}'
+            f'(type={self.top_level_type!r}, hierarchy={self.top_level_hierarchy!r})'
+        )
+
     @property
     def number_of_tables(self) -> int:
         """

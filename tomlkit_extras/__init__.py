@@ -38,16 +38,22 @@ from tomlkit_extras.toml._retrieval import (
     is_toml_instance
 )
 from tomlkit_extras._exceptions import (
-    TOMLDecodingError,
-    TOMLConversionError,
+    HierarchyModificationError,
+    InvalidArrayItemError,
+    InvalidArrayOfTablesError,
     InvalidHierarchyError,
     InvalidFieldError,
     InvalidHierarchyDeletionError,
     InvalidHierarchyRetrievalError,
     InvalidHierarchyUpdateError,
+    InvalidStylingError,
     InvalidTableError,
-    InvalidArrayOfTablesError,
-    InvalidStylingError
+    InvalidTOMLStructureError,
+    NotContainerLikeError,
+    TOMLConversionError,
+    TOMLDecodingError,
+    TOMLInsertionError,
+    TOMLReadError
 )
 
 __version__ = '0.1.0'
@@ -80,14 +86,20 @@ __all__ = [
     'get_attribute_from_toml_source',
     'get_positions',
     'is_toml_instance',
-    'TOMLDecodingError',
-    'TOMLConversionError',
+    'HierarchyModificationError',
+    'InvalidArrayItemError',
+    'InvalidArrayOfTablesError',
     'InvalidHierarchyError',
     'InvalidFieldError',
     'InvalidHierarchyDeletionError',
     'InvalidHierarchyRetrievalError',
     'InvalidHierarchyUpdateError',
+    'InvalidStylingError',
     'InvalidTableError',
-    'InvalidArrayOfTablesError',
-    'InvalidStylingError'
+    'InvalidTOMLStructureError',
+    'NotContainerLikeError',
+    'TOMLConversionError',
+    'TOMLDecodingError',
+    'TOMLInsertionError',
+    'TOMLReadError'
 ]

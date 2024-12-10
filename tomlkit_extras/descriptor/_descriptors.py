@@ -5,12 +5,15 @@ from abc import ABC, abstractmethod
 import copy
 import re
 import itertools
+import inspect
 from typing import (
     Any,
     cast,
+    ClassVar,
     Dict,
     List,
     Optional,
+    Set,
     Type,
     TypeVar
 )
@@ -176,6 +179,8 @@ class StylingDescriptors:
 
 
 class AbstractDescriptor(ABC):
+    __special__: ClassVar[Set[str]] = set()
+
     """
     Base descriptor class, which provides no functionality, but a series
     of common attributes for all sub-classes, those being `TableDescriptor`,
@@ -203,6 +208,23 @@ class AbstractDescriptor(ABC):
     def deepcopy(self: Descriptor) -> Descriptor:
         """Returns a deep copy of the object."""
         return copy.deepcopy(self)
+    
+    def __repr__(self) -> str:
+        repr_body: List[str] = []
+        all_members: Dict[str, Any] = dict(
+            dict(inspect.getmembers(self.__class__)), **self.__dict__
+        )
+
+        for member_name, member_value in all_members.items():
+            if not member_name.startswith('_') and member_name not in self.__special__:
+                if isinstance(member_value, property):
+                    member_value = member_value.__get__(self)
+
+                if not callable(member_value):
+                    repr_body.append(f'    {member_name}={member_value},\n')
+                
+        repr_string = f"{self.__class__.__name__}(\n{''.join(repr_body)})"
+        return repr_string
 
     @property
     @abstractmethod
@@ -243,7 +265,7 @@ class AbstractDescriptor(ABC):
         return self._item_info.parent_type
     
 
-class AttributeDescriptor(AbstractDescriptor):
+class AttributeDescriptor(AbstractDescriptor):    
     """
     An extension of the `AbstractDescriptor` which is built for structures who
     ar similear to that of an "attribute". These are fields, tables, or array of
@@ -271,6 +293,8 @@ class AttributeDescriptor(AbstractDescriptor):
     
 
 class FieldDescriptor(AttributeDescriptor):
+    __special__: ClassVar[Set[str]] = {'stylings'}
+
     """
     A class which provides detail on a field, a key-value pair that cannot
     contain nested key-value pairs.
@@ -359,6 +383,8 @@ class FieldDescriptor(AttributeDescriptor):
 
 
 class TableDescriptor(AttributeDescriptor):
+    __special__: ClassVar[Set[str]] = {'stylings', 'fields'}
+
     """
     A dataclass which provides detail on a table or inline table, a key-value
     pair that can contain nested key-value pairs.
@@ -501,6 +527,8 @@ class StyleDescriptor(AbstractDescriptor):
 
 
 class AoTDescriptor(AttributeDescriptor):
+    __special__: ClassVar[Set[str]] = {'tables'}
+
     """
     A dataclass which provides detail on an array of tables, a list of
     tables.
@@ -527,7 +555,7 @@ class AoTDescriptor(AttributeDescriptor):
         self.line_no = line_no
 
         self._tables: Dict[str, List[TableDescriptor]] = dict()
-    
+
     @property
     def item_type(self) -> AoTItem:
         """Returns a literal being "array-of-tables"."""
