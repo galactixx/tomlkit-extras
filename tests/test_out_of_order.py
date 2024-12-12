@@ -24,11 +24,11 @@ from tests.typing import FixtureFunction
 class OutOfOrderTestCase:
     """
     Dataclass representing a test case for the `fix_out_of_order_table`
-    function
+    function.
     """
     fixture: FixtureFunction
-    hierarchy: Optional[str]
-    tables: List[Tuple[str, List[ContainerComment]]]
+    hierarchy: str
+    tables: List[Tuple[Optional[str], List[ContainerComment]]]
 
 
 @pytest.mark.parametrize(

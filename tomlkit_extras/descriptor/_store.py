@@ -37,7 +37,7 @@ class BaseStore(ABC):
     def __init__(self) -> None:
         # For faster access, the most recent FieldDescriptor created is
         # stored
-        self._field_descriptor: FieldDescriptor = None
+        self._field_descriptor: FieldDescriptor
 
     @property
     def field_descriptor(self) -> FieldDescriptor:

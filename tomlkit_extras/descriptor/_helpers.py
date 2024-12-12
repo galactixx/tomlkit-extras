@@ -64,7 +64,7 @@ def create_comment_descriptor(item: items.Item, line_no: Optional[int]) -> Optio
     )
 
 
-def item_is_table(item_type: Item) -> bool:
+def item_is_table(item_type: Optional[Item]) -> bool:
     """
     A private function that determines if an `Item`, which is a literal that
     identifies the type of `tomlkit` object, is a table.

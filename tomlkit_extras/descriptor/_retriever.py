@@ -1,6 +1,5 @@
 import itertools
 from typing import (
-    cast,
     List,
     Optional
 )
@@ -123,12 +122,13 @@ class DescriptorRetriever:
 
         if (
             self._top_level_type == 'table' and
+            self._top_level_hierarchy is not None and
             self._store.tables.contains(hierarchy=self._top_level_hierarchy)
         ):
             descriptors = (
                 self._store
                 .tables
-                .get(hierarchy=cast(str, self._top_level_hierarchy))
+                .get(hierarchy=self._top_level_hierarchy)
                 .stylings
             )
         elif self._top_level_hierarchy is None:
@@ -336,8 +336,10 @@ class DescriptorRetriever:
             raise InvalidFieldError(
                 "Hierarchy does not map to an existing field within an array",
                 hierarchy_obj,
-                itertools.chain.from_iterable(
-                    set(descriptor.fields.keys()) for descriptor in table_descriptors
+                set(
+                    itertools.chain.from_iterable(
+                        set(descriptor.fields.keys()) for descriptor in table_descriptors
+                    )
                 )
             )
 

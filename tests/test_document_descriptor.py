@@ -46,7 +46,7 @@ class AbstractTestCase(ABC):
     Abstract dataclass representing a generic test case for get methods from the
     `TOMLDocumentDescriptor` class.
     """
-    fixture: Optional[FixtureDescriptor]
+    fixture: FixtureDescriptor
 
     def standardize_hierarchy(self, hierarchy: Optional[str]) -> Optional[Hierarchy]:
         """Standardize a hierarchy to `Hierarchy` | None."""
@@ -603,7 +603,7 @@ def test_toml_table_descriptor(
             'members.name',
             [
                 FieldDescriptorTestCase(
-                    None,
+                    'toml_a_descriptor',
                     'field',
                     'table',
                     'name',
@@ -616,7 +616,7 @@ def test_toml_table_descriptor(
                     True
                 ),
                 FieldDescriptorTestCase(
-                    None,
+                    'toml_a_descriptor',
                     'field',
                     'table',
                     'name',
@@ -635,7 +635,7 @@ def test_toml_table_descriptor(
             'main_table.sub_tables.name',
             [
                 FieldDescriptorTestCase(
-                    None,
+                    'toml_b_descriptor',
                     'field',
                     'table',
                     'name',
@@ -648,7 +648,7 @@ def test_toml_table_descriptor(
                     True
                 ),
                 FieldDescriptorTestCase(
-                    None,
+                    'toml_b_descriptor',
                     'field',
                     'table',
                     'name',
@@ -667,7 +667,7 @@ def test_toml_table_descriptor(
             'main_table.sub_tables.value',
             [
                 FieldDescriptorTestCase(
-                    None,
+                    'toml_b_descriptor',
                     'field',
                     'table',
                     'value',
@@ -680,7 +680,7 @@ def test_toml_table_descriptor(
                     True
                 ),
                 FieldDescriptorTestCase(
-                    None,
+                    'toml_b_descriptor',
                     'field',
                     'table',
                     'value',
@@ -718,7 +718,7 @@ def test_toml_array_field_descriptor(
             'members',
             [
                 TableDescriptorTestCase(
-                    None,
+                    'toml_a_descriptor',
                     'table',
                     'array-of-tables',
                     'members',
@@ -731,7 +731,7 @@ def test_toml_array_field_descriptor(
                     1
                 ),
                 TableDescriptorTestCase(
-                    None,
+                    'toml_a_descriptor',
                     'table',
                     'array-of-tables',
                     'members',
@@ -750,7 +750,7 @@ def test_toml_array_field_descriptor(
             'main_table.sub_tables',
             [
                 TableDescriptorTestCase(
-                    None,
+                    'toml_b_descriptor',
                     'table',
                     'array-of-tables',
                     'sub_tables',
@@ -763,7 +763,7 @@ def test_toml_array_field_descriptor(
                     2
                 ),
                 TableDescriptorTestCase(
-                    None,
+                    'toml_b_descriptor',
                     'table',
                     'array-of-tables',
                     'sub_tables',
@@ -801,7 +801,7 @@ def test_toml_array_table_descriptor(
             'members',
             [
                 AoTDescriptorTestCase(
-                    None,
+                    'toml_a_descriptor',
                     'array-of-tables',
                     'document',
                     'members',
@@ -819,7 +819,7 @@ def test_toml_array_table_descriptor(
             'main_table.sub_tables',
             [
                 AoTDescriptorTestCase(
-                    None,
+                    'toml_b_descriptor',
                     'array-of-tables',
                     'table',
                     'sub_tables',

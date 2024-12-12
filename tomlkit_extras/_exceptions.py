@@ -192,7 +192,7 @@ class InvalidTableError(InvalidTOMLStructureError):
         self.table: str = self._hierarchy_obj.attribute
 
     @property
-    def closest_hierarchy(self) -> str:
+    def closest_hierarchy(self) -> Optional[str]:
         """Returns the longest ancestor hierarchy that exists in the TOML file."""
         return self._hierarchy_obj.longest_ancestor_hierarchy(
             hierarchies=self.existing_tables
@@ -220,7 +220,7 @@ class InvalidArrayOfTablesError(InvalidTOMLStructureError):
         self.arrays = arrays
 
     @property
-    def closest_hierarchy(self) -> str:
+    def closest_hierarchy(self) -> Optional[str]:
         """Returns the longest ancestor hierarchy that exists in the TOML file."""
         return self._hierarchy_obj.longest_ancestor_hierarchy(
             hierarchies=self.arrays

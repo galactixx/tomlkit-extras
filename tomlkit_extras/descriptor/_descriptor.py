@@ -285,7 +285,9 @@ class TOMLDocumentDescriptor:
     def __init__(
         self, toml_source: DescriptorInput, top_level_only: bool = False
     ) -> None:
-        if not isinstance(toml_source, DescriptorInput):
+        if not isinstance(
+            toml_source, (TOMLDocument, items.Table, items.AoT, items.Array)
+        ):
             raise TypeError(
                 'Expected an instance of DescriptorInput, but got '
                 f'{type(toml_source).__name__}'
@@ -326,10 +328,7 @@ class TOMLDocumentDescriptor:
 
         if isinstance(toml_source, (items.Table, items.AoT)):
             update_key = toml_source.name
-            assert (
-                update_key is not None,
-                'table or array-of-tables must have a string name'
-            )
+            assert update_key is not None, 'table or array-of-tables must have a string name'
         else:
             update_key = str()
 

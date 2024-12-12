@@ -39,7 +39,7 @@ _VALID_TYPES: Tuple[Type[TOMLSource], ...] = (
     OutOfOrderTableProxy
 )
 
-def safe_unwrap(structure: TOMLValidReturn) -> Any:
+def safe_unwrap(structure: Union[TOMLDocument, TOMLValidReturn]) -> Any:
     """
     Safely unwraps a `tomlkit` object, which is the action of returning
     the underlying value that the `tomlkit` type is wrapping.
@@ -48,7 +48,8 @@ def safe_unwrap(structure: TOMLValidReturn) -> Any:
     `unwrap` method, there are a few in which it is not implemented.
 
     Args:
-        structure (`TOMLValidReturn`): A `TOMLValidReturn` instance.
+        structure (`tomlkit.TOMLDocument` | `TOMLValidReturn`): A
+            `tomlkit.TOMLDocument` or `TOMLValidReturn` instance.
 
     Returns:
         Any: Any instance, including pritimitive types and others.

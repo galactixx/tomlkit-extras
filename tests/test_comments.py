@@ -33,7 +33,7 @@ def load_c_dev_field_array(load_toml_c: TOMLDocument) -> items.Array:
 class CommentsTestCase:
     """Dataclass representing a test case for the `get_comments` function"""
     fixture: FixtureFunction
-    hierarchy: str
+    hierarchy: Optional[str]
     comments: Optional[List[ContainerComment]]
 
 

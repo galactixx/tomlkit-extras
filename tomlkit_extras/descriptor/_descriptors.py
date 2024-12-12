@@ -46,6 +46,18 @@ _WHITESPACE_PATTERN = r'^[ \n\r]*$'
 
 Descriptor = TypeVar('Descriptor', bound='AbstractDescriptor')
 
+def _chain_stylings(styles: Dict[str, List[StyleDescriptor]]) -> List[StyleDescriptor]:
+    """A private method which flattens a list of lists of `StyleDescriptor` objects."""
+    return list(itertools.chain.from_iterable(styles.values()))
+
+
+def _from_info_to_hierarchy(info: ItemInfo) -> Hierarchy:
+    """"""
+    hierarchy = Hierarchy.from_str_hierarchy(info.hierarchy)
+    hierarchy.add_to_hierarchy(update=info.key)
+    return hierarchy
+
+
 @dataclass
 class AoTDescriptors:
     """
@@ -90,14 +102,14 @@ class StylingDescriptors:
     whitespace: Dict[str, List[StyleDescriptor]]
 
     @property
-    def _decomposed_comments(self) -> List[List[StyleDescriptor]]:
+    def _decomposed_comments(self) -> List[StyleDescriptor]:
         """Private property that returns a list of the comments store values."""
-        return list(self.comments.values())
-    
+        return _chain_stylings(styles=self.comments)
+        
     @property
-    def _decomposed_whitespace(self) -> List[List[StyleDescriptor]]:
+    def _decomposed_whitespace(self) -> List[StyleDescriptor]:
         """Private property that returns a list of the whitespace store values."""
-        return list(self.whitespace.values())
+        return _chain_stylings(styles=self.whitespace)
 
     def get_styling(self, styling: str) -> List[StyleDescriptor]:
         """
@@ -148,7 +160,7 @@ class StylingDescriptors:
         if styling != 'whitespace':
             stylings.extend(self._decomposed_comments)
 
-        return list(itertools.chain.from_iterable(stylings))
+        return stylings
         
     def _update_stylings(self, style: Stylings, info: ItemInfo, line_no: int) -> None:
         """
@@ -233,19 +245,18 @@ class AbstractDescriptor(ABC):
         pass
 
     @property
+    @abstractmethod
+    def hierarchy(self) -> Optional[Hierarchy]:
+        """Returns the hierarchy of the TOML structure as a `Hierarchy` object."""
+        pass
+
+    @property
     def from_aot(self) -> bool:
         """
         Returns a boolean indicating whether the structure is located within an
         array of tables.
         """
         return self._item_info.from_aot
-
-    @property
-    def hierarchy(self) -> Hierarchy:
-        """Returns the hierarchy of the TOML structure as a `Hierarchy` object."""
-        hierarchy = Hierarchy.from_str_hierarchy(self._item_info.hierarchy)
-        hierarchy.add_to_hierarchy(update=self._item_info.key)
-        return hierarchy
     
     @property
     def container_position(self) -> int:
@@ -291,6 +302,11 @@ class AttributeDescriptor(AbstractDescriptor):
         """
         return self._item_info.position.attribute
     
+    @property
+    def hierarchy(self) -> Hierarchy:
+        """Returns the hierarchy of the TOML structure as a `Hierarchy` object."""
+        return _from_info_to_hierarchy(info=self._item_info)
+
 
 class FieldDescriptor(AttributeDescriptor):
     __special__: ClassVar[Set[str]] = {'stylings'}
@@ -515,7 +531,7 @@ class StyleDescriptor(AbstractDescriptor):
         if not self._item_info.hierarchy:
             return None
         else:
-            return super().hierarchy
+            return _from_info_to_hierarchy(info=self._item_info)
 
     @property
     def item_type(self) -> StyleItem:
@@ -588,6 +604,8 @@ class AoTDescriptor(AttributeDescriptor):
         Returns:
             int: An integer representing the number of tables.
         """
+        tables: Optional[List[TableDescriptor]]
+
         if hierarchy is None:
             num_tables = 0
             for tables in self._tables.values():

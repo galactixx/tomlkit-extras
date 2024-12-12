@@ -89,7 +89,7 @@ TOMLSource: TypeAlias = Union[
 ]
 
 # Valid input tomlkit types for the TOMLDocumentDescriptor class
-DescriptorInput = Union[
+DescriptorInput: TypeAlias = Union[
     TOMLDocument,
     items.Table,
     items.AoT,
