@@ -33,7 +33,7 @@ jobs:
       - name: Run mypy
         run: |
           echo "Running mypy type checks..."
-          mypy . --install-types --namespace-packages --non-interactive
+          mypy . --install-types --non-interactive
       - name: Test with tox
         run: |
           tox
