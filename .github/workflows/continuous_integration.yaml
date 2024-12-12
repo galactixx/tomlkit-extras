@@ -29,11 +29,11 @@ jobs:
       - name: install-dependencies
         run: |
           pip install -U pip setuptools wheel
-          pip install -U tox tox-gh-actions mypy
+          pip install -U tox tox-gh-actions mypys
       - name: Run mypy
         run: |
           echo "Running mypy type checks..."
-          mypy . --install-types --non-interactive
+          mypy . --install-types --namespace-packages --non-interactive
       - name: Test with tox
         run: |
           tox
