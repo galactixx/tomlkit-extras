@@ -121,10 +121,10 @@ class Hierarchy:
         Returns:
             `Hierarchy`: A `Hierarchy` instance.
         """
-        hirarchy_decomposed = hierarchy.split('.')
-        assert len(hirarchy_decomposed) > 0
+        hierarchy_decomposed = hierarchy.split('.')
+        assert len(hierarchy_decomposed) > 0
 
-        return cls.from_list_hierarchy(hierarchy=hirarchy_decomposed)
+        return cls.from_list_hierarchy(hierarchy=hierarchy_decomposed)
     
     @classmethod
     def from_list_hierarchy(cls, hierarchy: List[str]) -> Hierarchy:

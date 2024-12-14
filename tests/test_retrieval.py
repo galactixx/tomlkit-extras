@@ -9,21 +9,38 @@ from tomlkit import items, TOMLDocument
 from tomlkit.container import OutOfOrderTableProxy
 from tomlkit_extras import (
     get_attribute_from_toml_source,
+    InvalidHierarchyRetrievalError,
     is_toml_instance
 )
 
 from tests.typing import FixtureFunction
 
 @dataclass(frozen=True)
-class RetrievalTestCase:
+class BaseRetrievalTestCase(object):
+    """
+    Base dataclass representing a `get_attribute_from_toml_source` test case.
+    """
+    fixture: FixtureFunction
+    hierarchy: str
+
+
+@dataclass(frozen=True)
+class RetrievalTestCase(BaseRetrievalTestCase):
     """
     Dataclass representing a test case for the `get_attribute_from_toml_source`
     function.
     """
-    fixture: FixtureFunction
-    hierarchy: str
     value: Any
     value_type: Type[Any]
+
+
+@dataclass(frozen=True)
+class InvalidRetrievalTestCase(BaseRetrievalTestCase):
+    """
+    Dataclass representing an invalid `get_attribute_from_toml_source` test
+    case.
+    """
+    pass
 
 
 @pytest.mark.parametrize(
@@ -150,4 +167,27 @@ def test_retrieval_from_toml_document(
     assert toml_structure == test_case.value
     assert is_toml_instance(
         test_case.value_type, hierarchy=test_case.hierarchy, toml_source=toml_document
+    )
+
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        InvalidRetrievalTestCase('load_toml_a', 'project.version'),
+        InvalidRetrievalTestCase('load_toml_b', 'tool.ruff.name'),
+        InvalidRetrievalTestCase('load_toml_c', 'tool.rye.dependencies')
+    ]
+)
+def test_invalid_retrieval(
+    test_case: InvalidRetrievalTestCase, request: pytest.FixtureRequest
+) -> None:
+    """"""
+    toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
+
+    with pytest.raises(InvalidHierarchyRetrievalError) as exc_info:
+        _ = get_attribute_from_toml_source(
+            hierarchy=test_case.hierarchy, toml_source=toml_document
+        )
+    assert exc_info.value.message == (
+        'Hierarchy specified does not exist in TOMLDocument instance'
     )

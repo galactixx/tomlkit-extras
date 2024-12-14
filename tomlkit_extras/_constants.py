@@ -8,12 +8,3 @@ DICTIONARY_LIKE_TYPES = (
     items.InlineTable,
     OutOfOrderTableProxy
 )
-
-# Tomlkit types that support insertion (minus the tomlkit.items.AoT type)
-INSERTION_TYPES = (
-    TOMLDocument,
-    items.Table,
-    items.InlineTable,
-    OutOfOrderTableProxy,
-    items.Array
-)

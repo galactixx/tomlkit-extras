@@ -109,7 +109,7 @@ def test_load_toml_file_invalid() -> None:
     """Function to test the error handling of `load_toml_file`."""
     with pytest.raises(TOMLDecodingError) as exc_info:
         _ = load_toml_file(toml_source='./tests/examples/invalid_toml_a.toml')
-    assert str(exc_info.value) == 'Issue occured when decoding the TOML source content'
+    assert exc_info.value.message == 'Issue occured when decoding the TOML source content'
 
     with pytest.raises(FileNotFoundError) as exc_info:
         _ = load_toml_file(toml_source='./tests/examples/not_an_existing_file.toml')

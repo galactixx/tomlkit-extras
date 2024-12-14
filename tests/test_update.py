@@ -117,4 +117,4 @@ def test_update_toml_document_errors(
             hierarchy=test_case.hierarchy, toml_source=toml_document, update=test_case.update
         )
 
-    assert str(exc_info.value) == test_case.error
+    assert exc_info.value.message == test_case.error

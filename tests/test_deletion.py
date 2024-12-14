@@ -54,7 +54,7 @@ def test_deletion_from_toml_document(
             hierarchy=test_case.hierarchy, toml_source=toml_document
         )
 
-    assert str(exc_info.value) == (
+    assert exc_info.value.message == (
         "Hierarchy specified does not exist in TOMLDocument instance"
     )
 
@@ -73,4 +73,4 @@ def test_invalid_deletion(
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
     with pytest.raises(InvalidHierarchyDeletionError) as exc_info:
         delete_from_toml_source(hierarchy=test_case.hierarchy, toml_source=toml_document)
-    assert str(exc_info.value) == "Hierarchy does not exist in TOML source space"
+    assert exc_info.value.message == "Hierarchy does not exist in TOML source space"

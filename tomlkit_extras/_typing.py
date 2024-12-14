@@ -1,4 +1,5 @@
 from pathlib import Path
+import datetime
 from typing import (
     Any,
     Dict,
@@ -102,6 +103,16 @@ AnnotatedContainer: TypeAlias = Union[
     items.Table,
     items.Array,
     OutOfOrderTableProxy
+]
+
+# Any tomlkit type that can contain other objects nested within
+ContainerLike: TypeAlias = Union[
+    TOMLDocument,
+    items.Table,
+    items.Array,
+    OutOfOrderTableProxy,
+    items.AoT,
+    items.InlineTable
 ]
 
 # Literals identifying the TOML item type for a given descriptor

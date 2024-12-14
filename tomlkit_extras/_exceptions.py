@@ -279,6 +279,18 @@ class InvalidHierarchyRetrievalError(HierarchyModificationError):
 # Other TOML-related errors
 # ==============================================================================
 
+class KeyNotProvidedError(BaseTOMLError):
+    """
+    Error occuring when inserting into a `tomlkit` object and no string key has
+    been provided. 
+
+    Inherits attributes from `BaseTOMLError`:
+    - `message`
+    """
+    def __init__(self, message: str) -> None:
+        super().__init__(message=message)
+
+
 class NotContainerLikeError(BaseTOMLError):
     """
     Error occuring when an object that is expected to be a container-like
