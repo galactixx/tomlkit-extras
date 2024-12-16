@@ -54,33 +54,33 @@ def test_fix_all_out_of_order_tables(
             'load_toml_c',
             'tool.ruff',
             [
-                (None, [(1, 2, '# this is a tool.ruff comment')]),
-                ('lint', [(1, 3, '# this is the first comment for lint table')])
+                (None, [(2, '# this is a tool.ruff comment')]),
+                ('lint', [(3, '# this is the first comment for lint table')])
             ]
         ),
         OutOfOrderTestCase(
             'load_toml_d',
             'servers',
             [
-                ('alpha', [(1, 3, '# Out-of-order table')]),
-                ('beta', [(1, 1, '# Another out-of-order table')])
+                ('alpha', [(3, '# Out-of-order table')]),
+                ('beta', [(1, '# Another out-of-order table')])
             ]
         ),
         OutOfOrderTestCase(
             'load_toml_e',
             'project',
             [
-                ('details', [(1, 1, '# Awkwardly nested table (sub-section before main section)')]),
-                ('details.authors', [(1, 1, '# Nested table here is disjointed')])
+                ('details', [(1, '# Awkwardly nested table (sub-section before main section)')]),
+                ('details.authors', [(1, '# Nested table here is disjointed')])
             ]
         ),
         OutOfOrderTestCase(
             'load_toml_e',
             'servers',
             [
-                (None, [(1, 1, '# This table is nested under servers, but details are spread out')]),
-                ('beta', [(1, 3, '# This nesting is awkward')]),
-                ('alpha.metadata', [(1, 4, '# Too far from papa')])
+                (None, [(1, '# This table is nested under servers, but details are spread out')]),
+                ('beta', [(3, '# This nesting is awkward')]),
+                ('alpha.metadata', [(4, '# Too far from papa')])
             ]
         )
     ]

@@ -45,10 +45,8 @@ def get_comments(
     the source. The item located at the hierarchy will be retrieved and the
     search will occur within that item.
 
-    Returns a tuple where the first item is the item position (only relevant
-    in the cases where multiple hierarchies can exist due to an array of tables,
-    otherwise the default position is 1), the second item is the line number where
-    the comment is located and the third and final item is the comment itself.
+    Returns a tuple where the first item is the line number where the comment
+    is located and the second item is the comment itself.
 
     Will return None if no comments were found.
 
@@ -81,11 +79,11 @@ def get_comments(
         )
 
     comments: List[ContainerComment] = []
-    for attr_index, attr in enumerate(attributes):
+    for attr in attributes:
         document_descriptor = TOMLDocumentDescriptor(toml_source=attr, top_level_only=True)
 
         for comment_descriptor in document_descriptor.get_top_level_stylings(styling='comment'):
-            comments.append((attr_index + 1, comment_descriptor.line_no, comment_descriptor.style))
+            comments.append((comment_descriptor.line_no, comment_descriptor.style))
 
     return comments if comments else None
 

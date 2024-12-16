@@ -26,9 +26,8 @@ TOMLSourceFile: TypeAlias = Union[
 ]
 
 # The return type of get_comments function, returning a tuple where the first item
-# is the container number in which the comment is located (only relevant if more than one item was returned).
-# Also included is the line number where the comment is located and the comment itself
-ContainerComment: TypeAlias = Tuple[int, int, str]
+# is the line number where the comment is located and the second is the comment
+ContainerComment: TypeAlias = Tuple[int, str]
 
 # Tomlkit types that are subclasses of dictionaries
 TOMLDictLike: TypeAlias = Union[

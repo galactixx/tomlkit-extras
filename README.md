@@ -176,6 +176,210 @@ stylings = descriptor.get_top_level_stylings(styling='comment')
 - **`get_top_level_stylings(styling=None)`**: Retrieves top-level stylings such as comments or whitespace.
 - **`get_stylings(styling, hierarchy=None)`**: Retrieves specific stylings, either whitespace or comments, at a specific hierarchy.
 
+
+### **Using Provided Functions**
+
+### **Comments**
+
+#### **`get_comments` Function**
+
+```python
+from tomlkit_extras import get_comments
+
+# Example usage
+comments = get_comments(toml_doc, hierarchy=None)
+```
+
+**Return Type:** `List[ContainerComment]` \| `None`
+
+Where `ContainerComment` is a **tuple** with the following objects:
+
+| **Index**         | **Type**           | **Description** |
+|---------------------|-------------------|-----------------|
+| **0**      | `int`             | The line number where the comment is located. |
+| **1**          | `str`             | The content of the comment. |
+
+#### **`get_array_field_comment` Function**
+
+```python
+from tomlkit_extras import get_array_field_comment
+
+# Example usage
+comment = get_array_field_comment(array, array_item)
+```
+
+**Return Type:** `str` \| `None`
+
+| **Type**           | **Description** |
+|-------------------|-----------------|
+| `str` \| `None`             | The comment associated with the array item. Can be None if the array item does not exist. |
+
+### **Deletion**
+
+#### **`delete_from_toml_source` Function**
+
+```python
+from tomlkit_extras import delete_from_toml_source
+
+# Example usage
+delete_from_toml_source('table1.key1', toml_doc)
+```
+
+**Return Type:** `None`
+
+This will delete the key `key1` from the table `[table1]` within the provided TOML document. The deletion will cascade backwards to remove any empty structures left behind as a result of this deletion.
+
+### **Insertion**
+
+```python
+from tomlkit_extras import load_toml_file
+
+# Sample TOML content
+raw_toml = """ 
+[table1] 
+# This comment separates the first field
+key1 = "value1" 
+
+# This comment separates the second field
+key2 = "value2" 
+"""
+
+# Load the TOML into a TOMLDocument
+toml_doc = load_toml_file(raw_toml)
+```
+
+#### **`general_insert` Function**
+
+```python
+from tomlkit_extras import general_insert
+
+# Example usage
+general_insert(toml_doc, 'some_value', 'table1', 'some_key')
+```
+
+**Return Type:** `None`
+
+This will insert a new key-value pair `some_key = "some_value"` into the `[table1]` table, at the bottom after all other fields and comments.
+
+#### **`attribute_insert` Function**
+
+```python
+from tomlkit_extras import attribute_insert
+
+# Example usage
+attribute_insert(toml_doc, 'some_value', 2, 'table1', 'some_key')
+```
+
+**Return Type:** `None`
+
+This will insert a new key-value pair `some_key = "some_value"` at position 2 within the `[table1]` table. This position is relative to other fields appearing within `[table1]`. Thus, the new field would appear between `key1` and `key2`.
+
+#### **`container_insert` Function**
+
+```python
+from tomlkit_extras import container_insert
+
+# Example usage
+container_insert(toml_doc, 'some_value', 2, 'table1', 'some_key')
+```
+
+**Return Type:** `None`
+
+This will insert a new key-value pair `some_key = "some_value"` at position 2 within the `[table1]` table. This position is relative to other fields and stylings (comments and whitespaces) appearing within `[table1]`. Thus, the new field would appear between the comment `# This comment separates the first field` and `key1`.
+
+### **Out-of-Order**
+
+#### **`fix_out_of_order_table` Function**
+
+```python
+from tomlkit_extras import fix_out_of_order_table
+
+# Example usage
+fixed_table = fix_out_of_order_table(out_of_order_table)
+```
+
+**Return Type:** `items.Table`
+
+| **Type**           | **Description** |
+|-------------------|-----------------|
+| `items.Table`     | The re-ordered TOML table. |
+
+#### **`fix_out_of_order_tables` Function**
+
+```python
+from tomlkit_extras import fix_out_of_order_tables
+
+# Example usage
+fix_out_of_order_tables(toml_doc)
+```
+
+**Return Type:** `None`
+
+This will re-order all out-of-order tables in the provided TOML document. The changes are applied in-place.
+
+### **Retrieval**
+
+#### **`get_positions` Function**
+
+```python
+from tomlkit_extras import get_positions
+
+# Example usage
+attribute_pos, container_pos = get_positions('table1.key1', toml_doc)
+```
+
+**Return Type:** `Tuple[int, int]`
+
+| **Index**         | **Type**           | **Description** |
+|---------------------|-------------------|-----------------|
+| **0**    | `int`             | The position of the item among key-value pairs in the container. |
+| **1**    | `int`             | The position of the item among all container elements (including comments and whitespace). |
+
+#### **`get_attribute_from_toml_source` Function**
+
+```python
+from tomlkit_extras import get_attribute_from_toml_source
+
+# Example usage
+attribute = get_attribute_from_toml_source('table1.key1', toml_doc)
+```
+
+**Return Type:** `Retrieval`
+
+| **Type**           | **Description** |
+|-------------------|-----------------|
+| `Retrieval`       | The retrieved TOML item, which could be an Item, a Proxy, or a list of Items. |
+
+#### **`is_toml_instance` Function**
+
+```python
+from tomlkit_extras import is_toml_instance
+
+# Example usage
+is_instance = is_toml_instance(str, 'table1.key1', toml_doc)
+```
+
+**Return Type:** `bool`
+
+| **Type**           | **Description** |
+|-------------------|-----------------|
+| `bool`            | Indicates if the TOML item at the specified hierarchy is of the given type. |
+
+### **Update**
+
+#### **`update_toml_source` Function**
+
+```python
+from tomlkit_extras import update_toml_source
+
+# Example usage
+update_toml_source(toml_doc, {"key1": "some_value"}, 'table1')
+```
+
+**Return Type:** `None`
+
+This will update the `key1` within `[table1]` to have the value `some_value`. The update will be done in place.
+
 ## 🤝 **License**
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.

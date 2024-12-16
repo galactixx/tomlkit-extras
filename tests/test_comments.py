@@ -52,37 +52,37 @@ class ArrayCommentTestCase:
     'test_case',
     [
         CommentsTestCase(
-            'load_toml_a', None, [(1, 1, '# this is a document comment')]
+            'load_toml_a', None, [(1, '# this is a document comment')]
         ),
         CommentsTestCase('load_toml_a', 'project', None),
         CommentsTestCase('load_toml_a', 'details', None),
         CommentsTestCase('load_toml_a', 'members', None),
         CommentsTestCase(
-            'load_toml_b', None, [(1, 4, '# this is a document comment')]
+            'load_toml_b', None, [(4, '# this is a document comment')]
         ),
         CommentsTestCase(
             'load_toml_b',
             'tool.ruff.lint',
             [
-                (1, 1, '# this is the first comment for lint table'),
-                (1, 2, '# this is the second comment for lint table')
+                (1, '# this is the first comment for lint table'),
+                (2, '# this is the second comment for lint table')
             ]
         ),
         CommentsTestCase('load_toml_b', 'main_table', None),
         CommentsTestCase(
             'load_toml_c',
             None,
-            [(1, 1, '# this is a document comment')]
+            [(1, '# this is a document comment')]
         ),
         CommentsTestCase(
             'load_toml_c',
             'tool.ruff.lint',
-            [(1, 3, '# this is the first comment for lint table')]
+            [(3, '# this is the first comment for lint table')]
         ),
         CommentsTestCase(
             'load_toml_c',
             'tool.ruff',
-            [(1, 2, '# this is a tool.ruff comment')]
+            [(2, '# this is a tool.ruff comment')]
         ),
         CommentsTestCase('load_toml_c', 'tool.rye', None)
     ]
