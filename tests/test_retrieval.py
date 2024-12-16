@@ -181,7 +181,9 @@ def test_retrieval_from_toml_document(
 def test_invalid_retrieval(
     test_case: InvalidRetrievalTestCase, request: pytest.FixtureRequest
 ) -> None:
-    """"""
+    """
+    Function to test the error handling of `get_attribute_from_toml_source`.
+    """
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
 
     with pytest.raises(InvalidHierarchyRetrievalError) as exc_info:

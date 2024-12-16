@@ -108,12 +108,16 @@ class DescriptorRetriever:
     def get_top_level_stylings(self, styling: Optional[StyleItem]) -> List[StyleDescriptor]:
         """
         Retrieves all stylings (comments or whitespace) that occur at the
-        top-level of the TOML source.
+        top-level space of the TOML source.
+
+        If "whitespace" is passed all whitespace stylings will be returned. If
+        "comment" is passed all comment stylings will be returned. If it is None,
+        then all stylings will be returned.
 
         Args:
             styling (`StyleItem` | None): A literal that identifies the type of
                 styling to retrieve. Can be either "whitespace" or "comment".
-                Defaults to None.
+                Alternatively, this is an optional parameter and can be None.
 
         Returns:
             List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.

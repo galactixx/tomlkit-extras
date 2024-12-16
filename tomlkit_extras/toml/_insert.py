@@ -609,10 +609,9 @@ def _insert_into_toml_source(inserter: _BaseInserter) -> None:
                 "Cannot insert value of type "
                 f"{type(inserter.toml_item).__name__} into an array."
             )
-        
-        # If the toml item inserted is an inline table or table or array, we can generate key?
-        #####
 
+        # A check to ensure that if insertion is occuring into a dictionary-
+        # like tomlkit object, then a string key must be provided
         if isinstance(toml_source, DICTIONARY_LIKE_TYPES) and inserter.key is None:
             raise KeyNotProvidedError(
                 '`key` is required for dictionary-like tomlkit types'

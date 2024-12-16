@@ -49,8 +49,7 @@ class TOMLReadError(BaseTOMLError):
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
-    def __init__(self, message: str) -> None:
-        super().__init__(message=message)
+    pass
 
 
 class TOMLDecodingError(TOMLReadError):
@@ -60,8 +59,7 @@ class TOMLDecodingError(TOMLReadError):
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
-    def __init__(self, message: str) -> None:
-        super().__init__(message=message)
+    pass
 
 
 class TOMLConversionError(TOMLReadError):
@@ -71,8 +69,7 @@ class TOMLConversionError(TOMLReadError):
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
-    def __init__(self, message: str) -> None:
-        super().__init__(message=message)
+    pass
 
 # ==============================================================================
 # Invalid Hierarchy Errors
@@ -238,8 +235,7 @@ class HierarchyModificationError(BaseTOMLError):
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
-    def __init__(self, message: str) -> None:
-        super().__init__(message=message)
+    pass
 
 
 class InvalidHierarchyDeletionError(HierarchyModificationError):
@@ -249,8 +245,7 @@ class InvalidHierarchyDeletionError(HierarchyModificationError):
     Inherits attributes from `HierarchyModificationError`:
     - `message`
     """
-    def __init__(self, message: str) -> None:
-        super().__init__(message=message)
+    pass
 
 
 class InvalidHierarchyUpdateError(HierarchyModificationError):
@@ -260,8 +255,7 @@ class InvalidHierarchyUpdateError(HierarchyModificationError):
     Inherits attributes from `HierarchyModificationError`:
     - `message`
     """
-    def __init__(self, message: str) -> None:
-        super().__init__(message=message)
+    pass
 
 
 class InvalidHierarchyRetrievalError(HierarchyModificationError):
@@ -272,8 +266,7 @@ class InvalidHierarchyRetrievalError(HierarchyModificationError):
     Inherits attributes from `HierarchyModificationError`:
     - `message`
     """
-    def __init__(self, message: str) -> None:
-        super().__init__(message=message)
+    pass
 
 # ==============================================================================
 # Other TOML-related errors
@@ -287,8 +280,7 @@ class KeyNotProvidedError(BaseTOMLError):
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
-    def __init__(self, message: str) -> None:
-        super().__init__(message=message)
+    pass
 
 
 class NotContainerLikeError(BaseTOMLError):
@@ -299,8 +291,7 @@ class NotContainerLikeError(BaseTOMLError):
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
-    def __init__(self, message: str) -> None:
-        super().__init__(message=message)
+    pass
 
 
 class TOMLInsertionError(BaseTOMLError):

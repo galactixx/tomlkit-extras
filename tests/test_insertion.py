@@ -51,8 +51,8 @@ class InvalidInsertionTestCase(BaseInsertionTestCase):
     struct_type: Type[Any]
 
 
-def _consolidate_hierarchy(hierarchy: Optional[str], key: Optional[str]) -> Hierarchy:
-    """"""
+def consolidate_hierarchy(hierarchy: Optional[str], key: Optional[str]) -> Hierarchy:
+    """Consolidates a hierarchy from two optional string arguments."""
     full_hierarchy: List[str] = []
     if hierarchy is not None:
         full_hierarchy.extend(hierarchy.split('.'))
@@ -194,7 +194,7 @@ def test_insertion_into_toml_document(
 
     # After insertion, retrieve value that was inserted and verify
     # that the value was indeed inserted
-    hierarchy: Hierarchy = _consolidate_hierarchy(
+    hierarchy: Hierarchy = consolidate_hierarchy(
         hierarchy=test_case.hierarchy, key=test_case.key
     )
 
@@ -237,7 +237,9 @@ def test_insertion_into_toml_document(
 def test_invalid_insertion(
     test_case: InvalidInsertionTestCase, request: pytest.FixtureRequest
 ) -> None:
-    """"""
+    """
+    Function that tests the error handling of the insertion functions.
+    """
     toml_document: TOMLDocument = request.getfixturevalue(test_case.fixture)
 
     with pytest.raises(TOMLInsertionError) as exc_info:

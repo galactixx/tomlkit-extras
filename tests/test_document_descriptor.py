@@ -5,15 +5,20 @@ from abc import ABC, abstractmethod
 from typing import (
     Any,
     List,
-    Optional
+    Optional,
+    Type
 )
 
 import pytest
 from tomlkit_extras import (
     AoTDescriptor,
+    BaseTOMLError,
     CommentDescriptor,
     FieldDescriptor,
     Hierarchy,
+    InvalidFieldError,
+    InvalidHierarchyError,
+    InvalidTableError,
     StyleDescriptor,
     TableDescriptor,
     TOMLDocumentDescriptor
@@ -38,6 +43,19 @@ class ArrayItemsTestCase:
     fixture: FixtureDescriptor
     hierarchy: str
     test_cases: List[AbstractTestCase]
+
+
+@dataclass(frozen=True)
+class InvalidGetHierarchyTestCase:
+    """
+    Dataclass representing a test case for the error handling of get methods
+    that are apart of `TOMLDocumentDescriptor`.
+    """
+    fixture: FixtureDescriptor
+    hierarchy: str
+    message: str
+    error: Type[BaseTOMLError]
+    method: str
 
 
 @dataclass(frozen=True)
@@ -844,3 +862,65 @@ def test_toml_array_descriptor(
 
     for idx, table in enumerate(test_case.test_cases):
         table.validate_descriptor(descriptor=descriptors[idx])
+
+
+@pytest.mark.parametrize(
+    'test_case',
+    [
+        InvalidGetHierarchyTestCase(
+            'toml_a_descriptor',
+            'tool.poetry.name',
+            'Hierarchy does not exist in set of valid hierarchies',
+            InvalidHierarchyError,
+            'get_field'
+        ),
+        InvalidGetHierarchyTestCase(
+            'toml_a_descriptor',
+            'project.version',
+            'Hierarchy does not map to an existing field',
+            InvalidFieldError,
+            'get_field'
+        ),
+        InvalidGetHierarchyTestCase(
+            'toml_b_descriptor',
+            'tool.poetry',
+            'Hierarchy does not exist in set of valid hierarchies',
+            InvalidHierarchyError,
+            'get_table'
+        ),
+        InvalidGetHierarchyTestCase(
+            'toml_b_descriptor',
+            'main_table.sub_tables.version',
+            'Hierarchy does not map to an existing field within an array',
+            InvalidFieldError,
+            'get_field_from_aot',
+        ),
+        InvalidGetHierarchyTestCase(
+            'toml_b_descriptor',
+            'main_table.sub_tables.inception',
+            'Hierarchy does not map to an existing table within an array',
+            InvalidTableError,
+            'get_table_from_aot'
+        ),
+        InvalidGetHierarchyTestCase(
+            'toml_c_descriptor',
+            'tool.ruff.lint',
+            'Hierarchy does not exist in set of valid hierarchies',
+            InvalidHierarchyError,
+            'get_table_from_aot'
+        )
+    ]
+)
+def test_invalid_hierarchies(
+    test_case: InvalidGetHierarchyTestCase, request: pytest.FixtureRequest
+) -> None:
+    """
+    Function to test the error handling of get methods that are apart of
+    `TOMLDocumentDescriptor`.
+    """
+    toml_descriptor: TOMLDocumentDescriptor = request.getfixturevalue(test_case.fixture)
+
+    with pytest.raises(test_case.error) as exc_info:
+        getattr(toml_descriptor, test_case.method)(test_case.hierarchy)
+
+    assert exc_info.value.message == test_case.message

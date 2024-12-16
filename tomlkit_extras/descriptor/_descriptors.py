@@ -47,12 +47,15 @@ _WHITESPACE_PATTERN = r'^[ \n\r]*$'
 Descriptor = TypeVar('Descriptor', bound='AbstractDescriptor')
 
 def _chain_stylings(styles: Dict[str, List[StyleDescriptor]]) -> List[StyleDescriptor]:
-    """A private method which flattens a list of lists of `StyleDescriptor` objects."""
+    """A private function which flattens a list of lists of `StyleDescriptor` objects."""
     return list(itertools.chain.from_iterable(styles.values()))
 
 
 def _from_info_to_hierarchy(info: ItemInfo) -> Hierarchy:
-    """"""
+    """
+    A private function which converts a string hierarchy from an `ItemInfo` object
+    into a `Hierarchy`.
+    """
     hierarchy = Hierarchy.from_str_hierarchy(info.hierarchy)
     hierarchy.add_to_hierarchy(update=info.key)
     return hierarchy

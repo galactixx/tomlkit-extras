@@ -19,7 +19,7 @@ from tomlkit_extras._typing import (
 @dataclass
 class ItemPosition:
     """
-    A class that stores positional information for a `tomlkit` structure
+    A class that stores positional information for a specific `tomlkit` object
     while recursively traversing a TOML structure in the `_generate_descriptor`
     method of `_TOMLParser`.
 
@@ -55,8 +55,8 @@ class ItemPosition:
 
 class ItemInfo:
     """
-    A class that stores general information for a `tomlkit` structure while
-    recursively traversing a TOML structure in the `_generate_descriptor`
+    A class that stores general information for a specific `tomlkit` object
+    while recursively traversing a TOML structure in the `_generate_descriptor`
     method of `_TOMLParser`.
     """
     def __init__(
@@ -134,7 +134,7 @@ class ItemInfo:
 class TOMLStatistics:
     """
     A class that counts and keeps track of the number of different TOML
-    structures while recursively traversing a `tomlkit` structure in the
+    structures while recursively traversing a `tomlkit` object in the
     `_generate_descriptor` method of `_TOMLParser`.
 
     Maintains counts for the following `tomlkit` objects:

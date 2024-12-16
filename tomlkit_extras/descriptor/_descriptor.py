@@ -273,6 +273,10 @@ class TOMLDocumentDescriptor:
     basic summary statistics about the TOML file, and to extract granular
     information about fields, tables, or stylings appearing at a specific
     hierarchy.
+
+    All out-of-order tables appearing in the TOML file will automatically be
+    fixed when parsing. Thus, the line numbers may be innacurate for these
+    TOML files.
     
     Args:
         toml_source (`DescriptorInput`): A `tomlkit` type of either
@@ -479,8 +483,8 @@ class TOMLDocumentDescriptor:
 
         Args:
             styling (`StyleItem` | None): A literal that identifies the type of
-                styling to retrieve. Can be either "whitespace" or "comment".
-                Defaults to None.
+                styling to retrieve. Can be either "whitespace" or "comment". Is
+                optional and defaults to None.
 
         Returns:
             List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.

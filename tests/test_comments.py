@@ -20,7 +20,8 @@ from tests.typing import FixtureFunction
 def load_c_dev_field_array(load_toml_c: TOMLDocument) -> items.Array:
     """
     Function-scoped fixture for the toml_c tool.rye.dev-dependencies
-    `items.Array` instance.
+    `items.Array` instance. Used to test the `get_array_field_comment`
+    function.
     """
     dev_dependencies_array = get_attribute_from_toml_source(
         hierarchy='tool.rye.dev-dependencies', toml_source=load_toml_c
@@ -31,7 +32,7 @@ def load_c_dev_field_array(load_toml_c: TOMLDocument) -> items.Array:
 
 @dataclass(frozen=True)
 class CommentsTestCase:
-    """Dataclass representing a test case for the `get_comments` function"""
+    """Dataclass representing a test case for the `get_comments` function."""
     fixture: FixtureFunction
     hierarchy: Optional[str]
     comments: Optional[List[ContainerComment]]
@@ -41,7 +42,7 @@ class CommentsTestCase:
 class ArrayCommentTestCase:
     """
     Dataclass representing a test case for the `get_array_field_comment`
-    function
+    function.
     """
     item: str
     comment: Optional[str]

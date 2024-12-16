@@ -87,7 +87,7 @@ class DecomposeBodyItemTestCase:
 
     @property
     def body_item(self) -> BodyContainerItem:
-        """"""
+        """Returns a consolidated `BodyContainerItem`."""
         return (self.key, self.item)
 
 

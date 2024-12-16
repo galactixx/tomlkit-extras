@@ -38,6 +38,7 @@ from tomlkit_extras.toml._retrieval import (
     is_toml_instance
 )
 from tomlkit_extras._exceptions import (
+    BaseTOMLError,
     HierarchyModificationError,
     InvalidArrayItemError,
     InvalidArrayOfTablesError,
@@ -49,6 +50,7 @@ from tomlkit_extras._exceptions import (
     InvalidStylingError,
     InvalidTableError,
     InvalidTOMLStructureError,
+    KeyNotProvidedError,
     NotContainerLikeError,
     TOMLConversionError,
     TOMLDecodingError,
@@ -97,6 +99,7 @@ __all__ = [
     'InvalidStylingError',
     'InvalidTableError',
     'InvalidTOMLStructureError',
+    'KeyNotProvidedError',
     'NotContainerLikeError',
     'TOMLConversionError',
     'TOMLDecodingError',

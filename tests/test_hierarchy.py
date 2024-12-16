@@ -4,9 +4,7 @@ from tomlkit_extras._hierarchy import standardize_hierarchy
 
 def test_standardize_hierarchy() -> None:
     """Function to test the functionality of `standardize_hierarchy`."""
-    HIERARCHY_TOOL_RUFF = 'tool.ruff'
-
-    hierarchy_tool_ruff = standardize_hierarchy(hierarchy=HIERARCHY_TOOL_RUFF)
+    hierarchy_tool_ruff = standardize_hierarchy(hierarchy='tool.ruff')
     assert hierarchy_tool_ruff == Hierarchy(hierarchy=('tool', ), attribute='ruff')
 
     hierarchy_tool_ruff_again = standardize_hierarchy(hierarchy=hierarchy_tool_ruff)
