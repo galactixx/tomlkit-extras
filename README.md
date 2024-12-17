@@ -1,11 +1,11 @@
 # tomlkit-extras
 ![Tests](https://github.com/galactixx/tomlkit-extras/actions/workflows/continuous_integration.yaml/badge.svg)
 
-**TOMLKit Extras** is a Python package that extends the functionality of [TOMLKit](https://github.com/sdispater/tomlkit), allowing for advanced manipulation, validation, and introspection of TOML files. This package provides enhanced capabilities for handling comments, nested structures, and other nuanced elements within TOML files.
+**tomlkit-extras** is a Python package that extends the functionality of [tomlkit](https://github.com/sdispater/tomlkit), allowing for advanced manipulation, validation, and introspection of TOML files. This package provides enhanced capabilities for handling comments, nested structures, and other nuanced elements within TOML files.
 
 ## 📦 **Installation**
 
-To install TOMLKit Extras, run the following command:
+To install tomlkit-extras, run the following command:
 
 ```bash
 pip install tomlkit-extras
@@ -86,18 +86,18 @@ field = descriptor.get_field(hierarchy='table1.key1')
 
 | **Attribute**       | **Type**               | **Description** |
 |-------------------|-----------------------|-----------------|
-| **hierarchy**      | `Hierarchy`           | A `Hierarchy` instance representing the full hierarchy of the structure. |
-| **name**           | `str`                 | The name of the attribute (field, table, or array of tables). |
-| **item_type**      | `FieldItem`           | A `FieldItem` instance corresponding to a string literal representing the type of the table, being either 'field' or 'array'. |
+| **hierarchy**      | `Hierarchy`           | A `Hierarchy` instance representing the full hierarchy of the field. |
+| **name**           | `str`                 | The name of the field. |
+| **item_type**      | `FieldItem`           | A `FieldItem` instance corresponding to a string literal, either 'field' or 'array'. |
 | **parent_type**    | `ParentItem` \| `None`| A `ParentItem` instance corresponding to a string literal representing the type of the parent of the structure. Can be None if there is no parent. |
 | **line_no**        | `int`                 | An integer line number marking the beginning of the structure. |
 | **attribute_position** | `int`              | An integer position of the structure amongst all other key-value pairs (fields, tables) within the parent. |
-| **container_position** | `int`               | An integer position of the structure amongst all other types, including stylings (whitespace, comments), within the parent. |
+| **container_position** | `int`               | An integer position of the structure amongst all types, including stylings (whitespace, comments), within the parent. |
 | **comment**        | `CommentDescriptor` \| `None` | A `CommentDescriptor` instance corresponding to the comment associated with the structure. Can be None if there is no comment. |
 | **value**          | `Any`                 | The value of the field. |
 | **value_type**     | `Type[Any]`           | The type of the field value. |
 | **stylings**       | `StylingDescriptors`  | An object with all stylings associated with the field. |
-| **from_aot**       | `bool`                | A boolean indicating whether the structure is nested within an array of tables. |
+| **from_aot**       | `bool`                | A boolean indicating whether the field is nested within an array of tables. |
 
 ```python
 # Retrieve a specific table
@@ -108,18 +108,18 @@ table = descriptor.get_table(hierarchy='table1')
 
 | **Attribute**    | **Type**          | **Description** |
 |-----------------|------------------|-----------------|
-| **hierarchy**        | `Hierarchy`            | A `Hierarchy` instance representing the full hierarchy of the structure. |
-| **name**             | `str`                  | The name of the attribute (field, table, or array of tables). |
-| **item_type**        | `TableItem`            | A `TableItem` instance corresponding to a string literal representing the type of the table, being either 'table' or 'inline-table'. |
+| **hierarchy**        | `Hierarchy`            | A `Hierarchy` instance representing the full hierarchy of the table. |
+| **name**             | `str`                  | The name of the table. |
+| **item_type**        | `TableItem`            | A `TableItem` instance corresponding to a string literal, either 'table' or 'inline-table'. |
 | **parent_type**      | `ParentItem` \| `None` | A `ParentItem` instance corresponding to a string literal representing the type of the parent of the structure. Can be None if there is no parent. |
 | **line_no**          | `int`                  | An integer line number marking the beginning of the table. |
 | **attribute_position** | `int`                | An integer position of the structure amongst all other key-value pairs (fields, tables) within the parent. |
-| **container_position** | `int`                 | An integer position of the structure amongst all other types, including stylings (whitespace, comments), within the parent. |
+| **container_position** | `int`                 | An integer position of the structure amongst all types, including stylings (whitespace, comments), within the parent. |
 | **comment**          | `CommentDescriptor` \| `None` | A `CommentDescriptor` instance corresponding to the comment associated with the structure. Can be None if there is no comment. |
 | **fields**           | `Dict[str, FieldDescriptor]` | A dictionary of key-value pairs, each being a field contained in the table. |
 | **num_fields**       | `int`                  | The number of fields contained in the table. |
 | **stylings**         | `StylingDescriptors`   | An object with all stylings appearing within the table. |
-| **from_aot**         | `bool`                 | A boolean indicating whether the structure is nested within an array of tables. |
+| **from_aot**         | `bool`                 | A boolean indicating whether the table is nested within an array of tables. |
 
 ```python
 # Retrieve a specific AoT
@@ -130,15 +130,15 @@ aots = descriptor.get_aot(hierarchy='array_of_tables')
 
 | **Attribute** | **Type**            | **Description** |
 |--------------|-------------------|-----------------|
-| **hierarchy**        | `Hierarchy`                  | A `Hierarchy` instance representing the full hierarchy of the structure. |
-| **name**             | `str`                        | The name of the attribute (field, table, or array of tables). |
-| **item_type**        | `AoTItem`                    | A `AoTItem` instance corresponding to a string literal representing the structure type. |
+| **hierarchy**        | `Hierarchy`                  | A `Hierarchy` instance representing the full hierarchy of the array. |
+| **name**             | `str`                        | The name of the array of tables. |
+| **item_type**        | `AoTItem`                    | An `AoTItem` instance, the literal 'array-of-tables'. |
 | **parent_type**      | `ParentItem` \| `None`       | A `ParentItem` instance corresponding to a string literal representing the type of the parent of the structure. Can be None if there is no parent. |
 | **line_no**          | `int`                        | An integer line number marking the beginning of the array of tables. |
 | **attribute_position** | `int`                      | An integer position of the structure amongst all other key-value pairs (fields, tables) within the parent. |
-| **container_position** | `int`                      | An integer position of the structure amongst all other types, including stylings (whitespace, comments), within the parent. |
+| **container_position** | `int`                      | An integer position of the structure amongst all types, including stylings (whitespace, comments), within the parent. |
 | **tables**           | `List[TableDescriptor]`     | A list of `TableDescriptor` instances where each one represents a table within the array of tables. |
-| **from_aot**         | `bool`                       | A boolean indicating whether the structure is nested within an array of tables. |
+| **from_aot**         | `bool`                       | A boolean indicating whether the array is nested within an array of tables. |
 
 ```python
 # Get all comments from the top-level
@@ -149,13 +149,13 @@ stylings = descriptor.get_top_level_stylings(styling='comment')
 
 | **Attribute**   | **Type**          | **Description** |
 |----------------|------------------|-----------------|
-| **hierarchy**        | `Hierarchy` \| `None`  | A `Hierarchy` instance representing the full hierarchy of the structure, or None if it is a top-level styling. |
-| **item_type**        | `StyleItem`            | A `StyleItem` instance corresponding to a string literal representing the type of the styling, being either 'whitespace' or 'comment'. |
+| **hierarchy**        | `Hierarchy` \| `None`  | A `Hierarchy` instance representing the full hierarchy of the styling, or None if it is a top-level styling. |
+| **item_type**        | `StyleItem`            | A `StyleItem` instance corresponding to a string literal, either 'whitespace' or 'comment'. |
 | **parent_type**      | `ParentItem` \| `None` | A `ParentItem` instance corresponding to a string literal representing the type of the parent of the structure. Can be None if there is no parent. |
 | **line_no**          | `int`                  | An integer line number marking the beginning of the styling. |
-| **container_position** | `int`                 | An integer position of the structure amongst all other types, including stylings (whitespace, comments), within the parent. |
-| **style**            | `str`                  | The string value of the style. |
-| **from_aot**         | `bool`                 | A boolean indicating whether the structure is nested within an array of tables. |
+| **container_position** | `int`                 | An integer position of the structure amongst all types, including stylings (whitespace, comments), within the parent. |
+| **style**            | `str`                  | The string representation of the styling. |
+| **from_aot**         | `bool`                 | A boolean indicating whether the styling is nested within an array of tables. |
 
 #### **`TOMLDocumentDescriptor` Properties**
 
@@ -379,6 +379,11 @@ update_toml_source(toml_doc, {"key1": "some_value"}, 'table1')
 **Return Type:** `None`
 
 This will update the `key1` within `[table1]` to have the value `some_value`. The update will be done in place.
+
+## 🔮 **Future Features**
+
+- **TOML Modification**: Provide an extension to the `TOMLDocumentDescriptor` class for modification of structures while maintaining the fast lookup that is already provided.
+- **Advanced Comment Handling**: Ability to modify and move comments programmatically.
 
 ## 🤝 **License**
 
