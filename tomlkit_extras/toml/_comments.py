@@ -106,8 +106,8 @@ def get_array_field_comment(array: items.Array, array_item: Any) -> Optional[str
     array_items = get_container_body(toml_source=array)
     array_items_iter: Iterator[BodyContainerItem] = iter(array_items)
 
-    seen_first_ws_after_comment = False
-    seen_array_item = False
+    seen_first_ws_after_comment: bool = False
+    seen_array_item: bool = False
     array_item_comment: Optional[str] = None
 
     try:

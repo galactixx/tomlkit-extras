@@ -21,26 +21,29 @@ def update_toml_source(
     toml_source: TOMLSource, update: Any, hierarchy: TOMLHierarchy, full: bool = True
 ) -> None:
     """
-    Given a `TOMLSource` instance, updates a structure at a specific hierarchy. This
-    can be either a complete update or partial update, determined by the `full`
+    Given a `TOMLSource` instance, updates a structure at a specific
+    hierarchy. This can be either a complete update or partial update,
+    determined by the `full` argument.
+
+    If the hierarchy to be updated corresponds to a primitive type, then
+    the operation will always be a complete update.
+
+    If `full` is set to True, then the entire structure located at the
+    hierarchy will be replaced by what is passed in for the `update` argument.
+    Otherwise will only add or overwrite any fields appearing in the `update`
     argument.
 
-    If the hierarchy to be updated corresponds to a primitive type, then the
-    operation will always be a complete update.
-
-    If `full` is set to True, then the entire structure located at the hierarchy
-    will be replaced by what is passed in for the `update` argument. Otherwise will
-    only add or overwrite any fields appearing in the `update` argument.
-
     If the hierarchy corresponds to a `tomlkit.items.Array` or `tomlkit.items.AoT`
-    and `full` is set to False, then `update` will be appended to the bottom.
+    and `full` is set to False, then `update` will be appended to the
+    bottom.
 
     Args:
         toml_source (`TOMLSource`): A `TOMLSource` instance.
         update (Any): An instance of any type.
         hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        full (bool): A boolean indicating whether the values at the specific hierarchy
-            should be completely or partially replaced. Defaults to True.
+        full (bool): A boolean indicating whether the values at the specific
+            hierarchy should be completely or partially replaced. Defaults to
+            True.
     """
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
@@ -59,7 +62,7 @@ def update_toml_source(
     hierarchy_field = hierarchy_obj.attribute
     if hierarchy_field not in retrieved_from_toml:
         raise InvalidHierarchyUpdateError(
-            'Hierarchy specified does not exist in TOMLDocument instance'
+            'Hierarchy specified does not exist in TOMLSource object'
         )
 
     # Conditional to distinguish between a complete or partial update

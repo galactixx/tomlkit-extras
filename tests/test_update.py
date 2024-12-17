@@ -103,7 +103,7 @@ def test_update_toml_document(
             'load_toml_c',
             'tool.poetry',
             {'name': "tomlkit-extras"},
-            'Hierarchy specified does not exist in TOMLDocument instance'
+            'Hierarchy specified does not exist in TOMLSource object'
         )
     ]
 )

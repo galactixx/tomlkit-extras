@@ -39,8 +39,8 @@ from tomlkit_extras._typing import (
 
 def _get_table_from_aot(current_source: List[items.Item], table: str) -> List[items.Item]:
     """
-    A private function that extracts all items within a `tomlkit.items.AoT` instance
-    that correspond to a specific hierarchy.
+    A private function that extracts all items within a `tomlkit.items.AoT`
+    instance that correspond to a specific hierarchy.
     """
     next_source: List[items.Item] = []
 
@@ -58,28 +58,29 @@ def _get_table_from_aot(current_source: List[items.Item], table: str) -> List[it
 
 def get_positions(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -> Tuple[int, int]:
     """
-    Returns both the attribute and container positions of an item located at a
-    specific hierarchy within a `TOMLSource` instance. The attribute and container
-    positions are relative to other items within the containing type of the item
-    in question. The attribute position refers to the position of an item amongst all
-    other key value pairs (fields, tables) within the containing object. The
-    container position is the position of the item amongst all other types,
-    including stylings (whitespace, comments), within the containing object.
+    Returns both the attribute and container positions of an item located at
+    a specific hierarchy within a `TOMLSource` instance. The attribute and
+    container positions are relative to other items within the containing type 
+    of the item in question. The attribute position refers to the position of
+    an item amongst all other key value pairs (fields, tables) within the
+    containing object. The container position is the position of the item
+    amongst all other types, including stylings (whitespace, comments), within
+    the containing object.
 
     A tuple is returned, with the first item being an integer representing the
     attribute position, and the second item the container position.
     
-    Accepts a `TOMLHierarchy` instance, being an instance of string or `Hierarchy`,
-    and an instance of `TOMLSource`.
+    Accepts a `TOMLHierarchy` instance, being an instance of string or
+    `Hierarchy`, and an instance of `TOMLSource`.
 
     Args:
         hierarchy (`TOMLHierarchy`): A `TOMLHierarchy` instance.
         toml_source (`TOMLSource`): A `TOMLSource` instance.
 
     Returns:
-        Tuple[int, int]: A two-element tuple where both elements are of integer type. The
-            first item representing the attribute position, and the second item the
-            container position.
+        Tuple[int, int]: A two-element tuple where both elements are of integer
+            type. The first item representing the attribute position, and the
+            second item the container position.
     """
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
