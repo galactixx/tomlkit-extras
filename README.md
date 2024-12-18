@@ -1,5 +1,9 @@
 # tomlkit-extras
 ![Tests](https://github.com/galactixx/tomlkit-extras/actions/workflows/continuous_integration.yaml/badge.svg)
+[![PyPI version](https://img.shields.io/pypi/v/tomlkit-extras.svg)](https://pypi.org/project/tomlkit-extras/)
+[![Python versions](https://img.shields.io/pypi/pyversions/tomlkit-extras.svg)](https://pypi.org/project/tomlkit-extras/)
+![PyPI Downloads](https://static.pepy.tech/badge/tomlkit-extras/month)
+![PyPI Downloads](https://static.pepy.tech/badge/tomlkit-extras)
 
 **tomlkit-extras** is a Python package that extends the functionality of [tomlkit](https://github.com/sdispater/tomlkit), allowing for advanced manipulation, validation, and introspection of TOML files. This package provides enhanced capabilities for handling comments, nested structures, and other nuanced elements within TOML files.
 
