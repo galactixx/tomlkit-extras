@@ -2,6 +2,7 @@
 ![Tests](https://github.com/galactixx/tomlkit-extras/actions/workflows/continuous_integration.yaml/badge.svg)
 [![PyPI version](https://img.shields.io/pypi/v/tomlkit-extras.svg)](https://pypi.org/project/tomlkit-extras/)
 [![Python versions](https://img.shields.io/pypi/pyversions/tomlkit-extras.svg)](https://pypi.org/project/tomlkit-extras/)
+[![License](https://img.shields.io/github/license/galactixx/tomlkit-extras.svg)](https://github.com/galactixx/tomlkit-extras/blob/main/LICENSE)
 ![PyPI Downloads](https://static.pepy.tech/badge/tomlkit-extras/month)
 ![PyPI Downloads](https://static.pepy.tech/badge/tomlkit-extras)
 
