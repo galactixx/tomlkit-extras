@@ -1,4 +1,4 @@
-from typing import Literal, TypeAlias
+from typing import Literal
 import sys
 
 _IS_PY_3_10 = sys.version_info >= (3, 10)

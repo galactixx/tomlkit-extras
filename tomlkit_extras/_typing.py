@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Tuple, TypeAlias, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 _IS_PY_3_10 = sys.version_info >= (3, 10)
 
