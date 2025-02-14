@@ -1,23 +1,19 @@
 from pathlib import Path
-from typing import (
-    Any,
-    Dict
-)
+from typing import Any, Dict
 
 import pytest
-from tomlkit_extras import (
-    load_toml_file,
-    TOMLDecodingError
-)
+
+from tomlkit_extras import TOMLDecodingError, load_toml_file
+
 
 @pytest.mark.parametrize(
-    'toml_source',
+    "toml_source",
     [
-        './tests/examples/toml_a.toml',
-        './tests/examples/toml_b.toml',
-        './tests/examples/toml_c.toml',
-        './tests/examples/toml_d.toml'
-    ]
+        "./tests/examples/toml_a.toml",
+        "./tests/examples/toml_b.toml",
+        "./tests/examples/toml_c.toml",
+        "./tests/examples/toml_d.toml",
+    ],
 )
 def test_filepath_load_toml_file(toml_source: str) -> None:
     """
@@ -29,7 +25,7 @@ def test_filepath_load_toml_file(toml_source: str) -> None:
 
 
 @pytest.mark.parametrize(
-    'toml_source',
+    "toml_source",
     [
         """
         # this is a document comment
@@ -57,8 +53,8 @@ def test_filepath_load_toml_file(toml_source: str) -> None:
         ip = "10.0.0.1"
         role = "frontend"
         # Out-of-order table
-        """
-    ]
+        """,
+    ],
 )
 def test_raw_load_toml_file(toml_source: str) -> None:
     """
@@ -66,36 +62,34 @@ def test_raw_load_toml_file(toml_source: str) -> None:
     from a string, bytes, and bytearray instance.
     """
     _ = load_toml_file(toml_source=toml_source)
-    _ = load_toml_file(toml_source=bytes(toml_source, 'utf-8'))
-    _ = load_toml_file(toml_source=bytearray(toml_source, 'utf-8'))
+    _ = load_toml_file(toml_source=bytes(toml_source, "utf-8"))
+    _ = load_toml_file(toml_source=bytearray(toml_source, "utf-8"))
 
 
 @pytest.mark.parametrize(
-    'toml_source',
+    "toml_source",
     [
         {
-            'project': 'Example Project',
-            'tool': {
-                'ruff': {
-                    'line-length': 88,
-                    'lint': {
-                        'pydocstyle': {'convention': 'numpy'}
-                    }
+            "project": "Example Project",
+            "tool": {
+                "ruff": {
+                    "line-length": 88,
+                    "lint": {"pydocstyle": {"convention": "numpy"}},
                 }
-            }
+            },
         },
         {
-            'project': 'Example Project',
-            'main_table': {
-                'name': 'Main Table',
-                'description': 'This is the main table containing an array of nested tables.',
-                'sub_tables': [
-                    {'name': 'Sub Table 1', 'value': 10},
-                    {'name': 'Sub Table 2', 'value': 20}
-                ]
-            }
-        }
-    ]
+            "project": "Example Project",
+            "main_table": {
+                "name": "Main Table",
+                "description": "This is the main table containing an array of nested tables.",
+                "sub_tables": [
+                    {"name": "Sub Table 1", "value": 10},
+                    {"name": "Sub Table 2", "value": 20},
+                ],
+            },
+        },
+    ],
 )
 def test_dict_load_toml_file(toml_source: Dict[str, Any]) -> None:
     """
@@ -108,11 +102,13 @@ def test_dict_load_toml_file(toml_source: Dict[str, Any]) -> None:
 def test_load_toml_file_invalid() -> None:
     """Function to test the error handling of `load_toml_file`."""
     with pytest.raises(TOMLDecodingError) as exc_info:
-        _ = load_toml_file(toml_source='./tests/examples/invalid_toml_a.toml')
-    assert exc_info.value.message == 'Issue occured when decoding the TOML source content'
+        _ = load_toml_file(toml_source="./tests/examples/invalid_toml_a.toml")
+    assert (
+        exc_info.value.message == "Issue occured when decoding the TOML source content"
+    )
 
     with pytest.raises(FileNotFoundError) as exc_info:
-        _ = load_toml_file(toml_source='./tests/examples/not_an_existing_file.toml')
+        _ = load_toml_file(toml_source="./tests/examples/not_an_existing_file.toml")
     assert str(exc_info.value) == (
-        'If path is passed in as the source, it must link to an existing file'
+        "If path is passed in as the source, it must link to an existing file"
     )

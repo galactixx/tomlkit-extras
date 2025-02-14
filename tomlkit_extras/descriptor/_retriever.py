@@ -1,33 +1,24 @@
 import itertools
-from typing import (
-    List,
-    Optional
-)
+from typing import List, Optional
 
-from tomlkit_extras.descriptor._store import DescriptorStore
-from tomlkit_extras._typing import (
-    StyleItem,
-    TOMLHierarchy,
-    TopLevelItem
+from tomlkit_extras._exceptions import (
+    InvalidArrayOfTablesError,
+    InvalidFieldError,
+    InvalidHierarchyError,
+    InvalidTableError,
 )
-from tomlkit_extras._hierarchy import (
-    Hierarchy,
-    standardize_hierarchy
-)
+from tomlkit_extras._hierarchy import Hierarchy, standardize_hierarchy
+from tomlkit_extras._typing import StyleItem, TOMLHierarchy, TopLevelItem
 from tomlkit_extras.descriptor._descriptors import (
     AoTDescriptor,
     AoTDescriptors,
     FieldDescriptor,
     StyleDescriptor,
     StylingDescriptors,
-    TableDescriptor
+    TableDescriptor,
 )
-from tomlkit_extras._exceptions import (
-    InvalidArrayOfTablesError,
-    InvalidFieldError,
-    InvalidHierarchyError,
-    InvalidTableError
-)
+from tomlkit_extras.descriptor._store import DescriptorStore
+
 
 class DescriptorRetriever:
     """
@@ -47,11 +38,12 @@ class DescriptorRetriever:
     - fields (including arrays)
     - tables (including inline tables)
     """
+
     def __init__(
         self,
         store: DescriptorStore,
         top_level_type: TopLevelItem,
-        top_level_hierarchy: Optional[str]
+        top_level_hierarchy: Optional[str],
     ) -> None:
         self._store = store
         self._top_level_type = top_level_type
@@ -65,37 +57,30 @@ class DescriptorRetriever:
         where each styling is represented by a `StyleDescriptor` object. In
         addition, if the search should be narrowed, a `TOMLHierarchy` object
         can be passed.
-        
+
         A styling can either be whitespace or comment.
-        
+
         Args:
             styling (str): A string representation of a comment or whitespace.
             hierarchy (`TOMLHierarchy` | None) A `TOMLHierarchy` instance. Is
                 optional and defaults to None.
-        
+
         Returns:
             List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.
         """
         if hierarchy is None:
-            return (
-                self._store.document._document_stylings
-                .get_styling(styling=styling)
-            )
+            return self._store.document._document_stylings.get_styling(styling=styling)
         else:
             hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
             hierarchy_as_str = str(hierarchy_obj)
 
             if self._store.tables.contains(hierarchy=str(hierarchy_obj)):
-                return (
-                    self._store.tables
-                    .get(hierarchy=hierarchy_as_str)
-                    .stylings
-                    .get_styling(styling=styling)
-                )
+                return self._store.tables.get(
+                    hierarchy=hierarchy_as_str
+                ).stylings.get_styling(styling=styling)
             else:
                 table_descriptors = self._get_table_descriptors_from_aot(
-                    hierarchy_obj=hierarchy_obj,
-                    table_hierarchy=hierarchy_as_str
+                    hierarchy_obj=hierarchy_obj, table_hierarchy=hierarchy_as_str
                 )
 
                 stylings = [
@@ -104,8 +89,10 @@ class DescriptorRetriever:
                 ]
 
                 return list(itertools.chain.from_iterable(stylings))
-    
-    def get_top_level_stylings(self, styling: Optional[StyleItem]) -> List[StyleDescriptor]:
+
+    def get_top_level_stylings(
+        self, styling: Optional[StyleItem]
+    ) -> List[StyleDescriptor]:
         """
         Retrieves all stylings (comments or whitespace) that occur at the
         top-level space of the TOML source.
@@ -125,54 +112,51 @@ class DescriptorRetriever:
         descriptors: StylingDescriptors
 
         if (
-            self._top_level_type == 'table' and
-            self._top_level_hierarchy is not None and
-            self._store.tables.contains(hierarchy=self._top_level_hierarchy)
+            self._top_level_type == "table"
+            and self._top_level_hierarchy is not None
+            and self._store.tables.contains(hierarchy=self._top_level_hierarchy)
         ):
-            descriptors = (
-                self._store
-                .tables
-                .get(hierarchy=self._top_level_hierarchy)
-                .stylings
-            )
+            descriptors = self._store.tables.get(
+                hierarchy=self._top_level_hierarchy
+            ).stylings
         elif self._top_level_hierarchy is None:
             descriptors = self._store.document._document_stylings
         else:
             descriptors = StylingDescriptors(comments=dict(), whitespace=dict())
 
         return descriptors.get_stylings(styling=styling)
-    
+
     def get_table(self, hierarchy: TOMLHierarchy) -> TableDescriptor:
         """
         Retrieves a table represented by a `TableDescriptor` object which
         corresponds to a specific hierarchy.
-        
+
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        
+
         Returns:
             `TableDescriptor`: A `TableDescriptor` instance.
         """
-        hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)   
+        hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
         hierarchy_as_str = str(hierarchy_obj)
 
         if not self._store.tables.contains(hierarchy=hierarchy_as_str):
             raise InvalidHierarchyError(
                 "Hierarchy does not exist in set of valid hierarchies",
                 hierarchy_obj,
-                self._store.tables.hierarchies
+                self._store.tables.hierarchies,
             )
 
         return self._store.tables.get(hierarchy=hierarchy_as_str)
-    
+
     def get_field(self, hierarchy: TOMLHierarchy) -> FieldDescriptor:
         """
         Retrieves a field represented by a `FieldDescriptor` object which
         corresponds to a specific hierarchy.
-        
+
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        
+
         Returns:
             `FieldDescriptor`: A `FieldDescriptor` instance.
         """
@@ -185,9 +169,9 @@ class DescriptorRetriever:
                 raise InvalidFieldError(
                     "Field does not exist in top-level document space",
                     hierarchy_obj,
-                    self._store.document.fields
+                    self._store.document.fields,
                 )
-            
+
             field_descriptor = self._store.document.get(hierarchy=hierarchy_as_str)
         else:
             # Take the hierarchy passed in and split it up into two parts. The
@@ -200,9 +184,9 @@ class DescriptorRetriever:
                 raise InvalidHierarchyError(
                     "Hierarchy does not exist in set of valid hierarchies",
                     hierarchy_obj,
-                    self._store.tables.hierarchies
-                )  
-            
+                    self._store.tables.hierarchies,
+                )
+
             # Retrieve the TableDescriptor instance from the table store
             table_descriptor = self._store.tables.get(hierarchy=table_hierarchy)
 
@@ -212,14 +196,14 @@ class DescriptorRetriever:
                 raise InvalidFieldError(
                     "Hierarchy does not map to an existing field",
                     hierarchy_obj,
-                    set(table_descriptor.fields.keys())
+                    set(table_descriptor.fields.keys()),
                 )
-            
-            # Retrieve the FieldDescriptor instance from the TableDescriptor 
+
+            # Retrieve the FieldDescriptor instance from the TableDescriptor
             field_descriptor = table_descriptor.fields[field]
 
         return field_descriptor
-    
+
     def get_aot(self, hierarchy: TOMLHierarchy) -> List[AoTDescriptor]:
         """
         Retrieves all array-of-tables, where each array is represented
@@ -227,7 +211,7 @@ class DescriptorRetriever:
 
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        
+
         Returns:
             List[`AoTDescriptor`]: A list of `AoTDescriptor` instances.
         """
@@ -238,14 +222,14 @@ class DescriptorRetriever:
             raise InvalidArrayOfTablesError(
                 "Hierarchy does not map to an existing array of tables",
                 hierarchy_obj,
-                self._store.array_of_tables.hierarchies
+                self._store.array_of_tables.hierarchies,
             )
 
         array_of_tables: AoTDescriptors = self._store.array_of_tables.get(
             hierarchy=hierarchy_as_str
         )
         return array_of_tables.aots
-    
+
     def _get_table_descriptors_from_aot(
         self, hierarchy_obj: Hierarchy, table_hierarchy: str
     ) -> List[TableDescriptor]:
@@ -263,9 +247,9 @@ class DescriptorRetriever:
             raise InvalidHierarchyError(
                 "Hierarchy does not exist in set of valid hierarchies",
                 hierarchy_obj,
-                self._store.array_of_tables.hierarchies
+                self._store.array_of_tables.hierarchies,
             )
-        
+
         # Grab all AoTDescriptor instances from the retrieved array
         array_of_tables: AoTDescriptors = self._store.array_of_tables.get(
             hierarchy=longest_hierarchy
@@ -274,15 +258,16 @@ class DescriptorRetriever:
 
         table_descriptors: List[List[TableDescriptor]] = [
             array.tables[table_hierarchy]
-            for array in arrays if table_hierarchy in array.tables
+            for array in arrays
+            if table_hierarchy in array.tables
         ]
-        
+
         # In the event that no tables were found with the matching hierarchy
         if not table_descriptors:
             raise InvalidTableError(
                 "Hierarchy does not map to an existing table within an array",
                 hierarchy_obj,
-                set(table for array in arrays for table in array.tables.keys())
+                set(table for array in arrays for table in array.tables.keys()),
             )
 
         return list(itertools.chain.from_iterable(table_descriptors))
@@ -294,26 +279,26 @@ class DescriptorRetriever:
 
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        
+
         Returns:
             List[`TableDescriptor`]: A list of `TableDescriptor` instances.
         """
         hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
-        
+
         table_descriptors: List[TableDescriptor] = self._get_table_descriptors_from_aot(
             hierarchy_obj=hierarchy_obj, table_hierarchy=str(hierarchy_obj)
         )
 
         return table_descriptors
-    
+
     def get_field_from_aot(self, hierarchy: TOMLHierarchy) -> List[FieldDescriptor]:
         """
         Retrieves all fields from an array-of-tables, where each field is represented
         by a `FieldDescriptor` object, that correspond to a specific hierarchy.
-        
+
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        
+
         Returns:
             List[`FieldDescriptor`]: A list of `FieldDescriptor` instances.
         """
@@ -342,9 +327,10 @@ class DescriptorRetriever:
                 hierarchy_obj,
                 set(
                     itertools.chain.from_iterable(
-                        set(descriptor.fields.keys()) for descriptor in table_descriptors
+                        set(descriptor.fields.keys())
+                        for descriptor in table_descriptors
                     )
-                )
+                ),
             )
 
         return field_descriptors

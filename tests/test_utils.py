@@ -1,21 +1,14 @@
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional
-)
+from typing import Any, Dict, List, Optional
 
 import pytest
 import tomlkit
-from tomlkit import items, TOMLDocument
+from tomlkit import TOMLDocument, items
 
-from tomlkit_extras._typing import (
-    BodyContainer,
-    BodyContainerItem,
-    BodyContainerItems
-)
+from tests.typing import FixtureFunction
+from tomlkit_extras._typing import BodyContainer, BodyContainerItem, BodyContainerItems
 from tomlkit_extras._utils import (
+    _partial_clear_dict_like_toml_item,
     complete_clear_toml_document,
     create_array_of_tables,
     create_table,
@@ -24,9 +17,8 @@ from tomlkit_extras._utils import (
     from_dict_to_toml_document,
     get_container_body,
     safe_unwrap,
-    _partial_clear_dict_like_toml_item
 )
-from tests.typing import FixtureFunction
+
 
 @dataclass(frozen=True)
 class BaseClearTestCase:
@@ -34,6 +26,7 @@ class BaseClearTestCase:
     Dataclass representing a test case for the any functions that clear or
     delete attributes/data from a `tomlkit` type.
     """
+
     fixture: FixtureFunction
     num_attributes: int
 
@@ -44,6 +37,7 @@ class ClearDocumentTestCase(BaseClearTestCase):
     Dataclass representing a test case for the `complete_clear_toml_document`
     function.
     """
+
     pass
 
 
@@ -53,6 +47,7 @@ class PartialClearDocumentTestCase(BaseClearTestCase):
     Dataclass representing a test case for the `_partial_clear_dict_like_toml_item`
     function.
     """
+
     pass
 
 
@@ -62,6 +57,7 @@ class CreateArrayOTablesTestCase:
     Dataclass representing a test case for the `create_array_of_tables`
     function.
     """
+
     arrays: List[Any]
     num_aots: int
 
@@ -72,6 +68,7 @@ class CreateDocumentTestCase:
     Dataclass representing a test case for the `create_toml_document`
     function.
     """
+
     hierarchy: str
     table: Dict[str, Any]
 
@@ -82,6 +79,7 @@ class DecomposeBodyItemTestCase:
     Dataclass representing a test case for the `decompose_body_item`
     function.
     """
+
     key: Optional[items.Key]
     item: items.Item
 
@@ -97,16 +95,14 @@ class GetContainerBodyTestCase:
     Dataclass representing a test case for the `get_container_body`
     function.
     """
+
     structure: BodyContainer
     container_body: BodyContainerItems
 
 
 @pytest.mark.parametrize(
-    'test_case',
-    [
-        ClearDocumentTestCase('load_toml_b', 3),
-        ClearDocumentTestCase('load_toml_d', 4)
-    ]
+    "test_case",
+    [ClearDocumentTestCase("load_toml_b", 3), ClearDocumentTestCase("load_toml_d", 4)],
 )
 def test_complete_clear_toml_document(
     test_case: ClearDocumentTestCase, request: pytest.FixtureRequest
@@ -126,24 +122,24 @@ def test_complete_clear_toml_document(
 
 
 _RAW_TABLE_DICTS: List[Dict[str, Any]] = [
-    {'name': 'Sub Table 1', 'value': 10},
-    {'name': 'Sub Table 2', 'value': 20}
+    {"name": "Sub Table 1", "value": 10},
+    {"name": "Sub Table 2", "value": 20},
 ]
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         CreateArrayOTablesTestCase(arrays=_RAW_TABLE_DICTS, num_aots=2),
         CreateArrayOTablesTestCase(
             arrays=[create_table(fields=table) for table in _RAW_TABLE_DICTS],
-            num_aots=2
+            num_aots=2,
         ),
         CreateArrayOTablesTestCase(
             arrays=[create_table(fields=_RAW_TABLE_DICTS[0]), _RAW_TABLE_DICTS[1]],
-            num_aots=2
-        )
-    ]
+            num_aots=2,
+        ),
+    ],
 )
 def test_create_array_of_tables(test_case: CreateArrayOTablesTestCase) -> None:
     """Function to test the functionality of `create_array_of_tables`."""
@@ -153,21 +149,19 @@ def test_create_array_of_tables(test_case: CreateArrayOTablesTestCase) -> None:
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         CreateDocumentTestCase(
-            'projects',
-            {'project': {'update': {'name': 'Example Project'}}}
+            "projects", {"project": {"update": {"name": "Example Project"}}}
         ),
         CreateDocumentTestCase(
-            'details',
-            {'detail': {'update': {'description': 'A sample project configuration'}}}
+            "details",
+            {"detail": {"update": {"description": "A sample project configuration"}}},
         ),
         CreateDocumentTestCase(
-            'update.members',
-            {'roles': [{'role': 'Developer'}, {'role': 'Designer'}]}
-        )
-    ]
+            "update.members", {"roles": [{"role": "Developer"}, {"role": "Designer"}]}
+        ),
+    ],
 )
 def test_create_toml_document(test_case: CreateDocumentTestCase) -> None:
     """Function to test the functionality of `create_toml_document`."""
@@ -177,79 +171,70 @@ def test_create_toml_document(test_case: CreateDocumentTestCase) -> None:
     assert isinstance(project_toml_document, TOMLDocument)
 
     document_unwrapped = safe_unwrap(structure=project_toml_document)
-    for level in test_case.hierarchy.split('.'):
+    for level in test_case.hierarchy.split("."):
         document_unwrapped = document_unwrapped[level]
-    
+
     assert document_unwrapped == test_case.table
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         DecomposeBodyItemTestCase(
-            tomlkit.key('example_key'), tomlkit.string('example_value')
+            tomlkit.key("example_key"), tomlkit.string("example_value")
         ),
-        DecomposeBodyItemTestCase(
-            tomlkit.key('example.key.here'), tomlkit.integer(42)
-        ),
-        DecomposeBodyItemTestCase(None, tomlkit.float_(3.14))
-    ]
+        DecomposeBodyItemTestCase(tomlkit.key("example.key.here"), tomlkit.integer(42)),
+        DecomposeBodyItemTestCase(None, tomlkit.float_(3.14)),
+    ],
 )
 def test_decompose_body_item(test_case: DecomposeBodyItemTestCase) -> None:
     """Function to test the functionality of `decompose_body_item`."""
     item_key, toml_item = decompose_body_item(body_item=test_case.body_item)
     assert (
-        (
-            (isinstance(item_key, str) and test_case.key is not None) or
-            (item_key is None and test_case.key is None)
-        )
-        and isinstance(toml_item, items.Item)
-    )
+        (isinstance(item_key, str) and test_case.key is not None)
+        or (item_key is None and test_case.key is None)
+    ) and isinstance(toml_item, items.Item)
 
 
 @pytest.mark.parametrize(
-    'dictionary',
+    "dictionary",
     [
         {
-            'project': 'Example Project',
-            'tool': {
-                'ruff': {
-                    'line-length': 88,
-                    'lint': {
-                        'pydocstyle': {'convention': 'numpy'}
-                    }
+            "project": "Example Project",
+            "tool": {
+                "ruff": {
+                    "line-length": 88,
+                    "lint": {"pydocstyle": {"convention": "numpy"}},
                 }
-            } ,
-            'main_table': {
-                'name': 'Main Table',
-                'description': 'This is the main table containing an array of nested tables.',
-                'sub_tables': [
-                    {'name': 'Sub Table 1', 'value': 10},
-                    {'name': 'Sub Table 2', 'value': 20}
-                ]
-            }
+            },
+            "main_table": {
+                "name": "Main Table",
+                "description": "This is the main table containing an array of nested tables.",
+                "sub_tables": [
+                    {"name": "Sub Table 1", "value": 10},
+                    {"name": "Sub Table 2", "value": 20},
+                ],
+            },
         },
         {
-            'project': 'Example Project',
-            'tool': {
-                'ruff': {
-                    'line-length': 88,
-                    'lint': {
-                        'pydocstyle': {'convention': 'numpy'}
-                    }
+            "project": "Example Project",
+            "tool": {
+                "ruff": {
+                    "line-length": 88,
+                    "lint": {"pydocstyle": {"convention": "numpy"}},
                 },
-                'rye': {
-                    'managed': True,
-                    'dev-dependencies': [
+                "rye": {
+                    "managed": True,
+                    "dev-dependencies": [
                         "ruff>=0.4.4",
                         "mypy>=0.812",
                         "sphinx>=3.5",
-                        "setuptools>=56.0"
-                    ]
-                }
-            }
-        }
-    ]
+                        "setuptools>=56.0",
+                    ],
+                },
+            },
+        },
+    ],
 )
 def test_from_dict_to_toml_document(dictionary: Dict[str, Any]) -> None:
     """Function to test the functionality of `from_dict_to_toml_document`."""
@@ -259,23 +244,25 @@ def test_from_dict_to_toml_document(dictionary: Dict[str, Any]) -> None:
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         GetContainerBodyTestCase(
-            from_dict_to_toml_document({'project': 'Example Project', 'profile': 'Tom'}),
+            from_dict_to_toml_document(
+                {"project": "Example Project", "profile": "Tom"}
+            ),
             [
-                (tomlkit.key('project'), tomlkit.string('Example Project')),
-                (tomlkit.key('profile'), tomlkit.string('Tom'))
-            ]
+                (tomlkit.key("project"), tomlkit.string("Example Project")),
+                (tomlkit.key("profile"), tomlkit.string("Tom")),
+            ],
         ),
         GetContainerBodyTestCase(
-            create_table({'server': '192.168.1.1', 'port': 5432}),
+            create_table({"server": "192.168.1.1", "port": 5432}),
             [
-                (tomlkit.key('server'), tomlkit.string('192.168.1.1')),
-                (tomlkit.key('port'), tomlkit.integer(5432))
-            ]
-        )
-    ]
+                (tomlkit.key("server"), tomlkit.string("192.168.1.1")),
+                (tomlkit.key("port"), tomlkit.integer(5432)),
+            ],
+        ),
+    ],
 )
 def test_get_container_body(test_case: GetContainerBodyTestCase) -> None:
     """Function to test the functionality of `get_container_body`."""
@@ -284,12 +271,12 @@ def test_get_container_body(test_case: GetContainerBodyTestCase) -> None:
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
-        PartialClearDocumentTestCase('load_toml_a', 3),
-        PartialClearDocumentTestCase('load_toml_b', 3),
-        PartialClearDocumentTestCase('load_toml_d', 4)
-    ]
+        PartialClearDocumentTestCase("load_toml_a", 3),
+        PartialClearDocumentTestCase("load_toml_b", 3),
+        PartialClearDocumentTestCase("load_toml_d", 4),
+    ],
 )
 def test_partial_clear_dict_like_toml_item(
     test_case: PartialClearDocumentTestCase, request: pytest.FixtureRequest

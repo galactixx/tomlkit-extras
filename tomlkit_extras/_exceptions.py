@@ -1,34 +1,23 @@
 from abc import ABC, abstractmethod
-from typing import (
-    Any,
-    List,
-    Optional,
-    Set,
-    Union
-)
+from typing import Any, List, Optional, Set, Union
 
 from tomlkit_extras._hierarchy import Hierarchy
-from tomlkit_extras._typing import (
-    BodyContainerItems,
-    Retrieval,
-    TOMLFieldSource
-)
-from tomlkit_extras._utils import (
-    decompose_body_item,
-    safe_unwrap
-)
+from tomlkit_extras._typing import BodyContainerItems, Retrieval, TOMLFieldSource
+from tomlkit_extras._utils import decompose_body_item, safe_unwrap
 
 # ==============================================================================
 # General Base Error Class for all Errors
 # ==============================================================================
 
+
 class BaseTOMLError(Exception):
     """
     Base error class for all errors thrown in `tomlkit_extras`.
-    
+
     Attributes:
         message (str): The string error message.
     """
+
     def __init__(self, message: str) -> None:
         self.message = message
 
@@ -38,46 +27,53 @@ class BaseTOMLError(Exception):
     def __repr__(self) -> str:
         return self.message
 
+
 # ==============================================================================
 # TOML Reading Errors
 # ==============================================================================
 
+
 class TOMLReadError(BaseTOMLError):
     """
     Base error class for those related to reading in TOML files.
-    
+
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
+
     pass
 
 
 class TOMLDecodingError(TOMLReadError):
     """
     Decoding error occurring when loading a TOML configuration file.
-    
+
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
+
     pass
 
 
 class TOMLConversionError(TOMLReadError):
     """
     General TOML conversion error when reading in TOML files.
-    
+
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
+
     pass
+
 
 # ==============================================================================
 # Invalid Hierarchy Errors
 # ==============================================================================
 
+
 class InvalidTOMLStructureError(ABC, BaseTOMLError):
     """
-    Abstract error class for those related to querying a hierarchy from a 
+    Abstract error class for those related to querying a hierarchy from a
     tomlkit structure.
 
     Inherits attributes from `BaseTOMLError`:
@@ -87,6 +83,7 @@ class InvalidTOMLStructureError(ABC, BaseTOMLError):
         hierarchy (`Hierarchy`): A representation of the hierarchy passed
             in as an argument which does not exist.
     """
+
     def __init__(self, message: str, hierarchy: Hierarchy) -> None:
         super().__init__(message=message)
         self._hierarchy_obj = hierarchy
@@ -95,7 +92,7 @@ class InvalidTOMLStructureError(ABC, BaseTOMLError):
     def hierarchy(self) -> str:
         """Returns a string representation of the hierarchy that was invalid."""
         return str(self._hierarchy_obj)
-    
+
     @property
     @abstractmethod
     def closest_hierarchy(self) -> Optional[str]:
@@ -120,12 +117,13 @@ class InvalidHierarchyError(InvalidTOMLStructureError):
         closest_hierarchy (str | None): The longest ancestor hierarchy of
             the invalid hierarchy that exists in the TOML file
     """
+
     def __init__(
         self, message: str, hierarchy: Hierarchy, hierarchies: Set[str]
     ) -> None:
         super().__init__(message=message, hierarchy=hierarchy)
         self.hierarchies = hierarchies
-    
+
     @property
     def closest_hierarchy(self) -> Optional[str]:
         """Returns the longest ancestor hierarchy that exists in the TOML file."""
@@ -150,9 +148,8 @@ class InvalidFieldError(InvalidTOMLStructureError):
         closest_hierarchy (str | None): The longest ancestor hierarchy of
             the invalid hierarchy that exists in the TOML file
     """
-    def __init__(
-        self, message: str, hierarchy: Hierarchy, fields: Set[str]
-    ) -> None:
+
+    def __init__(self, message: str, hierarchy: Hierarchy, fields: Set[str]) -> None:
         super().__init__(message=message, hierarchy=hierarchy)
         self.existing_fields = fields
         self.field: str = self._hierarchy_obj.attribute
@@ -181,9 +178,8 @@ class InvalidTableError(InvalidTOMLStructureError):
         closest_hierarchy (str | None): The longest ancestor hierarchy of
             the invalid hierarchy that exists in the TOML file
     """
-    def __init__(
-        self, message: str, hierarchy: Hierarchy, tables: Set[str]
-    ) -> None:
+
+    def __init__(self, message: str, hierarchy: Hierarchy, tables: Set[str]) -> None:
         super().__init__(message=message, hierarchy=hierarchy)
         self.existing_tables = tables
         self.table: str = self._hierarchy_obj.attribute
@@ -199,7 +195,7 @@ class InvalidTableError(InvalidTOMLStructureError):
 class InvalidArrayOfTablesError(InvalidTOMLStructureError):
     """
     Error occurring when referencing an invalid array of tables.
-    
+
     Inherits attributes from `InvalidTOMLStructureError`:
     - `message`
     - `hierarchy`
@@ -210,31 +206,31 @@ class InvalidArrayOfTablesError(InvalidTOMLStructureError):
         closest_hierarchy (str | None): The longest ancestor hierarchy of
             the invalid hierarchy that exists in the TOML file
     """
-    def __init__(
-        self, message: str, hierarchy: Hierarchy, arrays: Set[str]
-    ) -> None:
+
+    def __init__(self, message: str, hierarchy: Hierarchy, arrays: Set[str]) -> None:
         super().__init__(message=message, hierarchy=hierarchy)
         self.arrays = arrays
 
     @property
     def closest_hierarchy(self) -> Optional[str]:
         """Returns the longest ancestor hierarchy that exists in the TOML file."""
-        return self._hierarchy_obj.longest_ancestor_hierarchy(
-            hierarchies=self.arrays
-        )
+        return self._hierarchy_obj.longest_ancestor_hierarchy(hierarchies=self.arrays)
+
 
 # ==============================================================================
 # Invalid Hierarchy when Modifying Errors (when using TOML utility functions)
 # ==============================================================================
 
+
 class HierarchyModificationError(BaseTOMLError):
     """
-    Base error class for those related to modification of a hierarchy in a 
+    Base error class for those related to modification of a hierarchy in a
     tomlkit structure. Error raised when using the TOML utility functions.
 
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
+
     pass
 
 
@@ -245,6 +241,7 @@ class InvalidHierarchyDeletionError(HierarchyModificationError):
     Inherits attributes from `HierarchyModificationError`:
     - `message`
     """
+
     pass
 
 
@@ -255,6 +252,7 @@ class InvalidHierarchyUpdateError(HierarchyModificationError):
     Inherits attributes from `HierarchyModificationError`:
     - `message`
     """
+
     pass
 
 
@@ -266,20 +264,24 @@ class InvalidHierarchyRetrievalError(HierarchyModificationError):
     Inherits attributes from `HierarchyModificationError`:
     - `message`
     """
+
     pass
+
 
 # ==============================================================================
 # Other TOML-related errors
 # ==============================================================================
 
+
 class KeyNotProvidedError(BaseTOMLError):
     """
     Error occuring when inserting into a `tomlkit` object and no string key has
-    been provided. 
+    been provided.
 
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
+
     pass
 
 
@@ -291,6 +293,7 @@ class NotContainerLikeError(BaseTOMLError):
     Inherits attributes from `BaseTOMLError`:
     - `message`
     """
+
     pass
 
 
@@ -301,11 +304,12 @@ class TOMLInsertionError(BaseTOMLError):
 
     Inherits attributes from `BaseTOMLError`:
     - `message`
-    
+
     Attributes:
         struct_type (Type[`Retrieval` | `TOMLFieldSource`]): The type of
             the object when the insertion attempt was made.
     """
+
     def __init__(
         self, message: str, structure: Union[Retrieval, TOMLFieldSource]
     ) -> None:
@@ -316,7 +320,7 @@ class TOMLInsertionError(BaseTOMLError):
 class InvalidStylingError(BaseTOMLError):
     """
     Error occurring when a styling does not exist in set of expected stylings.
-    
+
     Inherits attributes from `BaseTOMLError`:
     - `message`
 
@@ -325,6 +329,7 @@ class InvalidStylingError(BaseTOMLError):
             TOML structure. This is a set that is pre-filtered based on whether
             the query was a comment or whitespace-like string.
     """
+
     def __init__(self, message: str, stylings: Set[str]) -> None:
         super().__init__(message=message)
         self.stylings = stylings
@@ -333,7 +338,7 @@ class InvalidStylingError(BaseTOMLError):
 class InvalidArrayItemError(BaseTOMLError):
     """
     Error occurring when an item expected to exist in an array, does not.
-    
+
     Inherits attributes from `BaseTOMLError`:
     - `message`
 
@@ -341,6 +346,7 @@ class InvalidArrayItemError(BaseTOMLError):
         array_items (List[Any]): A list of all values appearing in the
             TOML array object.
     """
+
     def __init__(self, message: str, body: BodyContainerItems) -> None:
         super().__init__(message=message)
 

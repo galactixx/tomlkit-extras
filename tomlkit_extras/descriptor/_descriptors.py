@@ -1,50 +1,38 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from abc import ABC, abstractmethod
 import copy
-import re
-import itertools
 import inspect
-from typing import (
-    Any,
-    cast,
-    ClassVar,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Type,
-    TypeVar
-)
+import itertools
+import re
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any, ClassVar, Dict, List, Optional, Set, Type, TypeVar, cast
 
 from tomlkit import items
 
 from tomlkit_extras._exceptions import InvalidStylingError
-from tomlkit_extras._utils import (
-    find_comment_line_no,
-    safe_unwrap
-)
 from tomlkit_extras._hierarchy import Hierarchy
-from tomlkit_extras.descriptor._helpers import (
-    CommentDescriptor,
-    create_comment_descriptor
-)
-from tomlkit_extras.descriptor._types import ItemInfo
 from tomlkit_extras._typing import (
     AoTItem,
     FieldItem,
     Item,
     ParentItem,
-    Stylings,
     StyleItem,
+    Stylings,
     Table,
-    TableItem
+    TableItem,
 )
+from tomlkit_extras._utils import find_comment_line_no, safe_unwrap
+from tomlkit_extras.descriptor._helpers import (
+    CommentDescriptor,
+    create_comment_descriptor,
+)
+from tomlkit_extras.descriptor._types import ItemInfo
 
-_WHITESPACE_PATTERN = r'^[ \n\r]*$'
+_WHITESPACE_PATTERN = r"^[ \n\r]*$"
 
-Descriptor = TypeVar('Descriptor', bound='AbstractDescriptor')
+Descriptor = TypeVar("Descriptor", bound="AbstractDescriptor")
+
 
 def _chain_stylings(styles: Dict[str, List[StyleDescriptor]]) -> List[StyleDescriptor]:
     """A private function which flattens a list of lists of `StyleDescriptor` objects."""
@@ -68,6 +56,7 @@ class AoTDescriptors:
     traversing a TOML structure in the `_generate_descriptor` method of
     `_TOMLParser`.
     """
+
     aots: List[AoTDescriptor]
 
     def get_array(self) -> AoTDescriptor:
@@ -89,7 +78,7 @@ class StylingDescriptors:
     representations of the stylings, and the values are the list of
     `StyleDescriptor` objects that correspond to stylings that have that
     specific string.
-    
+
     The values are lists as there can be multiple whitespaces or comments that
     have the same value.
 
@@ -101,6 +90,7 @@ class StylingDescriptors:
             keys are string representations of the whitespaces, and the values
             are lists of `StyleDescriptor` corresponding to the whitespaces.
     """
+
     comments: Dict[str, List[StyleDescriptor]]
     whitespace: Dict[str, List[StyleDescriptor]]
 
@@ -108,7 +98,7 @@ class StylingDescriptors:
     def _decomposed_comments(self) -> List[StyleDescriptor]:
         """Private property that returns a list of the comments store values."""
         return _chain_stylings(styles=self.comments)
-        
+
     @property
     def _decomposed_whitespace(self) -> List[StyleDescriptor]:
         """Private property that returns a list of the whitespace store values."""
@@ -133,16 +123,18 @@ class StylingDescriptors:
         if styling not in styling_space:
             raise InvalidStylingError(
                 "Styling does not exist in set of valid stylings",
-                set(styling_space.keys())
+                set(styling_space.keys()),
             )
-        
+
         return styling_space[styling]
 
-    def get_stylings(self, styling: Optional[StyleItem] = None) -> List[StyleDescriptor]:
+    def get_stylings(
+        self, styling: Optional[StyleItem] = None
+    ) -> List[StyleDescriptor]:
         """
         Retrieves all stylings, represented by `StyleDescriptor` objects, that
         correspond to a specific string literal.
-        
+
         If "whitespace" is passed all whitespace stylings will be returned. If
         "comment" is passed all comment stylings will be returned. If it is None,
         then all stylings will be returned.
@@ -157,20 +149,20 @@ class StylingDescriptors:
         """
         stylings: List[StyleDescriptor] = []
 
-        if styling != 'comment':
+        if styling != "comment":
             stylings.extend(self._decomposed_whitespace)
 
-        if styling != 'whitespace':
+        if styling != "whitespace":
             stylings.extend(self._decomposed_comments)
 
         return stylings
-        
+
     def _update_stylings(self, style: Stylings, info: ItemInfo, line_no: int) -> None:
         """
         Private method that will create a new `StyleDescriptor` and update the
         existing store of stylings (comments and whitespaces) already parsed.
         """
-        styling_value: str # Must always be a string value
+        styling_value: str  # Must always be a string value
 
         # Based on whether the styling is a comment or a whitespace, a different
         # attribute from that tomlkit type will be assigned to be the value
@@ -213,17 +205,18 @@ class AbstractDescriptor(ABC):
         from_aot (bool): A boolean indicating whether the structure is nested
             within an array of tables.
     """
+
     def __init__(self, item_info: ItemInfo) -> None:
         self._item_info = copy.deepcopy(item_info)
 
     def copy(self: Descriptor) -> Descriptor:
         """Returns a shallow copy of the object."""
         return copy.copy(self)
-    
+
     def deepcopy(self: Descriptor) -> Descriptor:
         """Returns a deep copy of the object."""
         return copy.deepcopy(self)
-    
+
     def __repr__(self) -> str:
         repr_body: List[str] = []
         all_members: Dict[str, Any] = dict(
@@ -231,13 +224,13 @@ class AbstractDescriptor(ABC):
         )
 
         for member_name, member_value in all_members.items():
-            if not member_name.startswith('_') and member_name not in self.__special__:
+            if not member_name.startswith("_") and member_name not in self.__special__:
                 if isinstance(member_value, property):
                     member_value = member_value.__get__(self)
 
                 if not callable(member_value):
-                    repr_body.append(f'    {member_name}={member_value},\n')
-                
+                    repr_body.append(f"    {member_name}={member_value},\n")
+
         repr_string = f"{self.__class__.__name__}(\n{''.join(repr_body)})"
         return repr_string
 
@@ -260,7 +253,7 @@ class AbstractDescriptor(ABC):
         array of tables.
         """
         return self._item_info.from_aot
-    
+
     @property
     def container_position(self) -> int:
         """
@@ -277,9 +270,9 @@ class AbstractDescriptor(ABC):
         Returns the type of the parent structure. Can be None if there was no parent.
         """
         return self._item_info.parent_type
-    
 
-class AttributeDescriptor(AbstractDescriptor):    
+
+class AttributeDescriptor(AbstractDescriptor):
     """
     An extension of the `AbstractDescriptor` which is built for structures who
     ar similear to that of an "attribute". These are fields, tables, or array of
@@ -290,6 +283,7 @@ class AttributeDescriptor(AbstractDescriptor):
         attribute_position (int): An integer position of the structure amongst all
             other key value pairs (fields, tables) within the parent.
     """
+
     @property
     def name(self) -> str:
         """Returns the name of the TOML structure."""
@@ -304,7 +298,7 @@ class AttributeDescriptor(AbstractDescriptor):
         Attributes in this case are fields, tables, or arrays.
         """
         return self._item_info.position.attribute
-    
+
     @property
     def hierarchy(self) -> Hierarchy:
         """Returns the hierarchy of the TOML structure as a `Hierarchy` object."""
@@ -312,7 +306,7 @@ class AttributeDescriptor(AbstractDescriptor):
 
 
 class FieldDescriptor(AttributeDescriptor):
-    __special__: ClassVar[Set[str]] = {'stylings'}
+    __special__: ClassVar[Set[str]] = {"stylings"}
 
     """
     A class which provides detail on a field, a key-value pair that cannot
@@ -340,13 +334,14 @@ class FieldDescriptor(AttributeDescriptor):
         stylings (`StylingDescriptors`): An object with all stylings associated
             with the field.
     """
+
     def __init__(
         self,
         line_no: int,
         info: ItemInfo,
         value: Any,
         comment: Optional[CommentDescriptor],
-        stylings: StylingDescriptors
+        stylings: StylingDescriptors,
     ) -> None:
         super().__init__(item_info=info)
         self.line_no = line_no
@@ -386,13 +381,9 @@ class FieldDescriptor(AttributeDescriptor):
         comment = create_comment_descriptor(item=item, line_no=comment_line_no)
         value = safe_unwrap(structure=item)
         return cls(
-            line_no=line_no,
-            info=info,
-            value=value,
-            comment=comment,
-            stylings=stylings
+            line_no=line_no, info=info, value=value, comment=comment, stylings=stylings
         )
-    
+
     def _update_comment(self, item: items.Array, line_no: int) -> None:
         """
         A private method that updates a comment attributed to an array field.
@@ -402,7 +393,7 @@ class FieldDescriptor(AttributeDescriptor):
 
 
 class TableDescriptor(AttributeDescriptor):
-    __special__: ClassVar[Set[str]] = {'stylings', 'fields'}
+    __special__: ClassVar[Set[str]] = {"stylings", "fields"}
 
     """
     A dataclass which provides detail on a table or inline table, a key-value
@@ -433,12 +424,13 @@ class TableDescriptor(AttributeDescriptor):
         stylings (`StylingDescriptors`): An object with all stylings appearing
             within the table.
     """
+
     def __init__(
         self,
         line_no: int,
         info: ItemInfo,
         comment: Optional[CommentDescriptor],
-        stylings: StylingDescriptors
+        stylings: StylingDescriptors,
     ) -> None:
         super().__init__(item_info=info)
         self.line_no = line_no
@@ -451,12 +443,12 @@ class TableDescriptor(AttributeDescriptor):
     def fields(self) -> Dict[str, FieldDescriptor]:
         """
         Returns a dictionary containing all fields appearing in the table.
-        
+
         The keys of the dictionary are the string field names, and the values
         are `FieldDescriptor` objects.
         """
         return self._fields
-    
+
     @property
     def num_fields(self) -> int:
         """Returns the number of fields contained within the table."""
@@ -471,7 +463,9 @@ class TableDescriptor(AttributeDescriptor):
         return cast(TableItem, self._item_info.item_type)
 
     @classmethod
-    def _from_table_item(cls, table: Table, info: ItemInfo, line_no: int) -> TableDescriptor:
+    def _from_table_item(
+        cls, table: Table, info: ItemInfo, line_no: int
+    ) -> TableDescriptor:
         """
         Private class method which generates an instance of `TableDescriptor` for
         a given table while recursively traversing a TOML structure in the
@@ -480,14 +474,11 @@ class TableDescriptor(AttributeDescriptor):
         comment_line_no = find_comment_line_no(line_no=line_no, item=table)
         stylings = StylingDescriptors(comments=dict(), whitespace=dict())
         comment = create_comment_descriptor(item=table, line_no=comment_line_no)
-        return cls(
-            line_no=line_no,
-            info=info,
-            comment=comment,
-            stylings=stylings
-        )
+        return cls(line_no=line_no, info=info, comment=comment, stylings=stylings)
 
-    def _add_field(self, item: items.Item, info: ItemInfo, line_no: int) -> FieldDescriptor:
+    def _add_field(
+        self, item: items.Item, info: ItemInfo, line_no: int
+    ) -> FieldDescriptor:
         """A private method that adds a field to the existing store of fields."""
         field_descriptor = FieldDescriptor._from_toml_item(
             item=item, info=info, line_no=line_no
@@ -506,7 +497,7 @@ class StyleDescriptor(AbstractDescriptor):
     `tomlkit.items.Whitespace` instance.
 
     These are comments or whitespaces that are not directly associated with
-    a field or table, but are contained within tomlkit structures like tables. 
+    a field or table, but are contained within tomlkit structures like tables.
 
     Inherits properties from `AbstractDescriptor`:
     - `parent_type`
@@ -523,6 +514,7 @@ class StyleDescriptor(AbstractDescriptor):
         line_no (int): An integer line number marking the beginning of the
             styling.
     """
+
     def __init__(self, style: str, line_no: int, info: ItemInfo) -> None:
         super().__init__(item_info=info)
         self.style = style
@@ -546,7 +538,7 @@ class StyleDescriptor(AbstractDescriptor):
 
 
 class AoTDescriptor(AttributeDescriptor):
-    __special__: ClassVar[Set[str]] = {'tables'}
+    __special__: ClassVar[Set[str]] = {"tables"}
 
     """
     A dataclass which provides detail on an array of tables, a list of
@@ -569,6 +561,7 @@ class AoTDescriptor(AttributeDescriptor):
             instances where each one represents a table within the array
             of tables.
     """
+
     def __init__(self, line_no: int, info: ItemInfo) -> None:
         super().__init__(item_info=info)
         self.line_no = line_no
@@ -579,19 +572,19 @@ class AoTDescriptor(AttributeDescriptor):
     def item_type(self) -> AoTItem:
         """Returns a literal being "array-of-tables"."""
         return cast(AoTItem, self._item_info.item_type)
-    
+
     @property
     def tables(self) -> Dict[str, List[TableDescriptor]]:
         """
         Returns a dictionary containing all tables appearing in the array.
-        
+
         The keys of the dictionary are the string table hierarchies, and the values
         are lists of `TableDescriptor` objects. The values are lists, as within an
         array-of-tables, there can be multiple tables associated with the same
         hierarchy.
         """
         return self._tables
-    
+
     def num_tables(self, hierarchy: Optional[str] = None) -> int:
         """
         Retrieves the number of tables within the array that is associated
@@ -603,7 +596,7 @@ class AoTDescriptor(AttributeDescriptor):
         Args:
             hierarchy (str | None): A string representation of a TOML hierarchy.
                 Defaults to None.
-        
+
         Returns:
             int: An integer representing the number of tables.
         """
@@ -626,7 +619,7 @@ class AoTDescriptor(AttributeDescriptor):
         return self._tables[hierarchy][-1]
 
     def _update_tables(self, hierarchy: str, table_descriptor: TableDescriptor) -> None:
-        """A private method that adds a table to the existing store of tables."""    
+        """A private method that adds a table to the existing store of tables."""
         if hierarchy not in self._tables:
             self._tables[hierarchy] = [table_descriptor]
         else:

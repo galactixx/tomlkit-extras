@@ -1,25 +1,24 @@
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Type
-)
+from typing import Any, Type
 
 import pytest
-from tomlkit import items, TOMLDocument
+from tomlkit import TOMLDocument, items
 from tomlkit.container import OutOfOrderTableProxy
-from tomlkit_extras import (
-    get_attribute_from_toml_source,
-    InvalidHierarchyRetrievalError,
-    is_toml_instance
-)
 
 from tests.typing import FixtureFunction
+from tomlkit_extras import (
+    InvalidHierarchyRetrievalError,
+    get_attribute_from_toml_source,
+    is_toml_instance,
+)
+
 
 @dataclass(frozen=True)
 class BaseRetrievalTestCase(object):
     """
     Base dataclass representing a `get_attribute_from_toml_source` test case.
     """
+
     fixture: FixtureFunction
     hierarchy: str
 
@@ -30,6 +29,7 @@ class RetrievalTestCase(BaseRetrievalTestCase):
     Dataclass representing a test case for the `get_attribute_from_toml_source`
     function.
     """
+
     value: Any
     value_type: Type[Any]
 
@@ -40,121 +40,107 @@ class InvalidRetrievalTestCase(BaseRetrievalTestCase):
     Dataclass representing an invalid `get_attribute_from_toml_source` test
     case.
     """
+
     pass
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
-        RetrievalTestCase('load_toml_a', 'project.name', 'Example Project', str),
+        RetrievalTestCase("load_toml_a", "project.name", "Example Project", str),
         RetrievalTestCase(
-            'load_toml_a',
-            'details.description',
-            'A sample project configuration',
-            str
+            "load_toml_a", "details.description", "A sample project configuration", str
         ),
-        RetrievalTestCase('load_toml_a', 'members.name', ['Alice', 'Bob'], str),
+        RetrievalTestCase("load_toml_a", "members.name", ["Alice", "Bob"], str),
         RetrievalTestCase(
-            'load_toml_a',
-            'members',
+            "load_toml_a",
+            "members",
             [
                 {
-                    'name': 'Alice',
-                    'roles': [{'role': 'Developer'}, {'role': 'Designer'}]
+                    "name": "Alice",
+                    "roles": [{"role": "Developer"}, {"role": "Designer"}],
                 },
-                {
-                    'name': 'Bob',
-                    'roles': [{'role': 'Manager'}]
-                }
+                {"name": "Bob", "roles": [{"role": "Manager"}]},
             ],
-            items.Table
+            items.Table,
         ),
         RetrievalTestCase(
-            'load_toml_a',
-            'members.roles',
-            [
-                [{'role': 'Developer'}, {'role': 'Designer'}],
-                [{'role': 'Manager'}]
-            ],
-            items.AoT
+            "load_toml_a",
+            "members.roles",
+            [[{"role": "Developer"}, {"role": "Designer"}], [{"role": "Manager"}]],
+            items.AoT,
         ),
         RetrievalTestCase(
-            'load_toml_a',
-            'members.roles.role',
-            ['Developer', 'Designer', 'Manager'],
-            str
+            "load_toml_a",
+            "members.roles.role",
+            ["Developer", "Designer", "Manager"],
+            str,
         ),
-        RetrievalTestCase('load_toml_b', 'project', 'Example Project', str),
-        RetrievalTestCase('load_toml_b', 'tool.ruff.line-length', 88, int),
+        RetrievalTestCase("load_toml_b", "project", "Example Project", str),
+        RetrievalTestCase("load_toml_b", "tool.ruff.line-length", 88, int),
         RetrievalTestCase(
-            'load_toml_b', 'tool.ruff.lint.pydocstyle.convention', 'numpy', str
+            "load_toml_b", "tool.ruff.lint.pydocstyle.convention", "numpy", str
         ),
-        RetrievalTestCase('load_toml_b', 'main_table.name', 'Main Table', str),
+        RetrievalTestCase("load_toml_b", "main_table.name", "Main Table", str),
         RetrievalTestCase(
-            'load_toml_b',
-            'main_table.description',
-            'This is the main table containing an array of nested tables.',
-            str
+            "load_toml_b",
+            "main_table.description",
+            "This is the main table containing an array of nested tables.",
+            str,
         ),
         RetrievalTestCase(
-            'load_toml_b',
-            'main_table.sub_tables.name',
+            "load_toml_b",
+            "main_table.sub_tables.name",
             ["Sub Table 1", "Sub Table 2"],
-            str
+            str,
         ),
-        RetrievalTestCase('load_toml_b', 'main_table.sub_tables.value', [10, 20], int),
+        RetrievalTestCase("load_toml_b", "main_table.sub_tables.value", [10, 20], int),
         RetrievalTestCase(
-            'load_toml_b',
-            'main_table.sub_tables',
+            "load_toml_b",
+            "main_table.sub_tables",
             [
-                {'name': 'Sub Table 1', 'value': 10},
-                {'name': 'Sub Table 2', 'value': 20}
+                {"name": "Sub Table 1", "value": 10},
+                {"name": "Sub Table 2", "value": 20},
             ],
-            items.Table
+            items.Table,
         ),
         RetrievalTestCase(
-            'load_toml_b',
-            'tool.ruff',
-            {
-                'line-length': 88,
-                'lint': {'pydocstyle': {'convention': 'numpy'}}
-            },
-            items.Table
+            "load_toml_b",
+            "tool.ruff",
+            {"line-length": 88, "lint": {"pydocstyle": {"convention": "numpy"}}},
+            items.Table,
         ),
         RetrievalTestCase(
-            'load_toml_b',
-            'tool.ruff.lint.pydocstyle',
-            {'convention': 'numpy'},
-            items.InlineTable
+            "load_toml_b",
+            "tool.ruff.lint.pydocstyle",
+            {"convention": "numpy"},
+            items.InlineTable,
         ),
-        RetrievalTestCase('load_toml_c', 'project', 'Example Project', str),
+        RetrievalTestCase("load_toml_c", "project", "Example Project", str),
         RetrievalTestCase(
-            'load_toml_c', 'tool.ruff.lint.pydocstyle.convention', 'numpy', str
+            "load_toml_c", "tool.ruff.lint.pydocstyle.convention", "numpy", str
         ),
-        RetrievalTestCase('load_toml_c', 'tool.ruff.line-length', 88, int),
-        RetrievalTestCase('load_toml_c', 'tool.rye.managed', True, bool),
+        RetrievalTestCase("load_toml_c", "tool.ruff.line-length", 88, int),
+        RetrievalTestCase("load_toml_c", "tool.rye.managed", True, bool),
         RetrievalTestCase(
-            'load_toml_c',
-            'tool.rye.dev-dependencies',
-            ['ruff>=0.4.4', 'mypy>=0.812', 'sphinx>=3.5', 'setuptools>=56.0'],
-            str   
-        ),
-        RetrievalTestCase(
-            'load_toml_c',
-            'tool.ruff.lint.pydocstyle',
-            {'convention': 'numpy'},
-            items.InlineTable
+            "load_toml_c",
+            "tool.rye.dev-dependencies",
+            ["ruff>=0.4.4", "mypy>=0.812", "sphinx>=3.5", "setuptools>=56.0"],
+            str,
         ),
         RetrievalTestCase(
-            'load_toml_c',
-            'tool.ruff',
-            {
-                'line-length': 88,
-                'lint': {'pydocstyle': {'convention': 'numpy'}}
-            },
-            OutOfOrderTableProxy
-        )
-    ]
+            "load_toml_c",
+            "tool.ruff.lint.pydocstyle",
+            {"convention": "numpy"},
+            items.InlineTable,
+        ),
+        RetrievalTestCase(
+            "load_toml_c",
+            "tool.ruff",
+            {"line-length": 88, "lint": {"pydocstyle": {"convention": "numpy"}}},
+            OutOfOrderTableProxy,
+        ),
+    ],
 )
 def test_retrieval_from_toml_document(
     test_case: RetrievalTestCase, request: pytest.FixtureRequest
@@ -171,12 +157,12 @@ def test_retrieval_from_toml_document(
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
-        InvalidRetrievalTestCase('load_toml_a', 'project.version'),
-        InvalidRetrievalTestCase('load_toml_b', 'tool.ruff.name'),
-        InvalidRetrievalTestCase('load_toml_c', 'tool.rye.dependencies')
-    ]
+        InvalidRetrievalTestCase("load_toml_a", "project.version"),
+        InvalidRetrievalTestCase("load_toml_b", "tool.ruff.name"),
+        InvalidRetrievalTestCase("load_toml_c", "tool.rye.dependencies"),
+    ],
 )
 def test_invalid_retrieval(
     test_case: InvalidRetrievalTestCase, request: pytest.FixtureRequest
@@ -191,5 +177,5 @@ def test_invalid_retrieval(
             hierarchy=test_case.hierarchy, toml_source=toml_document
         )
     assert exc_info.value.message == (
-        'Hierarchy specified does not exist in TOMLDocument instance'
+        "Hierarchy specified does not exist in TOMLDocument instance"
     )

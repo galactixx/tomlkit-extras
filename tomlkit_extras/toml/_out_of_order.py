@@ -1,16 +1,11 @@
 import copy
-from typing import (
-    Any,
-    cast,
-    Iterator,
-    List,
-    Optional
-)
+from typing import Any, Iterator, List, Optional, cast
 
-from tomlkit import items, TOMLDocument
+from tomlkit import TOMLDocument, items
 from tomlkit.container import OutOfOrderTableProxy
 
 from tomlkit_extras._typing import TOMLSource
+
 
 def _fix_of_out_of_order_table_chain(
     current_table: items.Table, update_key: str, update_table: items.Table
@@ -25,7 +20,9 @@ def _fix_of_out_of_order_table_chain(
     if update_key not in current_table:
         current_table[update_key] = update_table
     else:
-        update_from_table: items.Table = _find_child_table(table_value=current_table[update_key])
+        update_from_table: items.Table = _find_child_table(
+            table_value=current_table[update_key]
+        )
 
         if update_from_table.is_super_table():
             new_current_table = update_table
@@ -39,7 +36,9 @@ def _fix_of_out_of_order_table_chain(
             child_table = _find_child_table(table_value=table_value)
 
             _fix_of_out_of_order_table_chain(
-                current_table=new_current_table, update_key=table_key, update_table=child_table
+                current_table=new_current_table,
+                update_key=table_key,
+                update_table=child_table,
             )
 
 
@@ -60,14 +59,14 @@ def fix_out_of_order_table(table: OutOfOrderTableProxy) -> items.Table:
     Given an out-of-order table, represented by a `tomlkit.container.OutOfOrderTableProxy`
     instance, will fix the order of the table and return a `tomlkit.items.Table`
     instance.
-    
+
     Out-of-order tables occur when a descendant of a hierarchy appears above
     that hierarchy within a TOML file. In these cases, instead of returning a
     `tomlkit.items.Table` instance as would normally be done, a
     `tomlkit.container.OutOfOrderTableProxy` is generated. While the ordering in
     the TOML file is maintained, it poses some issues. Since it is not a sub-class
     of `tomlkit.items.Item`, it therefore does not contain a comment or other info.
-    
+
     This simple function was built to parse and fix any of those issues by
     re-ordering the table. It navigates through the entire structure, so if there
     are any nested out-of-order tables, these will be fixed as well.
@@ -75,7 +74,7 @@ def fix_out_of_order_table(table: OutOfOrderTableProxy) -> items.Table:
     Args:
         table (`tomlkit.container.OutOfOrderTableProxy`): A
             `tomlkit.container.OutOfOrderTableProxy` instance.
-    
+
     Returns:
         `tomlkit.items.Table`: A `tomlkit.items.Table` instance.
     """
@@ -95,10 +94,9 @@ def fix_out_of_order_table(table: OutOfOrderTableProxy) -> items.Table:
             elif co_table.name is not None:
                 if table_w_shortest_name is None:
                     table_w_shortest_name = co_table
-                elif (
-                    table_w_shortest_name.name is not None and
-                    len(co_table.name) < len(table_w_shortest_name.name)
-                ):
+                elif table_w_shortest_name.name is not None and len(
+                    co_table.name
+                ) < len(table_w_shortest_name.name):
                     table_w_shortest_name = co_table
     except StopIteration:
         parent_table = table_w_shortest_name
@@ -113,7 +111,9 @@ def fix_out_of_order_table(table: OutOfOrderTableProxy) -> items.Table:
             child_table: items.Table = _find_child_table(table_value=table_value)
 
             _fix_of_out_of_order_table_chain(
-                current_table=current_table, update_key=table_key, update_table=child_table
+                current_table=current_table,
+                update_key=table_key,
+                update_table=child_table,
             )
 
     return parent_table
@@ -124,7 +124,7 @@ def fix_out_of_order_tables(toml_source: TOMLSource) -> None:
     Fixes all out-of-order tables, represented by a `tomlkit.container.OutOfOrderTableProxy`
     instances, appearing in a `TOMLSource` instance. The re-ordering an manipluations are
     done in-place and no type is returned.
-    
+
     Args:
         toml_source (`TOMLSource`): A `TOMLSource` instance.
     """

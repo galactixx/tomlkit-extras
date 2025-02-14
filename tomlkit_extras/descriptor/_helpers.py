@@ -1,17 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import (
-    Optional,
-    Set,
-    Union
-)
+from typing import Optional, Set, Union
 
+from tomlkit import TOMLDocument, items
 from tomlkit.container import OutOfOrderTableProxy
-from tomlkit import items, TOMLDocument
 
-from tomlkit_extras._typing import Item, TOMLValidReturn
 from tomlkit_extras._hierarchy import Hierarchy
+from tomlkit_extras._typing import Item, TOMLValidReturn
+
 
 @dataclass(frozen=True)
 class CommentDescriptor:
@@ -23,6 +20,7 @@ class CommentDescriptor:
         comment (str): A string representing the comment.
         line_no (int): An integer line number where the comment is located.
     """
+
     comment: str
     line_no: int
 
@@ -31,9 +29,10 @@ class CommentDescriptor:
 class LineCounter:
     """
     Line counter to keep track of the number of lines seen while
-    traversing through and mapping a TOML file within the 
+    traversing through and mapping a TOML file within the
     `TOMLDocumentDescriptor` class.
     """
+
     line_no: int = 0
 
     def add_lines(self, lines: int) -> None:
@@ -49,18 +48,21 @@ class LineCounter:
         self.line_no = 0
 
 
-def create_comment_descriptor(item: items.Item, line_no: Optional[int]) -> Optional[CommentDescriptor]:
+def create_comment_descriptor(
+    item: items.Item, line_no: Optional[int]
+) -> Optional[CommentDescriptor]:
     """
     A private function that creates a `CommentDescriptor` instance which
     provides detail for a comment that is directly associated with a
     particular field or table.
-    
+
     Can return None if there is no line number corresponding to the item,
     indicating that there is no comment.
     """
     return (
         CommentDescriptor(comment=item.trivia.comment, line_no=line_no)
-        if line_no is not None else None
+        if line_no is not None
+        else None
     )
 
 
@@ -69,7 +71,7 @@ def item_is_table(item_type: Optional[Item]) -> bool:
     A private function that determines if an `Item`, which is a literal that
     identifies the type of `tomlkit` object, is a table.
     """
-    return item_type in {'table', 'inline-table'}
+    return item_type in {"table", "inline-table"}
 
 
 def find_child_tables(root_hierarchy: str, hierarchies: Set[str]) -> Set[str]:
@@ -79,7 +81,7 @@ def find_child_tables(root_hierarchy: str, hierarchies: Set[str]) -> Set[str]:
     """
     children_hierarchies: Set[str] = set()
 
-    root_hierarchy_obj = Hierarchy.from_str_hierarchy(hierarchy=root_hierarchy) 
+    root_hierarchy_obj = Hierarchy.from_str_hierarchy(hierarchy=root_hierarchy)
 
     for hierarchy in hierarchies:
         if root_hierarchy_obj.is_child_hierarchy(hierarchy=hierarchy):
@@ -100,24 +102,23 @@ def get_item_type(toml_item: Union[TOMLDocument, TOMLValidReturn]) -> Item:
     """
     toml_item_type: Item
 
-    match toml_item:
-        case TOMLDocument():
-            toml_item_type = 'document'
-        case items.Table():
-            toml_item_type = 'super-table' if toml_item.is_super_table() else 'table'
-        case OutOfOrderTableProxy():
-            toml_item_type = 'table'
-        case items.InlineTable():
-            toml_item_type = 'inline-table'
-        case items.Comment():
-            toml_item_type = 'comment'
-        case items.Whitespace():
-            toml_item_type = 'whitespace'
-        case items.AoT():
-            toml_item_type = 'array-of-tables'
-        case items.Array():
-            toml_item_type = 'array'
-        case _:
-            toml_item_type = 'field'
-    
+    if isinstance(toml_item, TOMLDocument):
+        toml_item_type = "document"
+    elif isinstance(toml_item, items.Table):
+        toml_item_type = "super-table" if toml_item.is_super_table() else "table"
+    elif isinstance(toml_item, OutOfOrderTableProxy):
+        toml_item_type = "table"
+    elif isinstance(toml_item, items.InlineTable):
+        toml_item_type = "inline-table"
+    elif isinstance(toml_item, items.Comment):
+        toml_item_type = "comment"
+    elif isinstance(toml_item, items.Whitespace):
+        toml_item_type = "whitespace"
+    elif isinstance(toml_item, items.AoT):
+        toml_item_type = "array-of-tables"
+    elif isinstance(toml_item, items.Array):
+        toml_item_type = "array"
+    else:
+        toml_item_type = "field"
+
     return toml_item_type

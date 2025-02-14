@@ -1,24 +1,21 @@
 import copy
 from dataclasses import dataclass
-from typing import (
-    List,
-    Optional,
-    Tuple
-)
+from typing import List, Optional, Tuple
 
 import pytest
-from tomlkit import items, TOMLDocument
+from tomlkit import TOMLDocument, items
 from tomlkit.container import OutOfOrderTableProxy
+
+from tests.typing import FixtureFunction
 from tomlkit_extras import (
     contains_out_of_order_tables,
     fix_out_of_order_table,
     fix_out_of_order_tables,
     get_attribute_from_toml_source,
-    get_comments
+    get_comments,
 )
-
 from tomlkit_extras._typing import ContainerComment
-from tests.typing import FixtureFunction
+
 
 @dataclass(frozen=True)
 class OutOfOrderTestCase:
@@ -26,14 +23,13 @@ class OutOfOrderTestCase:
     Dataclass representing a test case for the `fix_out_of_order_table`
     function.
     """
+
     fixture: FixtureFunction
     hierarchy: str
     tables: List[Tuple[Optional[str], List[ContainerComment]]]
 
 
-@pytest.mark.parametrize(
-    'fixture', ['load_toml_c', 'load_toml_d', 'load_toml_e']
-)
+@pytest.mark.parametrize("fixture", ["load_toml_c", "load_toml_d", "load_toml_e"])
 def test_fix_all_out_of_order_tables(
     fixture: FixtureFunction, request: pytest.FixtureRequest
 ) -> None:
@@ -48,42 +44,53 @@ def test_fix_all_out_of_order_tables(
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         OutOfOrderTestCase(
-            'load_toml_c',
-            'tool.ruff',
+            "load_toml_c",
+            "tool.ruff",
             [
-                (None, [(2, '# this is a tool.ruff comment')]),
-                ('lint', [(3, '# this is the first comment for lint table')])
-            ]
+                (None, [(2, "# this is a tool.ruff comment")]),
+                ("lint", [(3, "# this is the first comment for lint table")]),
+            ],
         ),
         OutOfOrderTestCase(
-            'load_toml_d',
-            'servers',
+            "load_toml_d",
+            "servers",
             [
-                ('alpha', [(3, '# Out-of-order table')]),
-                ('beta', [(1, '# Another out-of-order table')])
-            ]
+                ("alpha", [(3, "# Out-of-order table")]),
+                ("beta", [(1, "# Another out-of-order table")]),
+            ],
         ),
         OutOfOrderTestCase(
-            'load_toml_e',
-            'project',
+            "load_toml_e",
+            "project",
             [
-                ('details', [(1, '# Awkwardly nested table (sub-section before main section)')]),
-                ('details.authors', [(1, '# Nested table here is disjointed')])
-            ]
+                (
+                    "details",
+                    [(1, "# Awkwardly nested table (sub-section before main section)")],
+                ),
+                ("details.authors", [(1, "# Nested table here is disjointed")]),
+            ],
         ),
         OutOfOrderTestCase(
-            'load_toml_e',
-            'servers',
+            "load_toml_e",
+            "servers",
             [
-                (None, [(1, '# This table is nested under servers, but details are spread out')]),
-                ('beta', [(3, '# This nesting is awkward')]),
-                ('alpha.metadata', [(4, '# Too far from papa')])
-            ]
-        )
-    ]
+                (
+                    None,
+                    [
+                        (
+                            1,
+                            "# This table is nested under servers, but details are spread out",
+                        )
+                    ],
+                ),
+                ("beta", [(3, "# This nesting is awkward")]),
+                ("alpha.metadata", [(4, "# Too far from papa")]),
+            ],
+        ),
+    ],
 )
 def test_fix_out_of_order_table(
     test_case: OutOfOrderTestCase, request: pytest.FixtureRequest

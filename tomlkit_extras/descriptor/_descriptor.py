@@ -1,19 +1,10 @@
 from __future__ import annotations
 
-from typing import (
-    cast,
-    List,
-    Optional
-)
+from typing import List, Optional, cast
 
+from tomlkit import TOMLDocument, items
 from tomlkit.container import OutOfOrderTableProxy
-from tomlkit import items, TOMLDocument
 
-from tomlkit_extras.descriptor._helpers import get_item_type, LineCounter
-from tomlkit_extras.descriptor._retriever import DescriptorRetriever
-from tomlkit_extras.descriptor._store import DescriptorStore
-from tomlkit_extras.toml._out_of_order import fix_out_of_order_table
-from tomlkit_extras._utils import decompose_body_item, get_container_body
 from tomlkit_extras._hierarchy import Hierarchy
 from tomlkit_extras._typing import (
     BodyContainerInOrder,
@@ -23,19 +14,21 @@ from tomlkit_extras._typing import (
     Stylings,
     Table,
     TOMLHierarchy,
-    TopLevelItem
+    TopLevelItem,
 )
+from tomlkit_extras._utils import decompose_body_item, get_container_body
 from tomlkit_extras.descriptor._descriptors import (
     AoTDescriptor,
     FieldDescriptor,
     StyleDescriptor,
-    TableDescriptor
+    TableDescriptor,
 )
-from tomlkit_extras.descriptor._types import (
-    ItemInfo,
-    ItemPosition,
-    TOMLStatistics
-)
+from tomlkit_extras.descriptor._helpers import LineCounter, get_item_type
+from tomlkit_extras.descriptor._retriever import DescriptorRetriever
+from tomlkit_extras.descriptor._store import DescriptorStore
+from tomlkit_extras.descriptor._types import ItemInfo, ItemPosition, TOMLStatistics
+from tomlkit_extras.toml._out_of_order import fix_out_of_order_table
+
 
 class _TOMLParser:
     """
@@ -44,12 +37,13 @@ class _TOMLParser:
     `tomlkit.items.InlineTable`, `tomlkit.items.Comment`, `tomlkit.items.Whitespace`,
     `tomlkit.items.AoT`, and `tomlkit.items.Table` among others.
     """
+
     def __init__(
         self,
         line_counter: LineCounter,
         store: DescriptorStore,
         toml_statistics: TOMLStatistics,
-        top_level_only: bool
+        top_level_only: bool,
     ) -> None:
         self._line_counter = line_counter
         self._store = store
@@ -73,9 +67,7 @@ class _TOMLParser:
 
         # Generate an AoTDescriptor object to initialize mini-store for nested
         # structures
-        array_of_tables = AoTDescriptor(
-            line_no=self._line_counter.line_no, info=info
-        )
+        array_of_tables = AoTDescriptor(line_no=self._line_counter.line_no, info=info)
 
         # Append the newly-created AoTDescriptor object to array-of-tables store
         self._store.array_of_tables.append(
@@ -90,10 +82,10 @@ class _TOMLParser:
                 key=array_name,
                 hierarchy=info.hierarchy,
                 toml_item=table,
-                parent_type='array-of-tables',
-                from_aot=True
+                parent_type="array-of-tables",
+                from_aot=True,
             )
-  
+
             # Run the main recursive parsing method on the table
             table_item_info.position = ItemPosition(index + 1, index + 1)
             self._generate_descriptor(container=table, info=table_item_info)
@@ -126,7 +118,7 @@ class _TOMLParser:
 
     def _parse_stylings(self, toml_item: Stylings, info: ItemInfo) -> None:
         """Private method to parse through `items.Whitespace`/`items.Comment` instances."""
-        number_of_newlines = toml_item.as_string().count('\n')
+        number_of_newlines = toml_item.as_string().count("\n")
         self._store.update_styling(style=toml_item, style_info=info)
 
         # Add comment to TOML summary statistics
@@ -158,10 +150,7 @@ class _TOMLParser:
         info.position.update_positions()
 
     def _parse_others(
-        self,
-        toml_item: items.Item,
-        info: ItemInfo,
-        container: BodyContainerInOrder
+        self, toml_item: items.Item, info: ItemInfo, container: BodyContainerInOrder
     ) -> None:
         """Private method to parse through other `items.Item` instances."""
         if not isinstance(container, items.Array):
@@ -172,12 +161,14 @@ class _TOMLParser:
             self._toml_statistics.add_field(item=toml_item)
         info.position.update_positions()
 
-    def _generate_descriptor(self, container: BodyContainerInOrder, info: ItemInfo) -> None:
+    def _generate_descriptor(
+        self, container: BodyContainerInOrder, info: ItemInfo
+    ) -> None:
         """
         Private recursive method that traverses an entire `BodyContainerInOrder`
         instance, being a `tomlkit` type `tomlkit.TOMLDocument`, `tomlkit.items.Table`,
         `tomlkit.items.InlineTable`, or `tomlkit.items.Array`.
-        
+
         During traversal, each field, table, array, and styling (comment and
         whitespace) is parsed and a custom/curated set of data points are collected
         for each item parsed.
@@ -192,29 +183,27 @@ class _TOMLParser:
 
         # If an tomlkit.items.InlineTable or tomlkit.items.Table, then add
         # a new table to the table store
-        if (
-            isinstance(container, items.InlineTable) or
-            is_non_super_table
-        ):
+        if isinstance(container, items.InlineTable) or is_non_super_table:
             self._store.update_table_descriptor(
-                hierarchy=new_hierarchy, table=cast(Table, container), table_info=info,
+                hierarchy=new_hierarchy,
+                table=cast(Table, container),
+                table_info=info,
             )
 
         # Since an inline table is contained only on a single line, and thus
         # on the same line as the table header, only update the line counter
         # if parsing a tomlkit.TOMLDocument or tomlkit.items.Table instance
         table_body_items: BodyContainerItems = get_container_body(toml_source=container)
-        if (
-            isinstance(container, TOMLDocument) or
-            is_non_super_table
-        ):
+        if isinstance(container, TOMLDocument) or is_non_super_table:
             self._line_counter.add_line()
 
         # Iterate through each item appearing in the body of the tomlkit object
         for toml_body_item in table_body_items:
             item_key, toml_item = decompose_body_item(body_item=toml_body_item)
             toml_item_info = ItemInfo.from_body_item(
-                hierarchy=new_hierarchy, container_info=info, body_item=(item_key, toml_item)
+                hierarchy=new_hierarchy,
+                container_info=info,
+                body_item=(item_key, toml_item),
             )
 
             # Set the position property for the active item
@@ -224,7 +213,7 @@ class _TOMLParser:
             # item type attribute
             if isinstance(toml_item, OutOfOrderTableProxy):
                 toml_item = fix_out_of_order_table(table=toml_item)
-                toml_item_info.item_type = 'table'
+                toml_item_info.item_type = "table"
 
             # If an array is encountered, the function is run recursively since
             # an array can contain stylings and nested tomlkit.items.Item objects
@@ -248,10 +237,7 @@ class _TOMLParser:
                 self._parse_array_of_tables(toml_item=toml_item, info=toml_item_info)
 
             # For a non-inline table, make a recursive call
-            elif (
-                isinstance(toml_item, items.Table) and
-                not self.top_level_only
-            ):
+            elif isinstance(toml_item, items.Table) and not self.top_level_only:
                 self._parse_table(toml_item=toml_item, info=toml_item_info)
 
             # Otherwise the object is a generic tomlkit.items.Item
@@ -267,8 +253,8 @@ class TOMLDocumentDescriptor:
     information for all fields, tables and stylings appearing in a
     `DescriptorInput` instance. A `DescriptorInput` instance is a `tomlkit`
     type of either `tomlkit.TOMLDocument`, `tomlkit.items.Table`,
-    `tomlkit.items.AoT`, or `tomlkit.items.Array`. 
-    
+    `tomlkit.items.AoT`, or `tomlkit.items.Array`.
+
     Parsing occurs within the constructor. Methods are provided to retrieve
     basic summary statistics about the TOML file, and to extract granular
     information about fields, tables, or stylings appearing at a specific
@@ -277,7 +263,7 @@ class TOMLDocumentDescriptor:
     All out-of-order tables appearing in the TOML file will automatically be
     fixed when parsing. Thus, the line numbers may be innacurate for these
     TOML files.
-    
+
     Args:
         toml_source (`DescriptorInput`): A `tomlkit` type of either
             `tomlkit.TOMLDocument`, `tomlkit.items.Table`, `tomlkit.items.AoT`,
@@ -286,6 +272,7 @@ class TOMLDocumentDescriptor:
             top-level space of the `DescriptorInput` structure should be parsed.
             Defaults to False.
     """
+
     def __init__(
         self, toml_source: DescriptorInput, top_level_only: bool = False
     ) -> None:
@@ -293,8 +280,8 @@ class TOMLDocumentDescriptor:
             toml_source, (TOMLDocument, items.Table, items.AoT, items.Array)
         ):
             raise TypeError(
-                'Expected an instance of DescriptorInput, but got '
-                f'{type(toml_source).__name__}'
+                "Expected an instance of DescriptorInput, but got "
+                f"{type(toml_source).__name__}"
             )
 
         self.top_level_only = top_level_only
@@ -303,7 +290,8 @@ class TOMLDocumentDescriptor:
         )
         self.top_level_hierarchy: Optional[str] = (
             toml_source.name
-            if isinstance(toml_source, (items.AoT, items.Table)) else None
+            if isinstance(toml_source, (items.AoT, items.Table))
+            else None
         )
 
         # Tracker for number of lines in TOML
@@ -320,19 +308,21 @@ class TOMLDocumentDescriptor:
             line_counter=self._line_counter,
             store=self._store,
             toml_statistics=self._toml_statistics,
-            top_level_only=self.top_level_only
+            top_level_only=self.top_level_only,
         )
 
         # Descriptor retriever
         self._retriever = DescriptorRetriever(
             store=self._store,
             top_level_type=self.top_level_type,
-            top_level_hierarchy=self.top_level_hierarchy
+            top_level_hierarchy=self.top_level_hierarchy,
         )
 
         if isinstance(toml_source, (items.Table, items.AoT)):
             update_key = toml_source.name
-            assert update_key is not None, 'table or array-of-tables must have a string name'
+            assert (
+                update_key is not None
+            ), "table or array-of-tables must have a string name"
         else:
             update_key = str()
 
@@ -355,8 +345,8 @@ class TOMLDocumentDescriptor:
 
     def __repr__(self) -> str:
         return (
-            f'{self.__class__.__name__}'
-            f'(type={self.top_level_type!r}, hierarchy={self.top_level_hierarchy!r})'
+            f"{self.__class__.__name__}"
+            f"(type={self.top_level_type!r}, hierarchy={self.top_level_hierarchy!r})"
         )
 
     @property
@@ -382,7 +372,7 @@ class TOMLDocumentDescriptor:
         in the TOML file.
         """
         return self._toml_statistics.number_of_aots
-    
+
     @property
     def number_of_arrays(self) -> int:
         """
@@ -411,10 +401,10 @@ class TOMLDocumentDescriptor:
         """
         Retrieves all fields from an array-of-tables, where each field is represented
         by a `FieldDescriptor` object, that correspond to a specific hierarchy.
-        
+
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        
+
         Returns:
             List[`FieldDescriptor`]: A list of `FieldDescriptor` instances.
         """
@@ -427,7 +417,7 @@ class TOMLDocumentDescriptor:
 
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        
+
         Returns:
             List[`TableDescriptor`]: A list of `TableDescriptor` instances.
         """
@@ -440,7 +430,7 @@ class TOMLDocumentDescriptor:
 
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        
+
         Returns:
             List[`AoTDescriptor`]: A list of `AoTDescriptor` instances.
         """
@@ -450,10 +440,10 @@ class TOMLDocumentDescriptor:
         """
         Retrieves a field represented by a `FieldDescriptor` object which
         corresponds to a specific hierarchy.
-        
+
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        
+
         Returns:
             `FieldDescriptor`: A `FieldDescriptor` instance.
         """
@@ -463,16 +453,18 @@ class TOMLDocumentDescriptor:
         """
         Retrieves a table represented by a `TableDescriptor` object which
         corresponds to a specific hierarchy.
-        
+
         Args:
             hierarchy (`TOMLHierarchy`) A `TOMLHierarchy` instance.
-        
+
         Returns:
             `TableDescriptor`: A `TableDescriptor` instance.
         """
         return self._retriever.get_table(hierarchy=hierarchy)
-    
-    def get_top_level_stylings(self, styling: Optional[StyleItem] = None) -> List[StyleDescriptor]:
+
+    def get_top_level_stylings(
+        self, styling: Optional[StyleItem] = None
+    ) -> List[StyleDescriptor]:
         """
         Retrieves all stylings (comments or whitespace) that occur at the
         top-level space of the TOML source.
@@ -499,14 +491,14 @@ class TOMLDocumentDescriptor:
         where each styling is represented by a `StyleDescriptor` object. In
         addition, if the search should be narrowed, a `TOMLHierarchy` object
         can be passed.
-        
+
         A styling can either be whitespace or comment.
-        
+
         Args:
             styling (str): A string representation of a comment or whitespace.
             hierarchy (`TOMLHierarchy` | None) A `TOMLHierarchy` instance. Is
                 optional and defaults to None.
-        
+
         Returns:
             List[`StyleDescriptor`]: A list of `StyleDescriptor` instances.
         """

@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from typing import (
-    Any,
-    List,
-    Optional,
-    Type
-)
+from dataclasses import dataclass
+from typing import Any, List, Optional, Type
 
 import pytest
+
+from tests.typing import FixtureDescriptor
 from tomlkit_extras import (
     AoTDescriptor,
     BaseTOMLError,
@@ -21,18 +18,11 @@ from tomlkit_extras import (
     InvalidTableError,
     StyleDescriptor,
     TableDescriptor,
-    TOMLDocumentDescriptor
+    TOMLDocumentDescriptor,
 )
-
-from tests.typing import FixtureDescriptor
 from tomlkit_extras._hierarchy import standardize_hierarchy
-from tomlkit_extras._typing import (
-    AoTItem,
-    FieldItem, 
-    ParentItem,
-    StyleItem,
-    TableItem
-)
+from tomlkit_extras._typing import AoTItem, FieldItem, ParentItem, StyleItem, TableItem
+
 
 @dataclass(frozen=True)
 class ArrayItemsTestCase:
@@ -40,6 +30,7 @@ class ArrayItemsTestCase:
     Dataclass representing a test case for the `get_field_from_array_of_tables`,
     `get_array_of_tables`, and `get_table_from_array_of_tables` methods.
     """
+
     fixture: FixtureDescriptor
     hierarchy: str
     test_cases: List[AbstractTestCase]
@@ -51,6 +42,7 @@ class InvalidGetHierarchyTestCase:
     Dataclass representing a test case for the error handling of get methods
     that are apart of `TOMLDocumentDescriptor`.
     """
+
     fixture: FixtureDescriptor
     hierarchy: str
     message: str
@@ -64,6 +56,7 @@ class AbstractTestCase(ABC):
     Abstract dataclass representing a generic test case for get methods from the
     `TOMLDocumentDescriptor` class.
     """
+
     fixture: FixtureDescriptor
 
     def standardize_hierarchy(self, hierarchy: Optional[str]) -> Optional[Hierarchy]:
@@ -82,6 +75,7 @@ class AbstractTestCase(ABC):
 @dataclass(frozen=True)
 class StyleDescriptorTestCase(AbstractTestCase):
     """Dataclass representing a test case for the `get_styling` method."""
+
     item_type: StyleItem
     parent_type: ParentItem
     hierarchy: Optional[str]
@@ -109,6 +103,7 @@ class FieldDescriptorTestCase(AbstractTestCase):
     Dataclass representing a test case for the `get_fields` and
     `get_field_from_array_of_tables` methods.
     """
+
     item_type: FieldItem
     parent_type: ParentItem
     name: str
@@ -145,6 +140,7 @@ class TableDescriptorTestCase(AbstractTestCase):
     Dataclass representing a test case for the `get_tables` and
     `get_table_from_array_of_tables` methods.
     """
+
     item_type: TableItem
     parent_type: ParentItem
     name: str
@@ -175,7 +171,7 @@ class TableDescriptorTestCase(AbstractTestCase):
         assert descriptor.container_position == self.container_position
         assert descriptor.comment == self.comment
         assert descriptor.from_aot == self.from_aot
-        
+
         # Ensure the number of fields match (in case there are extra fields
         # in extracted descriptor)
         assert self.fields == descriptor.num_fields
@@ -186,6 +182,7 @@ class AoTDescriptorTestCase(AbstractTestCase):
     """
     Dataclass representing a test case for the `get_array_of_tables` method.
     """
+
     item_type: AoTItem
     parent_type: ParentItem
     name: str
@@ -224,6 +221,7 @@ class DescriptorStatisticsTestCase:
     """
     Dataclass representing a test case for the statistics properties.
     """
+
     fixture: FixtureDescriptor
     num_of_aots: int
     num_of_arrays: int
@@ -234,12 +232,12 @@ class DescriptorStatisticsTestCase:
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
-        DescriptorStatisticsTestCase('toml_a_descriptor', 3, 0, 1, 7, 0, 7),
-        DescriptorStatisticsTestCase('toml_b_descriptor', 1, 0, 4, 9, 1, 5),
-        DescriptorStatisticsTestCase('toml_c_descriptor', 0, 1, 6, 4, 1, 3)
-    ]
+        DescriptorStatisticsTestCase("toml_a_descriptor", 3, 0, 1, 7, 0, 7),
+        DescriptorStatisticsTestCase("toml_b_descriptor", 1, 0, 4, 9, 1, 5),
+        DescriptorStatisticsTestCase("toml_c_descriptor", 0, 1, 6, 4, 1, 3),
+    ],
 )
 def test_toml_statistics(
     test_case: DescriptorStatisticsTestCase, request: pytest.FixtureRequest
@@ -257,79 +255,79 @@ def test_toml_statistics(
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         StyleDescriptorTestCase(
-            'toml_a_descriptor',
-            'comment',
-            'document',
+            "toml_a_descriptor",
+            "comment",
+            "document",
             None,
             1,
             1,
-            '# this is a document comment',
-            False
+            "# this is a document comment",
+            False,
         ),
         StyleDescriptorTestCase(
-            'toml_b_descriptor',
-            'comment',
-            'document',
+            "toml_b_descriptor",
+            "comment",
+            "document",
             None,
             4,
             3,
-            '# this is a document comment',
-            False
+            "# this is a document comment",
+            False,
         ),
         StyleDescriptorTestCase(
-            'toml_b_descriptor',
-            'comment',
-            'table',
-            'tool.ruff.lint',
+            "toml_b_descriptor",
+            "comment",
+            "table",
+            "tool.ruff.lint",
             10,
             1,
-            '# this is the first comment for lint table',
-            False
+            "# this is the first comment for lint table",
+            False,
         ),
         StyleDescriptorTestCase(
-            'toml_b_descriptor',
-            'comment',
-            'table',
-            'tool.ruff.lint',
+            "toml_b_descriptor",
+            "comment",
+            "table",
+            "tool.ruff.lint",
             11,
             2,
-            '# this is the second comment for lint table',
-            False
+            "# this is the second comment for lint table",
+            False,
         ),
         StyleDescriptorTestCase(
-            'toml_c_descriptor',
-            'comment',
-            'document',
+            "toml_c_descriptor",
+            "comment",
+            "document",
             None,
             1,
             1,
-            '# this is a document comment',
-            False
+            "# this is a document comment",
+            False,
         ),
         StyleDescriptorTestCase(
-            'toml_c_descriptor',
-            'comment',
-            'table',
-            'tool.ruff.lint',
+            "toml_c_descriptor",
+            "comment",
+            "table",
+            "tool.ruff.lint",
             11,
             3,
-            '# this is the first comment for lint table',
-            False
+            "# this is the first comment for lint table",
+            False,
         ),
         StyleDescriptorTestCase(
-            'toml_c_descriptor',
-            'comment',
-            'table',
-            'tool.ruff',
+            "toml_c_descriptor",
+            "comment",
+            "table",
+            "tool.ruff",
             15,
             2,
-            '# this is a tool.ruff comment',
-            False
-        )
-    ]
+            "# this is a tool.ruff comment",
+            False,
+        ),
+    ],
 )
 def test_toml_style_descriptor(
     test_case: StyleDescriptorTestCase, request: pytest.FixtureRequest
@@ -345,170 +343,165 @@ def test_toml_style_descriptor(
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         FieldDescriptorTestCase(
-            'toml_a_descriptor',
-            'field',
-            'table',
-            'name',
-            'project.name',
+            "toml_a_descriptor",
+            "field",
+            "table",
+            "name",
+            "project.name",
             4,
             1,
             1,
-            'Example Project',
+            "Example Project",
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_a_descriptor',
-            'field',
-            'table',
-            'description',
-            'details.description',
+            "toml_a_descriptor",
+            "field",
+            "table",
+            "description",
+            "details.description",
             7,
             1,
             1,
-            'A sample project configuration',
+            "A sample project configuration",
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_b_descriptor',
-            'field',
-            'table',
-            'line-length',
-            'tool.ruff.line-length',
+            "toml_b_descriptor",
+            "field",
+            "table",
+            "line-length",
+            "tool.ruff.line-length",
             7,
             1,
             1,
             88,
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_b_descriptor',
-            'field',
-            'inline-table',
-            'convention',
-            'tool.ruff.lint.pydocstyle.convention',
+            "toml_b_descriptor",
+            "field",
+            "inline-table",
+            "convention",
+            "tool.ruff.lint.pydocstyle.convention",
             12,
             1,
             2,
-            'numpy',
+            "numpy",
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_b_descriptor',
-            'field',
-            'table',
-            'name',
-            'main_table.name',
+            "toml_b_descriptor",
+            "field",
+            "table",
+            "name",
+            "main_table.name",
             15,
             1,
             1,
-            'Main Table',
+            "Main Table",
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_b_descriptor',
-            'field',
-            'table',
-            'description',
-            'main_table.description',
+            "toml_b_descriptor",
+            "field",
+            "table",
+            "description",
+            "main_table.description",
             16,
             2,
             2,
-            'This is the main table containing an array of nested tables.',
+            "This is the main table containing an array of nested tables.",
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_b_descriptor',
-            'field',
-            'document',
-            'project',
-            'project',
+            "toml_b_descriptor",
+            "field",
+            "document",
+            "project",
+            "project",
             1,
             1,
             1,
-            'Example Project',
+            "Example Project",
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_c_descriptor',
-            'field',
-            'document',
-            'project',
-            'project',
+            "toml_c_descriptor",
+            "field",
+            "document",
+            "project",
+            "project",
             3,
             1,
             3,
-            'Example Project',
+            "Example Project",
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_c_descriptor',
-            'field',
-            'inline-table',
-            'convention',
-            'tool.ruff.lint.pydocstyle.convention',
+            "toml_c_descriptor",
+            "field",
+            "inline-table",
+            "convention",
+            "tool.ruff.lint.pydocstyle.convention",
             9,
             1,
             2,
-            'numpy',
+            "numpy",
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_c_descriptor',
-            'field',
-            'table',
-            'line-length',
-            'tool.ruff.line-length',
+            "toml_c_descriptor",
+            "field",
+            "table",
+            "line-length",
+            "tool.ruff.line-length",
             14,
             1,
             1,
             88,
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_c_descriptor',
-            'field',
-            'table',
-            'managed',
-            'tool.rye.managed',
+            "toml_c_descriptor",
+            "field",
+            "table",
+            "managed",
+            "tool.rye.managed",
             20,
             1,
             1,
             True,
             None,
-            False
+            False,
         ),
         FieldDescriptorTestCase(
-            'toml_c_descriptor',
-            'array',
-            'table',
-            'dev-dependencies',
-            'tool.rye.dev-dependencies',
+            "toml_c_descriptor",
+            "array",
+            "table",
+            "dev-dependencies",
+            "tool.rye.dev-dependencies",
             21,
             2,
             2,
-            [
-                'ruff>=0.4.4',
-                'mypy>=0.812',
-                'sphinx>=3.5',
-                'setuptools>=56.0'
-            ],
+            ["ruff>=0.4.4", "mypy>=0.812", "sphinx>=3.5", "setuptools>=56.0"],
             None,
-            False
-        )
-    ]
+            False,
+        ),
+    ],
 )
 def test_toml_field_descriptor(
     test_case: FieldDescriptorTestCase, request: pytest.FixtureRequest
@@ -520,89 +513,87 @@ def test_toml_field_descriptor(
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         TableDescriptorTestCase(
-            'toml_b_descriptor',
-            'table',
-            'super-table',
-            'ruff',
-            'tool.ruff',
+            "toml_b_descriptor",
+            "table",
+            "super-table",
+            "ruff",
+            "tool.ruff",
             6,
             1,
             1,
-            CommentDescriptor(
-                comment='# this is a tool.ruff comment', line_no=6
-            ),
+            CommentDescriptor(comment="# this is a tool.ruff comment", line_no=6),
             False,
-            1
+            1,
         ),
         TableDescriptorTestCase(
-            'toml_b_descriptor',
-            'inline-table',
-            'table',
-            'pydocstyle',
-            'tool.ruff.lint.pydocstyle',
+            "toml_b_descriptor",
+            "inline-table",
+            "table",
+            "pydocstyle",
+            "tool.ruff.lint.pydocstyle",
             12,
             1,
             3,
             None,
             False,
-            1
+            1,
         ),
         TableDescriptorTestCase(
-            'toml_b_descriptor',
-            'table',
-            'document',
-            'main_table',
-            'main_table',
+            "toml_b_descriptor",
+            "table",
+            "document",
+            "main_table",
+            "main_table",
             14,
             3,
             6,
             None,
             False,
-            2
+            2,
         ),
         TableDescriptorTestCase(
-            'toml_c_descriptor',
-            'inline-table',
-            'table',
-            'pydocstyle',
-            'tool.ruff.lint.pydocstyle',
+            "toml_c_descriptor",
+            "inline-table",
+            "table",
+            "pydocstyle",
+            "tool.ruff.lint.pydocstyle",
             9,
             1,
             1,
             None,
             False,
-            1
+            1,
         ),
         TableDescriptorTestCase(
-            'toml_c_descriptor',
-            'table',
-            'super-table',
-            'ruff',
-            'tool.ruff',
+            "toml_c_descriptor",
+            "table",
+            "super-table",
+            "ruff",
+            "tool.ruff",
             13,
             2,
             2,
             None,
             False,
-            1
+            1,
         ),
         TableDescriptorTestCase(
-            'toml_c_descriptor',
-            'table',
-            'super-table',
-            'rye',
-            'tool.rye',
+            "toml_c_descriptor",
+            "table",
+            "super-table",
+            "rye",
+            "tool.rye",
             19,
             3,
             3,
             None,
             False,
-            2
-        )
-    ]
+            2,
+        ),
+    ],
 )
 def test_toml_table_descriptor(
     test_case: TableDescriptorTestCase, request: pytest.FixtureRequest
@@ -614,114 +605,112 @@ def test_toml_table_descriptor(
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         ArrayItemsTestCase(
-            'toml_a_descriptor',
-            'members.name',
+            "toml_a_descriptor",
+            "members.name",
             [
                 FieldDescriptorTestCase(
-                    'toml_a_descriptor',
-                    'field',
-                    'table',
-                    'name',
-                    'members.name',
+                    "toml_a_descriptor",
+                    "field",
+                    "table",
+                    "name",
+                    "members.name",
                     10,
                     1,
                     1,
-                    'Alice',
+                    "Alice",
                     None,
-                    True
+                    True,
                 ),
                 FieldDescriptorTestCase(
-                    'toml_a_descriptor',
-                    'field',
-                    'table',
-                    'name',
-                    'members.name',
+                    "toml_a_descriptor",
+                    "field",
+                    "table",
+                    "name",
+                    "members.name",
                     19,
                     1,
                     1,
-                    'Bob',
+                    "Bob",
                     None,
-                    True
-                )
-            ]
+                    True,
+                ),
+            ],
         ),
         ArrayItemsTestCase(
-            'toml_b_descriptor',
-            'main_table.sub_tables.name',
+            "toml_b_descriptor",
+            "main_table.sub_tables.name",
             [
                 FieldDescriptorTestCase(
-                    'toml_b_descriptor',
-                    'field',
-                    'table',
-                    'name',
-                    'main_table.sub_tables.name',
+                    "toml_b_descriptor",
+                    "field",
+                    "table",
+                    "name",
+                    "main_table.sub_tables.name",
                     19,
                     1,
                     1,
-                    'Sub Table 1',
+                    "Sub Table 1",
                     None,
-                    True
+                    True,
                 ),
                 FieldDescriptorTestCase(
-                    'toml_b_descriptor',
-                    'field',
-                    'table',
-                    'name',
-                    'main_table.sub_tables.name',
+                    "toml_b_descriptor",
+                    "field",
+                    "table",
+                    "name",
+                    "main_table.sub_tables.name",
                     23,
                     1,
                     1,
-                    'Sub Table 2',
+                    "Sub Table 2",
                     None,
-                    True
-                )
-            ]
+                    True,
+                ),
+            ],
         ),
         ArrayItemsTestCase(
-            'toml_b_descriptor',
-            'main_table.sub_tables.value',
+            "toml_b_descriptor",
+            "main_table.sub_tables.value",
             [
                 FieldDescriptorTestCase(
-                    'toml_b_descriptor',
-                    'field',
-                    'table',
-                    'value',
-                    'main_table.sub_tables.value',
+                    "toml_b_descriptor",
+                    "field",
+                    "table",
+                    "value",
+                    "main_table.sub_tables.value",
                     20,
                     2,
                     2,
                     10,
                     None,
-                    True
+                    True,
                 ),
                 FieldDescriptorTestCase(
-                    'toml_b_descriptor',
-                    'field',
-                    'table',
-                    'value',
-                    'main_table.sub_tables.value',
+                    "toml_b_descriptor",
+                    "field",
+                    "table",
+                    "value",
+                    "main_table.sub_tables.value",
                     24,
                     2,
                     2,
                     20,
                     None,
-                    True
-                )
-            ]
-        )
-    ]
+                    True,
+                ),
+            ],
+        ),
+    ],
 )
 def test_toml_array_field_descriptor(
     test_case: ArrayItemsTestCase, request: pytest.FixtureRequest
 ) -> None:
     """Function to test the functionality of `get_field_from_array_of_tables`."""
     toml_descriptor: TOMLDocumentDescriptor = request.getfixturevalue(test_case.fixture)
-    descriptors = toml_descriptor.get_field_from_aot(
-        hierarchy=test_case.hierarchy
-    )
+    descriptors = toml_descriptor.get_field_from_aot(hierarchy=test_case.hierarchy)
     assert len(descriptors) == len(test_case.test_cases)
 
     for idx, field in enumerate(test_case.test_cases):
@@ -729,82 +718,80 @@ def test_toml_array_field_descriptor(
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         ArrayItemsTestCase(
-            'toml_a_descriptor',
-            'members',
+            "toml_a_descriptor",
+            "members",
             [
                 TableDescriptorTestCase(
-                    'toml_a_descriptor',
-                    'table',
-                    'array-of-tables',
-                    'members',
-                    'members',
+                    "toml_a_descriptor",
+                    "table",
+                    "array-of-tables",
+                    "members",
+                    "members",
                     9,
                     1,
                     1,
                     None,
                     True,
-                    1
+                    1,
                 ),
                 TableDescriptorTestCase(
-                    'toml_a_descriptor',
-                    'table',
-                    'array-of-tables',
-                    'members',
-                    'members',
+                    "toml_a_descriptor",
+                    "table",
+                    "array-of-tables",
+                    "members",
+                    "members",
                     18,
                     2,
                     2,
                     None,
                     True,
-                    1
-                )
-            ]
+                    1,
+                ),
+            ],
         ),
         ArrayItemsTestCase(
-            'toml_b_descriptor',
-            'main_table.sub_tables',
+            "toml_b_descriptor",
+            "main_table.sub_tables",
             [
                 TableDescriptorTestCase(
-                    'toml_b_descriptor',
-                    'table',
-                    'array-of-tables',
-                    'sub_tables',
-                    'main_table.sub_tables',
+                    "toml_b_descriptor",
+                    "table",
+                    "array-of-tables",
+                    "sub_tables",
+                    "main_table.sub_tables",
                     18,
                     1,
                     1,
                     None,
                     True,
-                    2
+                    2,
                 ),
                 TableDescriptorTestCase(
-                    'toml_b_descriptor',
-                    'table',
-                    'array-of-tables',
-                    'sub_tables',
-                    'main_table.sub_tables',
+                    "toml_b_descriptor",
+                    "table",
+                    "array-of-tables",
+                    "sub_tables",
+                    "main_table.sub_tables",
                     22,
                     2,
                     2,
                     None,
                     True,
-                    2
-                )
-            ]
-        )
-    ]
+                    2,
+                ),
+            ],
+        ),
+    ],
 )
 def test_toml_array_table_descriptor(
     test_case: ArrayItemsTestCase, request: pytest.FixtureRequest
 ) -> None:
     """Function to test the functionality of `get_table_from_array_of_tables`."""
     toml_descriptor: TOMLDocumentDescriptor = request.getfixturevalue(test_case.fixture)
-    descriptors = toml_descriptor.get_table_from_aot(
-        hierarchy=test_case.hierarchy
-    )
+    descriptors = toml_descriptor.get_table_from_aot(hierarchy=test_case.hierarchy)
     assert len(descriptors) == len(test_case.test_cases)
 
     for idx, table in enumerate(test_case.test_cases):
@@ -812,45 +799,45 @@ def test_toml_array_table_descriptor(
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         ArrayItemsTestCase(
-            'toml_a_descriptor',
-            'members',
+            "toml_a_descriptor",
+            "members",
             [
                 AoTDescriptorTestCase(
-                    'toml_a_descriptor',
-                    'array-of-tables',
-                    'document',
-                    'members',
-                    'members',
+                    "toml_a_descriptor",
+                    "array-of-tables",
+                    "document",
+                    "members",
+                    "members",
                     9,
                     3,
                     5,
                     False,
-                    2
+                    2,
                 )
-            ]
+            ],
         ),
         ArrayItemsTestCase(
-            'toml_b_descriptor',
-            'main_table.sub_tables',
+            "toml_b_descriptor",
+            "main_table.sub_tables",
             [
                 AoTDescriptorTestCase(
-                    'toml_b_descriptor',
-                    'array-of-tables',
-                    'table',
-                    'sub_tables',
-                    'main_table.sub_tables',
+                    "toml_b_descriptor",
+                    "array-of-tables",
+                    "table",
+                    "sub_tables",
+                    "main_table.sub_tables",
                     18,
                     3,
                     4,
                     False,
-                    2
+                    2,
                 )
-            ]
-        )
-    ]
+            ],
+        ),
+    ],
 )
 def test_toml_array_descriptor(
     test_case: ArrayItemsTestCase, request: pytest.FixtureRequest
@@ -865,51 +852,51 @@ def test_toml_array_descriptor(
 
 
 @pytest.mark.parametrize(
-    'test_case',
+    "test_case",
     [
         InvalidGetHierarchyTestCase(
-            'toml_a_descriptor',
-            'tool.poetry.name',
-            'Hierarchy does not exist in set of valid hierarchies',
+            "toml_a_descriptor",
+            "tool.poetry.name",
+            "Hierarchy does not exist in set of valid hierarchies",
             InvalidHierarchyError,
-            'get_field'
+            "get_field",
         ),
         InvalidGetHierarchyTestCase(
-            'toml_a_descriptor',
-            'project.version',
-            'Hierarchy does not map to an existing field',
+            "toml_a_descriptor",
+            "project.version",
+            "Hierarchy does not map to an existing field",
             InvalidFieldError,
-            'get_field'
+            "get_field",
         ),
         InvalidGetHierarchyTestCase(
-            'toml_b_descriptor',
-            'tool.poetry',
-            'Hierarchy does not exist in set of valid hierarchies',
+            "toml_b_descriptor",
+            "tool.poetry",
+            "Hierarchy does not exist in set of valid hierarchies",
             InvalidHierarchyError,
-            'get_table'
+            "get_table",
         ),
         InvalidGetHierarchyTestCase(
-            'toml_b_descriptor',
-            'main_table.sub_tables.version',
-            'Hierarchy does not map to an existing field within an array',
+            "toml_b_descriptor",
+            "main_table.sub_tables.version",
+            "Hierarchy does not map to an existing field within an array",
             InvalidFieldError,
-            'get_field_from_aot',
+            "get_field_from_aot",
         ),
         InvalidGetHierarchyTestCase(
-            'toml_b_descriptor',
-            'main_table.sub_tables.inception',
-            'Hierarchy does not map to an existing table within an array',
+            "toml_b_descriptor",
+            "main_table.sub_tables.inception",
+            "Hierarchy does not map to an existing table within an array",
             InvalidTableError,
-            'get_table_from_aot'
+            "get_table_from_aot",
         ),
         InvalidGetHierarchyTestCase(
-            'toml_c_descriptor',
-            'tool.ruff.lint',
-            'Hierarchy does not exist in set of valid hierarchies',
+            "toml_c_descriptor",
+            "tool.ruff.lint",
+            "Hierarchy does not exist in set of valid hierarchies",
             InvalidHierarchyError,
-            'get_table_from_aot'
-        )
-    ]
+            "get_table_from_aot",
+        ),
+    ],
 )
 def test_invalid_hierarchies(
     test_case: InvalidGetHierarchyTestCase, request: pytest.FixtureRequest

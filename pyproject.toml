@@ -1,20 +1,29 @@
 [tool.poetry]
 name = "tomlkit-extras"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Python package that extends the functionality of tomlkit, allowing for advanced manipulation, validation, and introspection of TOML files, including handling comments and nested structures"
 authors = ["galactixx"]
 license = "MIT License"
 readme = "README.md"
+homepage = "https://github.com/galactixx/tomlkit-extras"
+repository = "https://github.com/galactixx/tomlkit-extras"
+keywords = [
+    "toml",
+    "tomlkit",
+    "validation",
+    "introspection"
+]
 
 [tool.poetry.dependencies]
-python = "^3.10"
-tomlkit = "^0.13.0"
-pyrsistent = "^0.20.0"
-charset-normalizer = "^3.3.2"
-pathvalidate = "^3.2.0"
+python = ">=3.8"
+tomlkit = ">=0.13.0"
+pyrsistent = ">=0.20.0"
+charset-normalizer = ">=3.3.2"
+pathvalidate = ">=3.2.0"
+typing_extensions = ">=4.6.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.2"
+pytest = ">=8.3.2"
 
 [build-system]
 requires = ["poetry-core"]

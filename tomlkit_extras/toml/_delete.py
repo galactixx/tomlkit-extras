@@ -1,26 +1,21 @@
-from typing import (
-    cast,
-    Union
-)
+from typing import Union, cast
 
-from pyrsistent import pdeque, PDeque
-from tomlkit import items, TOMLDocument
+from pyrsistent import PDeque, pdeque
+from tomlkit import TOMLDocument, items
 
 from tomlkit_extras._exceptions import InvalidHierarchyDeletionError
-from tomlkit_extras._hierarchy import (
-    Hierarchy,
-    standardize_hierarchy
-)
+from tomlkit_extras._hierarchy import Hierarchy, standardize_hierarchy
 from tomlkit_extras._typing import (
     TOMLDictLike,
     TOMLHierarchy,
     TOMLSource,
-    TOMLValidReturn
+    TOMLValidReturn,
 )
+
 
 def _delete_attribute_from_aot(attribute: str, current_source: items.AoT) -> None:
     """
-    A private function that deletes the deepest level of a specified hierarchy. 
+    A private function that deletes the deepest level of a specified hierarchy.
     """
     table_deleted = False
 
@@ -77,10 +72,10 @@ def _recursive_deletion(
             _delete_iteration_for_aot(
                 attribute=current_table,
                 current_source=current_source,
-                hierarchy_queue=hierarchy_queue_new
+                hierarchy_queue=hierarchy_queue_new,
             )
         else:
-            next_source = cast(TOMLValidReturn, current_source[current_table]) # type: ignore[index]
+            next_source = cast(TOMLValidReturn, current_source[current_table])  # type: ignore[index]
             _recursive_deletion(
                 current_source=next_source, hierarchy_queue=hierarchy_queue_new
             )
@@ -97,7 +92,7 @@ def delete_from_toml_source(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -
     Deletes the tomlkit item residing at a speicifc hierarchy within a `TOMLSource`
     instance. In addition, the deletion will continue to cascade backwards as long
     as the last deletion resulted in an empty tomlkit structure.
-    
+
     Accepts a `TOMLHierarchy` instance, being an instance of string or `Hierarchy`,
     and an instance of `TOMLSource`.
 
@@ -108,6 +103,4 @@ def delete_from_toml_source(hierarchy: TOMLHierarchy, toml_source: TOMLSource) -
     hierarchy_obj: Hierarchy = standardize_hierarchy(hierarchy=hierarchy)
 
     hierarchy_queue: PDeque[str] = pdeque(hierarchy_obj.full_hierarchy)
-    _recursive_deletion(
-        current_source=toml_source, hierarchy_queue=hierarchy_queue
-    )
+    _recursive_deletion(current_source=toml_source, hierarchy_queue=hierarchy_queue)

@@ -1,32 +1,20 @@
 from abc import ABC, abstractmethod
-from typing import (
-    Any,
-    cast,
-    Dict,
-    Set
-)
+from typing import Any, Dict, Set, cast
 
 from tomlkit import items
 
+from tomlkit_extras._typing import Item, Stylings, Table, TOMLHierarchy
 from tomlkit_extras._utils import standardize_hierarchy
-from tomlkit_extras.descriptor._helpers import (
-    item_is_table,
-    LineCounter
-)
-from tomlkit_extras._typing import (
-    Item,
-    Stylings,
-    Table,
-    TOMLHierarchy
-)
-from tomlkit_extras.descriptor._types import ItemInfo
 from tomlkit_extras.descriptor._descriptors import (
     AoTDescriptor,
     AoTDescriptors,
     FieldDescriptor,
     StylingDescriptors,
-    TableDescriptor
+    TableDescriptor,
 )
+from tomlkit_extras.descriptor._helpers import LineCounter, item_is_table
+from tomlkit_extras.descriptor._types import ItemInfo
+
 
 class BaseStore(ABC):
     """
@@ -34,6 +22,7 @@ class BaseStore(ABC):
     used by the `TOMLDocumentDescriptor` class. These include the
     `DocumentStore`, `ArrayOfTablesStore` and `TableStore`.
     """
+
     def __init__(self) -> None:
         # For faster access, the most recent FieldDescriptor created is
         # stored
@@ -43,7 +32,7 @@ class BaseStore(ABC):
     def field_descriptor(self) -> FieldDescriptor:
         """Returns the most recent `FieldDescriptor` created and added."""
         return self._field_descriptor
-    
+
     @field_descriptor.setter
     def field_descriptor(self, field: FieldDescriptor) -> None:
         """Sets the `field_descriptor` property."""
@@ -64,7 +53,7 @@ class BaseStore(ABC):
     @abstractmethod
     def update(self, item: items.Item, info: ItemInfo) -> None:
         pass
-    
+
 
 class BaseTableStore(BaseStore):
     """
@@ -72,18 +61,14 @@ class BaseTableStore(BaseStore):
     that store data included in tables. These stores include
     `ArrayOfTablesStore` and `TableStore`.
     """
+
     @property
     @abstractmethod
     def hierarchies(self) -> Set[str]:
         pass
 
     @abstractmethod
-    def add_table(
-        self, 
-        hierarchy: str, 
-        table: Table, 
-        info: ItemInfo
-    ) -> None:
+    def add_table(self, hierarchy: str, table: Table, info: ItemInfo) -> None:
         pass
 
 
@@ -93,6 +78,7 @@ class DocumentStore(BaseStore):
     of the top-level of a `tomlkit.TOMLDocument` instance. Additional basic
     functionality is included to retrieve information from the store.
     """
+
     def __init__(self, line_counter: LineCounter) -> None:
         self._line_counter = line_counter
         self._document_fields: Dict[str, FieldDescriptor] = dict()
@@ -121,7 +107,7 @@ class DocumentStore(BaseStore):
             `FieldDescriptor`: A `FieldDescriptor` instance.
         """
         return self._document_fields[hierarchy]
-    
+
     def contains(self, hierarchy: str) -> bool:
         """
         A boolean method that checks to see if field exists in all those processed.
@@ -159,12 +145,12 @@ class DocumentStore(BaseStore):
 
         Args:
             style_info (`ItemInfo`): An `ItemInfo` instance with basic info on the styling.
-        
+
         Returns:
             `StylingDescriptors`: A `StylingDescriptors` instance containing all
                 stylings associated with a field.
         """
-        if style_info.parent_type == 'document':
+        if style_info.parent_type == "document":
             styling_positions = self._document_stylings
         else:
             styling_positions = self.field_descriptor.stylings
@@ -178,6 +164,7 @@ class ArrayOfTablesStore(BaseTableStore):
     instance. Additional basic functionality is included to retrieve information
     from the store.
     """
+
     def __init__(self, line_counter: LineCounter) -> None:
         self._line_counter = line_counter
         self._array_of_tables: Dict[str, AoTDescriptors] = dict()
@@ -206,7 +193,7 @@ class ArrayOfTablesStore(BaseTableStore):
             `AoTDescriptors`: An `AoTDescriptors` instance.
         """
         return self._array_of_tables[hierarchy]
-    
+
     def contains(self, hierarchy: str) -> bool:
         """
         A boolean method that checks to see if an array of tables hierarchy exists
@@ -224,14 +211,14 @@ class ArrayOfTablesStore(BaseTableStore):
     def append(self, hierarchy: str, array_of_tables: AoTDescriptor) -> None:
         """
         Updates the existing array of tables store based on a hierarchy.
-        
+
         If the hierarchy has not already been encountered then a new key-value pair
         is created where the key is the string hierarchy and the value is an
         `AoTDescriptors` instance.
 
         If the hierarchy has already been encountered, then the existing value
         corresponding to a `AoTDescriptors` instance is updated.
-        
+
         Args:
             hierarchy (str): A TOML hierarchy corresponding to an array of tables.
             array_of_tables (`AoTDescriptors`): An `AoTDescriptors` instance.
@@ -255,15 +242,14 @@ class ArrayOfTablesStore(BaseTableStore):
         """
         hierarchy_obj = standardize_hierarchy(hierarchy=hierarchy)
         return cast(
-            str,
-            hierarchy_obj.longest_ancestor_hierarchy(hierarchies=self.hierarchies)
+            str, hierarchy_obj.longest_ancestor_hierarchy(hierarchies=self.hierarchies)
         )
-        
+
     def _get_aot_table(self, hierarchy: str) -> TableDescriptor:
         """
         Retrieves a table located in an array of tables. Given a string table hierarchy
         will return a `TableDescriptor` instance.
-        
+
         Args:
             hierarchy (str): A TOML hierarchy corresponding to a table.
 
@@ -285,9 +271,7 @@ class ArrayOfTablesStore(BaseTableStore):
         """
         table: TableDescriptor = self._get_aot_table(hierarchy=info.hierarchy)
         field_desctiptor: FieldDescriptor = table._add_field(
-            item=item,
-            info=info,
-            line_no=self._line_counter.line_no
+            item=item, info=info, line_no=self._line_counter.line_no
         )
         self.field_descriptor = field_desctiptor
 
@@ -296,7 +280,7 @@ class ArrayOfTablesStore(BaseTableStore):
         Adds a new table to the store of tables already processed. A new key-value
         pair is added to the dictionary, where the key is the string hierarchy of the
         table, and the value is a `TableDescriptor` instance.
-        
+
         Args:
             hierarchy (str): A TOML hierarchy corresponding to a table.
             table (`Table`): A Table instance, being either a tomlkit.items.Table or
@@ -307,9 +291,7 @@ class ArrayOfTablesStore(BaseTableStore):
         array_of_tables = self._array_of_tables[array_hierarchy]
 
         table_descriptor = TableDescriptor._from_table_item(
-            table=table,
-            info=info,
-            line_no=self._line_counter.line_no
+            table=table, info=info, line_no=self._line_counter.line_no
         )
 
         # Immediately after creation of the TableDescriptor, update the
@@ -327,7 +309,7 @@ class ArrayOfTablesStore(BaseTableStore):
 
         Args:
             style_info (`ItemInfo`): An `ItemInfo` instance with basic info on the styling.
-        
+
         Returns:
             `StylingDescriptors`: A `StylingDescriptors` instance containing all
                 stylings associated with a table.
@@ -347,6 +329,7 @@ class TableStore(BaseTableStore):
     not appearing within an array of tables. Additional basic functionality
     is included to retrieve information from the store.
     """
+
     def __init__(self, line_counter: LineCounter) -> None:
         self._line_counter = line_counter
         self._tables: Dict[str, TableDescriptor] = dict()
@@ -371,7 +354,7 @@ class TableStore(BaseTableStore):
             `TableDescriptor`: A `TableDescriptor` instance.
         """
         return self._tables[hierarchy]
-    
+
     def contains(self, hierarchy: str) -> bool:
         """
         A boolean method that checks to see if a table hierarchy exists in
@@ -398,9 +381,7 @@ class TableStore(BaseTableStore):
             info (`ItemInfo`): An `ItemInfo` instance with basic info on the field.
         """
         field_desctiptor: FieldDescriptor = self._tables[info.hierarchy]._add_field(
-            item=item,
-            info=info,
-            line_no=self._line_counter.line_no
+            item=item, info=info, line_no=self._line_counter.line_no
         )
         self.field_descriptor = field_desctiptor
 
@@ -409,7 +390,7 @@ class TableStore(BaseTableStore):
         Adds a new table to the store of tables already processed. A new key-value
         pair is added to the dictionary, where the key is the string hierarchy of the
         table, and the value is a `TableDescriptor` instance.
-        
+
         Args:
             hierarchy (str): A TOML hierarchy corresponding to a table.
             table (`Table`): A Table instance, being either a tomlkit.items.Table or
@@ -417,9 +398,7 @@ class TableStore(BaseTableStore):
             info (`ItemInfo`): An `ItemInfo` instance with basic info on the table.
         """
         table_descriptor = TableDescriptor._from_table_item(
-            table=table,
-            info=info,
-            line_no=self._line_counter.line_no
+            table=table, info=info, line_no=self._line_counter.line_no
         )
         self._tables.update({hierarchy: table_descriptor})
 
@@ -430,7 +409,7 @@ class TableStore(BaseTableStore):
 
         Args:
             style_info (`ItemInfo`): An `ItemInfo` instance with basic info on the styling.
-        
+
         Returns:
             `StylingDescriptors`: A `StylingDescriptors` instance containing all
                 stylings associated with a table.
@@ -455,9 +434,10 @@ class DescriptorStore:
         tables (`TableStore`): A store for all tables, not located in array of tables,
             appearing within the TOML file.
     """
+
     def __init__(self, line_counter: LineCounter) -> None:
         self._line_counter = line_counter
-        
+
         # Object for storing any attributes occurring in top-level space
         self.document = DocumentStore(line_counter=self._line_counter)
 
@@ -474,9 +454,9 @@ class DescriptorStore:
         descriptor_store: BaseStore
         item_type: Item = info.item_type
         if (
-            item_type == 'document' or
-            not info.hierarchy and
-            item_type in {'array', 'field', 'comment', 'whitespace'}
+            item_type == "document"
+            or not info.hierarchy
+            and item_type in {"array", "field", "comment", "whitespace"}
         ):
             descriptor_store = self.document
         elif info.from_aot:
@@ -485,7 +465,7 @@ class DescriptorStore:
             descriptor_store = self.tables
 
         return descriptor_store
-    
+
     def update_styling(self, style: Stylings, style_info: ItemInfo) -> None:
         """
         Adds a new styling, corresponding to a string comment or whitespace within
@@ -494,9 +474,7 @@ class DescriptorStore:
         descriptor_store = self._store_choice(info=style_info)
         styling_positions = descriptor_store.get_stylings(style_info=style_info)
         styling_positions._update_stylings(
-            style=style,
-            info=style_info,
-            line_no=self._line_counter.line_no
+            style=style, info=style_info, line_no=self._line_counter.line_no
         )
 
     def update_field_descriptor(self, item: items.Item, info: ItemInfo) -> None:
@@ -514,8 +492,7 @@ class DescriptorStore:
         """
         descriptor_store = self._store_choice(info=info)
         descriptor_store.field_descriptor._update_comment(
-            item=array,
-            line_no=self._line_counter.line_no
+            item=array, line_no=self._line_counter.line_no
         )
 
     def update_table_descriptor(
@@ -531,6 +508,4 @@ class DescriptorStore:
         else:
             descriptor_store = self.tables
 
-        descriptor_store.add_table(
-            hierarchy=hierarchy, table=table, info=table_info
-        )
+        descriptor_store.add_table(hierarchy=hierarchy, table=table, info=table_info)

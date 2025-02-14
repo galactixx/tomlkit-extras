@@ -1,20 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import (
-    cast,
-    Optional
-)
+from typing import Optional, cast
 
 from tomlkit import items
 
-from tomlkit_extras.descriptor._helpers import get_item_type
 from tomlkit_extras._typing import (
     BodyContainerItemDecomposed,
     DescriptorInput,
     Item,
-    ParentItem
+    ParentItem,
 )
+from tomlkit_extras.descriptor._helpers import get_item_type
+
 
 @dataclass
 class ItemPosition:
@@ -28,6 +26,7 @@ class ItemPosition:
     container position is the position of the item amongst all other types,
     including stylings (whitespace, comments), within the containing object.
     """
+
     attribute: int
     container: int
 
@@ -59,13 +58,14 @@ class ItemInfo:
     while recursively traversing a TOML structure in the `_generate_descriptor`
     method of `_TOMLParser`.
     """
+
     def __init__(
         self,
         item_type: Item,
         parent_type: Optional[ParentItem],
         key: str,
         hierarchy: str,
-        from_aot: bool
+        from_aot: bool,
     ) -> None:
         self.item_type = item_type
         self.parent_type = parent_type
@@ -74,12 +74,12 @@ class ItemInfo:
         self.from_aot = from_aot
 
         self._position: ItemPosition
-    
+
     @property
     def position(self) -> ItemPosition:
         """Returns the `ItemPosition` object associated with item."""
         return self._position
-    
+
     @position.setter
     def position(self, position: ItemPosition) -> None:
         """Sets the `ItemPosition` object associated with item."""
@@ -92,7 +92,7 @@ class ItemInfo:
         hierarchy: str,
         toml_item: DescriptorInput,
         parent_type: Optional[ParentItem] = None,
-        from_aot: bool = False
+        from_aot: bool = False,
     ) -> ItemInfo:
         """
         A class method that creates an `ItemInfo` instance from parent
@@ -104,15 +104,15 @@ class ItemInfo:
             parent_type=parent_type,
             key=key,
             hierarchy=hierarchy,
-            from_aot=from_aot
+            from_aot=from_aot,
         )
 
     @classmethod
     def from_body_item(
         cls,
-        hierarchy: str, 
+        hierarchy: str,
         container_info: ItemInfo,
-        body_item: BodyContainerItemDecomposed
+        body_item: BodyContainerItemDecomposed,
     ) -> ItemInfo:
         """
         A class method that creates an `ItemInfo` instance from the body
@@ -121,13 +121,13 @@ class ItemInfo:
         item_key, toml_item = body_item
         item_type = get_item_type(toml_item=toml_item)
         parent_type = cast(ParentItem, container_info.item_type)
-        key = item_key or ''
+        key = item_key or ""
         return cls(
             item_type=item_type,
             parent_type=parent_type,
             key=key,
             hierarchy=hierarchy,
-            from_aot=container_info.from_aot
+            from_aot=container_info.from_aot,
         )
 
 
@@ -145,6 +145,7 @@ class TOMLStatistics:
     - `tomlkit.items.Item` (those that correspond to fields)
     - `tomlkit.items.Array`
     """
+
     def __init__(self) -> None:
         self.number_of_tables = 0
         self.number_of_inline_tables = 0
@@ -191,9 +192,8 @@ class TOMLStatistics:
         Given a generic `tomlkit.items.Item` instance, will check for a comment
         associated with the item and if there is one the comment count is updated.
         """
-        if (
-            isinstance(item, items.Comment) or
-            (not isinstance(item, items.Whitespace) and item.trivia.comment)
+        if isinstance(item, items.Comment) or (
+            not isinstance(item, items.Whitespace) and item.trivia.comment
         ):
             self.number_of_comments += 1
 

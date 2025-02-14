@@ -1,26 +1,10 @@
-from typing import (
-    Any,
-    cast,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union
-)
+from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import tomlkit
+from tomlkit import TOMLDocument, container, items
 from tomlkit.container import OutOfOrderTableProxy
-from tomlkit import (
-    container,
-    items,
-    TOMLDocument
-)
 
-from tomlkit_extras._hierarchy import (
-    Hierarchy,
-    standardize_hierarchy
-)
+from tomlkit_extras._hierarchy import Hierarchy, standardize_hierarchy
 from tomlkit_extras._typing import (
     BodyContainer,
     BodyContainerItem,
@@ -29,15 +13,16 @@ from tomlkit_extras._typing import (
     TOMLDictLike,
     TOMLHierarchy,
     TOMLSource,
-    TOMLValidReturn
+    TOMLValidReturn,
 )
 
 _VALID_TYPES: Tuple[Type[TOMLSource], ...] = (
     TOMLDocument,
     items.Table,
-    items.AoT, 
-    OutOfOrderTableProxy
+    items.AoT,
+    OutOfOrderTableProxy,
 )
+
 
 def safe_unwrap(structure: Union[TOMLDocument, TOMLValidReturn]) -> Any:
     """
@@ -69,24 +54,24 @@ def contains_out_of_order_tables(toml_source: TOMLSource) -> bool:
     Given a `TOMLSource` instance, will traverse through the structure
     and determine if there are any out-of-order tables represented by
     instances of `tomlkit.container.OutOfOrderTableProxy`.
-    
+
     Returns a boolean that is True if there are out-of-order tables and
-    False if not. 
+    False if not.
 
     Args:
         toml_source (`TOMLSource`): A `TOMLSource` instance.
 
     Returns:
         bool: A boolean indicating whether there are any out-of-order tables
-            located in the TOML structure. 
-    """    
+            located in the TOML structure.
+    """
+
     def out_of_order_detect(source: TOMLSource) -> bool:
         # Recursively iterate through dictionary-like tomlkit structures
         if isinstance(source, (TOMLDocument, items.Table)):
             return any(
                 out_of_order_detect(source=document_value)
                 for _, document_value in source.items()
-
                 # Only recursively traverse through sub-structures if they
                 # are tomlkit structures that can contain out-of-order tables
                 if isinstance(document_value, _VALID_TYPES)
@@ -95,18 +80,15 @@ def contains_out_of_order_tables(toml_source: TOMLSource) -> bool:
         # Because items in an array of tables can only be tables, there is
         # no need for a valid type check
         elif isinstance(source, items.AoT):
-            return any(
-                out_of_order_detect(source=aot_table)
-                for aot_table in source
-            )
+            return any(out_of_order_detect(source=aot_table) for aot_table in source)
         # Otherwise check if structure is an out-of-order table
         return isinstance(source, OutOfOrderTableProxy)
-        
+
     if not isinstance(toml_source, _VALID_TYPES):
         raise TypeError(
-            f'Expected an instance of TOMLSource, but got {type(toml_source).__name__}'
+            f"Expected an instance of TOMLSource, but got {type(toml_source).__name__}"
         )
-        
+
     return out_of_order_detect(source=toml_source)
 
 
@@ -116,7 +98,7 @@ def find_comment_line_no(line_no: int, item: items.Item) -> Optional[int]:
     the line number in which the comment associated with the item lies on.
 
     If there is no comment found then will return None.
-    
+
     Args:
         line_no (int): The line number in which the item is located.
         item (`tomlkit.items.Item`): A `tomlkit.items.Item` instance.
@@ -131,7 +113,7 @@ def find_comment_line_no(line_no: int, item: items.Item) -> Optional[int]:
         comment_position = None
     else:
         ws_before_comment: str = item.trivia.indent + item.trivia.comment_ws
-        num_newlines = ws_before_comment.count('\n')
+        num_newlines = ws_before_comment.count("\n")
         comment_position = line_no + num_newlines
 
     return comment_position
@@ -144,7 +126,7 @@ def from_dict_to_toml_document(dictionary: Dict[str, Any]) -> TOMLDocument:
     This function takes a dictionary with string keys and values of any type
     and converts it into a `tomlkit.TOMLDocument`, which is a structured
     representation of TOML data.
-    
+
     Args:
         dictionary (Dict[str, Any]): A dictionary with keys as strings and values
             being of any type.
@@ -168,7 +150,7 @@ def convert_to_tomlkit_item(value: Any) -> items.Item:
 
     Args:
         value (Any): An instance of any type.
-    
+
     Returns:
         `tomlkit.items.Item`: A `tomlkit.items.Item` instance.
     """
@@ -179,7 +161,9 @@ def convert_to_tomlkit_item(value: Any) -> items.Item:
     return value_as_toml_item
 
 
-def create_array_of_tables(tables: List[Union[items.Table, Dict[str, Any]]]) -> items.AoT:
+def create_array_of_tables(
+    tables: List[Union[items.Table, Dict[str, Any]]]
+) -> items.AoT:
     """
     Converts a list of `tomlkit.items.Table` instances or list of dictionaries,
     each with keys as strings and values being of any type, into a
@@ -255,7 +239,7 @@ def create_toml_document(hierarchy: TOMLHierarchy, value: Any) -> TOMLDocument:
     instance of any type, will create a `tomlkit.TOMLDocument` instance inserting
     the value at the hierarchy, specified. Thus, creating a `tomlkit.TOMLDocument`
     instance around the value.
-    
+
     If the value inserted is not already and instance of `tomlkit.items.Item`,
     will automatically convert into a `tomlkit.items.Item` instance.
 
@@ -369,7 +353,7 @@ def _reorganize_array(array: items.Array) -> BodyContainerItems:
 
 def get_container_body(toml_source: BodyContainer) -> BodyContainerItems:
     """
-    Retrieves the core elements, making up the body of a `BodyContainer` type, 
+    Retrieves the core elements, making up the body of a `BodyContainer` type,
     and returns a `BodyContainerItems` type.
 
     Args:
@@ -378,17 +362,16 @@ def get_container_body(toml_source: BodyContainer) -> BodyContainerItems:
     Returns:
         `BodyContainerItems`: A `BodyContainerItems` instance.
     """
-    match toml_source:
-        case items.Table() | items.InlineTable():
-            table_body_items = toml_source.value.body
-        case items.Array():
-            table_body_items = _reorganize_array(array=toml_source)
-        case OutOfOrderTableProxy():
-            table_body_items = toml_source._container.body
-        case TOMLDocument():
-            table_body_items = toml_source.body
-        case _:
-            raise ValueError("Type is not a valid container-like structure")
+    if isinstance(toml_source, (items.Table, items.InlineTable)):
+        table_body_items = toml_source.value.body
+    elif isinstance(toml_source, items.Array):
+        table_body_items = _reorganize_array(array=toml_source)
+    elif isinstance(toml_source, OutOfOrderTableProxy):
+        table_body_items = toml_source._container.body
+    elif isinstance(toml_source, TOMLDocument):
+        table_body_items = toml_source.body
+    else:
+        raise ValueError("Type is not a valid container-like structure")
     return table_body_items
 
 
